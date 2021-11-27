@@ -1,0 +1,225 @@
+/* 
+ * タマリンクのCSS.
+ */
+
+
+/* 画面間で共通した設定. */
+
+body.app {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "sans-serif";
+    color: black;
+    background-color: pink;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    min-width: 20em;
+}
+
+div.panel_view {
+    display: none;
+    position: relative;
+    height: 100vh;
+}
+
+div.panel_content {
+    position: absolute;
+    text-align: center;
+    background-color: lavenderblush;
+    border-radius: 1em;
+    padding: 1em 1.2em 1em 1em;
+    min-width: 15em;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+}
+
+img.panel_icon {
+    height: 4em;
+    margin: 2.5em 2em 0.5em 2em;
+}
+
+div.panel_title {
+    font-size: x-large;
+}
+
+div.panel_subtitle {
+    font-size: x-small;
+    margin-bottom: 1em;
+}
+
+div.panel_header {
+    margin-bottom: 1em;
+    font-size: larger;
+    color: dimgray;
+}
+
+div.panel_message {
+    font-weight: bolder;
+    margin-bottom: 1em;
+}
+
+input.readonly {
+    background-color: lavenderblush;
+    border-color: white;
+    border-style: solid;
+    border-width: 0.1em;
+}
+
+input.input {
+    border-color: white;
+    border-style: solid;
+    border-width: 0.1em;
+}
+
+input.button {
+    background-color: whitesmoke;
+}
+
+
+/* メインビュー用の設定. */
+
+div.main_view {
+    display: none;
+}
+
+div.header {
+    position: relative;
+    background-color: lavenderblush;
+    padding: 1em;
+    height: 2em;
+}
+
+div.title {
+    display: inline;
+    position: absolute;
+    vertical-align: middle;
+    left: 1em;
+}
+
+img.main_logo {
+    display: inline;
+    vertical-align: middle;
+    height: 2em;
+}
+
+div.main_name {
+    display: inline;
+    vertical-align: middle;
+    font-size: large;
+}
+
+div.main_version {
+    display: inline;
+    vertical-align: middle;
+    font-size: x-small;
+    color: dimgray;
+}
+
+div.menu {
+    position: absolute;
+    right: 1em;
+    display: inline;
+    vertical-align: middle;
+}
+
+input.user {
+    width: 20em;
+    color: dimgray;
+}
+
+a.header {
+    position: absolute;
+    right: 1em;
+    margin: 0.5em;
+}
+
+table.section {
+    margin: 2em;
+    width: 90%;
+    border-top: 0.2em solid lavenderblush;
+}
+
+caption.section {
+    text-align: left;
+}
+
+td.label {
+    width: 12em;
+    min-width: 8em;
+    font-size: small;
+    border-bottom: 0.1em solid lavenderblush;
+}
+
+td.input {
+    min-width: 32em;
+    border-bottom: 0.1em solid lavenderblush;
+}
+
+input.text {
+    width: 100%;
+}
+
+div.buttons {
+    margin: 2em;
+}
+
+
+/* 認証ビュー用の設定. */
+
+div.auth_error_message {
+    display: none;
+    margin: 0.25em;
+    color: coral;
+    font-weight: bolder;
+}
+
+input.auth_input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0.25em;
+}
+
+input.separator {
+    margin-bottom: 1em;
+}
+
+input.auth_button {
+    display: block;
+    width: 100%;
+    margin: 1em 0.25em 0 0.25em;
+}
+
+a.signup_link {
+    display: inline-block;
+    text-decoration: none;
+    font-size: small;
+    color: dimgray;
+    padding: 0.2em 2em 0.2em 2em;
+    border: 0;
+}
+
+a.help_link {
+    font-size: x-small;
+    text-decoration: none;
+    color: dimgray;
+}
+
+
+/* ダウンロードビュー用の設定. */
+
+input.download_count {
+    display: block;
+    width: 20em;
+    color: orange;
+    text-align: center;
+    margin: 1em;
+}
+
+input.download_file {
+    display: block;
+    width: 20em;
+    color: dimgray;
+    text-align: center;
+    margin: 1em;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+{% load static %}
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="shortcut icon" href="{% static 'image/connector-favicon.ico' %}">
+    <title>タマリンサービスにサインアップ</title>
+</head>
+
+<body>
+    <div class="header">
+        <img class="title" src="{% static 'image/connector-icon-192x192.png' %}">
+        <div class="title">タマリンサービスにサインアップ</div>
+    </div>
+    <div class="main">
+        <div class="description">
+            タマリンサービスへようこそ！
+        </div>
+        <div class="terms">
+            <textarea id="terms" class="terms" rows="6" readonly>
+【タマリンサービス利用規約】
+タマリンサービスを利用するにあたり、注意していただきたいことを以下に記載します。
+0. サインアップすることでここに記載の条件については合意していただいたとみなします。
+1. サービスは予告なく稼働を停止することがあります。また予告なく終了することがあります。
+2. お預かりしている写真については永続的なな保存をお約束するものではございません。
+3. 当社のプライバシーポリシーはたぶんホームページを探せば見つかるかもしれません。
+4. タマリンよりかわいい名前があったらそのうち名前を変えるかもしれません。
+5. トイストーリーは4より3だと思う方はじっくり話をしたいのでご連絡ください。
+6. その他お困りのことがありましたらなんでもすべて我慢してください。</textarea>
+        </div>
+        {% if form.errors %}
+        <div>
+            {% for field in form %} {% for error in field.errors %}
+            <div class="error">■ {{ error|escape }}</div>
+            {% endfor %} {% endfor %}
+        </div>
+        {% endif %}
+        <table class="form">
+            <form method="post">
+                {% csrf_token %} {% for field in form %}
+                <tr class="form">
+                    <td class="label">{{ field.label_tag }}</td>
+                    <td class="input">{{ field }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="form">
+                    <td class="button" colspan="2">
+                        <button class="form" type="submit">サインアップ</button>
+                    </td>
+                </tr>
+            </form>
+        </table>
+    </div>
+</body>
+
+</html>

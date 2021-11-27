@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+{% load static %}
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="shortcut icon" href="{% static 'image/connector-favicon.ico' %}">
+    <title>タマリンへようこそ！</title>
+</head>
+
+<body>
+    <div class="header">
+        <img class="title" src="{% static 'image/connector-icon-192x192.png' %}">
+        <div class="title">タマリンへようこそ！</div>
+    </div>
+    <div class="main">
+        <div class="message-title">タマリンとは？</div>
+        <hr>
+        <div class="message">
+            タマリンとは、保育ドキュメンテーションに適した写真を簡単・安全に撮影するためのサービスです。
+        </div>
+        <div class="message-title">タマリンを使うには?</div>
+        <hr>
+        <div class="message">
+            サインアップしていただくことでどなたでもタマリンをお試しいただけます。タマリンは写真を撮影するアプリである「タマリンカメラ」と、撮影した写真をダウンロードする「タマリンク」の２つのアプリで構成されています。 サインアップはタマリンクから行いますので、まずはタマリンクをインストールしてください。無事にサインアップを終えましたら、タマリンクとタマリンカメラをご利用いただくことができます。
+        </div>
+        <div class="message-title">どうやってインストールするの？</div>
+        <hr>
+        <div class="message">
+            タマリンは通常のストアアプリとは異なり、以下のリンクから直接インストールすることができます。ご使用になる環境で具体的な操作方法が異なるため、詳しくは[<a href="{% static 'install-help.html' %}">インストールヘルプ</a>]を参照してください。
+        </div>
+        <div class="app-guide">
+            <img class="app-guide" src="{% static 'image/link-icon-192x192.png' %}">
+            <a class="app-guide" href="../../link/link-app.html">タマリンク</a>
+        </div>
+        &nbsp;
+        <div class="app-guide">
+            <img class="app-guide" src="{% static 'image/camera-icon-192x192.png' %}">
+            <a class="app-guide" href="../../camera/camera-app.html">タマリンカメラ</a>
+        </div>
+        <div class="message-title">お困りの時は?</div>
+        <hr>
+        <div class="message">
+            <div class="message-sub">
+                <a href="{% static 'auth-help.html' %}">● サインインできないときは</a>
+            </div>
+            <div class="message-sub">
+                <a href="{% static 'link-help.html' %}">● タマリンクの詳しい使い方を知りたいときは</a>
+            </div>
+            <div class="message-sub">
+                <a href="{% static 'camera-help.html' %}">● タマリンカメラの詳しい使い方を知りたいときは</a>
+            </div>
+            <div class="message-sub">
+                <a href="{% static 'release-note.html' %}">● 制約・制限事項をしりたいときは(内部向け)</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

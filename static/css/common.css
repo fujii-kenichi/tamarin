@@ -1,0 +1,138 @@
+/*
+ * コンテンツ共通のCSS.
+ * PWA(タマリンカメラ・タマリンク)では意図的にこれを使用していないので注意.
+ */
+
+body {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "sans-serif";
+    color: black;
+    background-color: pink;
+    margin: 0;
+    border: 0;
+    padding: 0;
+}
+
+
+/* ヘッダ部分. */
+
+div.header {
+    padding: 1em;
+    position: relative;
+    background-color: lavenderblush;
+}
+
+img.title {
+    display: inline;
+    vertical-align: middle;
+    height: 3em;
+}
+
+div.title {
+    display: inline;
+    vertical-align: middle;
+    font-size: larger;
+}
+
+
+/* メイン部分. */
+
+div.main {
+    padding: 1em 1.2em 1em 1em;
+}
+
+textarea.terms {
+    font-size: smaller;
+    padding: 1em;
+    line-height: 1.5;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: white;
+    background-color: lavenderblush;
+    resize: none;
+    width: 47em;
+    margin-bottom: 1em;
+}
+
+div.description {
+    margin: 0.1em;
+}
+
+div.error {
+    margin: 0.1em;
+    font-size: small;
+    font-weight: bold;
+    color: red;
+}
+
+table.form {
+    margin-top: 1em;
+    margin-bottom: 2em;
+}
+
+tr.form {
+    height: 1.5em;
+}
+
+td.label {
+    font-size: small;
+}
+
+input {
+    width: 30em;
+}
+
+td.button {
+    height: 4em;
+}
+
+button.form {
+    width: 100%;
+}
+
+
+/* コンテンツ部分. */
+
+div.message-title {
+    font-weight: bold;
+    margin: 1em 0 0 0.5em;
+}
+
+div.message-section {
+    font-weight: bold;
+    background-color: lavenderblush;
+    margin: 1em;
+    padding: 0.3em;
+    line-height: 1.7;
+}
+
+div.message {
+    font-size: small;
+    margin: 1em;
+    line-height: 1.7;
+}
+
+div.app-guide {
+    display: inline;
+    position: relative;
+    width: 12em;
+    background-color: white;
+    border: 0.1em solid dimgray;
+    border-radius: 1em;
+    padding: 1.5em;
+}
+
+img.app-guide {
+    display: inline;
+    vertical-align: middle;
+    height: 3em;
+    margin: 0.5em 0 0.5em 0;
+}
+
+a.app-guide {
+    display: inline;
+    color: black;
+    vertical-align: middle;
+    font-size: smaller;
+    margin-left: 0.5em;
+    text-decoration: none;
+}

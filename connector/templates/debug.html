@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+{% load static %}
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="shortcut icon" href="{% static 'image/connector-favicon.ico' %}">
+    <title>TAMARIN DEBUG PAGE</title>
+</head>
+
+<body>
+    <div class="header">
+        <h1>TAMARIN DEBUG Page</h1>
+    </div>
+    <div class="main">
+        <h2>Internals</h2>
+        <ul>
+            <li><a href="../../manager/">Django manager</a></li>
+            <li><a href="../api/">Rest API</a></li>
+            <li><a href="../auth/jwt/create">Token API</a></li>
+        </ul>
+        <h2>Pages</h2>
+        <ul>
+            <li><a href="../">main page</a></li>
+            <li><a href="../signup">Sign-up</a></li>
+            <li><a href="../signup-done">Sign done</a></li>
+        </ul>
+        <h2>Apps</h2>
+        <ul>
+            <li><a href="../../camera/camera-app.html?mode=app">Camera App</a></li>
+            <li><a href="../../camera/camera-app.html">Camera App (Install)</a></li>
+            <li><a href="../../link/link-app.html?mode=app">Link App</a></li>
+            <li><a href="../../link/link-app.html">Link App (Install)</a></li>
+            <div></div>
+        </ul>
+        <h2>Help contents</h2>
+        <ul>
+            <li><a href="{% static 'release-note.html' %} ">Release note</a></li>
+            <li><a href="{% static 'install-help.html' %} ">Install help</a></li>
+            <li><a href="{% static 'auth-help.html' %} ">Authentication help</a></li>
+            <li><a href="{% static 'camera-help.html' %} ">Camera App help</a></li>
+            <li><a href="{% static 'link-help.html' %} ">Link App help</a></li>
+        </ul>
+    </div>
+</body>
+
+</html>

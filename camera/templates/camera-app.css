@@ -1,0 +1,217 @@
+/* 
+ * タマリンカメラのCSS.
+ */
+
+
+/* 画面間で共通した設定. */
+
+body.app {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "sans-serif";
+    color: black;
+    background-color: pink;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    min-width: 20em;
+}
+
+div.panel_view {
+    display: none;
+    position: relative;
+    height: 100vh;
+}
+
+div.panel_content {
+    position: absolute;
+    text-align: center;
+    background-color: lavenderblush;
+    border-radius: 1em;
+    padding: 1em 1.2em 1em 1em;
+    min-width: 15em;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+}
+
+img.panel_icon {
+    height: 4em;
+    margin: 2.5em 2em 0.5em 2em;
+}
+
+div.panel_title {
+    font-size: x-large;
+}
+
+div.panel_subtitle {
+    font-size: x-small;
+    margin-bottom: 1em;
+}
+
+div.panel_header {
+    margin-bottom: 1em;
+    font-size: larger;
+    color: dimgray;
+}
+
+div.panel_message {
+    font-weight: bolder;
+    margin-bottom: 1em;
+}
+
+input.readonly {
+    background-color: lavenderblush;
+    border-color: white;
+    border-style: solid;
+    border-width: 0.1em;
+}
+
+input.input {
+    border-color: white;
+    border-style: solid;
+    border-width: 0.1em;
+}
+
+input.button {
+    background-color: whitesmoke;
+}
+
+
+/* カメラビュー用の設定. */
+
+div.camera_view {
+    display: none;
+    background-color: darkgray;
+}
+
+div.camera_main {
+    display: flex;
+    justify-content: center;
+}
+
+div.camera_menu {
+    text-align: center;
+    background-color: pink;
+    padding: 0.3em;
+}
+
+input.author_name {
+    width: 10em;
+}
+
+select.context_tag {
+    width: 10em;
+}
+
+input.photo_count {
+    width: 3em;
+}
+
+input.camera_menu {
+    border: 0;
+}
+
+video.camera_preview {
+    background-color: black;
+    max-width: calc(100% - 5em);
+    height: calc(100vh - 2.5em);
+}
+
+div.camera_shutters {
+    width: 5.5em;
+}
+
+div.camera_shutter {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+button.camera_shutter {
+    display: block;
+    margin: 0.5em;
+    width: 5em;
+    height: 5em;
+    border-radius: 5em;
+}
+
+audio.camera_shutter_sound {
+    display: none;
+}
+
+
+/* 認証ビュー用の設定. */
+
+div.auth_error_message {
+    display: none;
+    margin: 0.25em;
+    color: coral;
+    font-weight: bolder;
+}
+
+input.auth_input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0.25em;
+}
+
+input.separator {
+    margin-bottom: 1em;
+}
+
+input.auth_button {
+    display: block;
+    width: 100%;
+    margin: 1em 0.25em 0 0.25em;
+}
+
+a.help_link {
+    font-size: x-small;
+    text-decoration: none;
+    color: dimgray;
+}
+
+
+/* 設定ビュー用の設定. */
+
+div.setting_title {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: x-large;
+}
+
+table.setting {
+    text-align: left;
+    font-size: small;
+    border-collapse: collapse;
+}
+
+td.setting {
+    padding: 0.5em;
+    min-width: 10em;
+    border-bottom: 0.1em solid lightgray;
+}
+
+input.setting {
+    display: block;
+    width: 100%;
+    margin: 1em 0.25em 0 0.25em;
+}
+
+input.setting_button {
+    display: block;
+    width: 100%;
+    margin: 1em 0.25em 0 0.25em;
+}
+
+
+/* デバッグビュー用の設定. */
+
+textarea.debug_log {
+    background-color: black;
+    color: white;
+    width: 100%;
+    height: 90vh;
+}
