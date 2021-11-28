@@ -71,6 +71,7 @@ const DEBUG_CLOSE = document.getElementById("debug_close");
 let database = null;
 
 // 現在アプリでサインインしているユーザを示す変数(新規作成時の初期値を含む).
+// PCでの実行の場合は facingMode: "user" でフロントカメラの使用をリクエストする.
 let current_user = {
     dummy_id: "{{DATABASE_USER_DUMMY_ID}}",
     user_id: null,
@@ -83,7 +84,15 @@ let current_user = {
     shutter_sound: true,
     auto_reload: true,
     encryption: true,
-    device_param: "{ \"audio\": false, \"video\": { \"width\": { \"ideal\": 1920, \"max\": 1920 }, \"height\": { \"ideal\": 1080 ,\"max\": 1080 }, \"facingMode\": \"user\"}}"
+    device_param: JSON.stringify({
+        "audio": false,
+        "video": {
+            "width": { "ideal": 1920, "max": 1920 },
+            "height": { "ideal": 1080, 'max': 1080 },
+            // "facingMode": "user"
+            "facingMode": { exact: "environment" }
+        }
+    })
 };
 
 // オンラインかオフラインを示す情報.
@@ -172,7 +181,8 @@ async function setup_debug_log() {
         DEBUG_RESET.onclick = (async(event) => {
             const count = await database.photo.count();
             await database.photo.clear();
-            DEBUG_LOG.value = "reset photo database :" + count;
+            await database.user.clear();
+            DEBUG_LOG.value = "reset database.";
         });
 
         DEBUG_STATE.onclick = (async(event) => {
@@ -219,30 +229,35 @@ async function setup_database() {
 async function setup_camera() {
     console.assert(!image_capture);
 
-    // データベースに保存されていた設定値を使ってJSONを作る.
-    const device_param = JSON.parse(current_user.device_param);
-    console.assert(device_param);
-    console.info("getting media devices using param :", device_param);
+    try {
+        // データベースに保存されていた設定値を使ってJSONを作る.
+        console.info("getting media devices using param :", current_user.device_param);
+        const device_param = JSON.parse(current_user.device_param);
+        console.assert(device_param);
 
-    // カメラストリームに接続する.
-    const stream = await navigator.mediaDevices.getUserMedia(device_param);
-    console.assert(stream);
-    console.log("connected to stream :", stream);
+        // カメラストリームに接続する.
+        const stream = await navigator.mediaDevices.getUserMedia(device_param);
+        console.assert(stream);
+        console.log("connected to stream :", stream);
 
-    // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
+        // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
 
-    // カメラストリームを写真撮影用として設定する.
-    const settings = stream.getVideoTracks()[0].getSettings();
-    console.assert(settings);
-    console.info("stream settings :", settings);
+        // カメラストリームを写真撮影用として設定する.
+        const settings = stream.getVideoTracks()[0].getSettings();
+        console.assert(settings);
+        console.info("stream settings :", settings);
 
-    // カメラストリームをプレビューにつなげて再生を開始する. 
-    CAMERA_PREVIEW.srcObject = stream;
-    CAMERA_PREVIEW.play();
+        // カメラストリームをプレビューにつなげて再生を開始する. 
+        CAMERA_PREVIEW.srcObject = stream;
+        CAMERA_PREVIEW.play();
 
-    // 撮影用のオブジェクトを初期化しておく.
-    image_capture = new ImageCapture(stream.getVideoTracks()[0]);
-    console.assert(image_capture);
+        // 撮影用のオブジェクトを初期化しておく.
+        image_capture = new ImageCapture(stream.getVideoTracks()[0]);
+        console.assert(image_capture);
+    } catch (error) {
+        console.error("camera setup error :", error);
+        state = "open_error_view";
+    }
 }
 
 /**
@@ -843,6 +858,12 @@ async function main_loop() {
                 ERROR_VIEW.style.display = "block";
 
                 console.error("fatal error - teminate main loop.");
+
+                // デバッグ時にはログを見せて終わりにする.
+                if (DEBUG) {
+                    DEBUG_VIEW.style.display = "block";
+                    load_debug_log();
+                }
                 break;
 
             case "service_error":

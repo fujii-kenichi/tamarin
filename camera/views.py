@@ -7,7 +7,6 @@ from django.shortcuts import render
 from django.templatetags.static import static
 
 # タマリンカメラ固有で書き換えたいシステム的な情報を定義する.
-
 CAMERA_CONTEXT = {
 
     # アイコン類のパス.
@@ -46,6 +45,9 @@ CAMERA_CONTEXT = {
     # Periodic Sync の時に用いられるタグ文字列.
     "SYNC_TAG": "tamarin-camera-sync",
 
+    # Service worker が使用するキャッシュの名前.
+    "CACHE_NAME": "V20211128-01",
+
     # アプリとしてのふるまいを決める値.
     "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
     "PERIODIC_SYNC_INTERVAL": 3 * 1000,  # Periodic Syncでこちらを呼び出してほしい時間間隔(ミリ秒).
@@ -55,7 +57,6 @@ CAMERA_CONTEXT = {
 }
 
 # タマリンカメラ固有で書き換えたいユーザに見せる各種メッセージを定義する.
-
 CAMERA_CONTEXT_MESSAGE = {
 
     # PWAとしてマニフェストに書くための情報.
@@ -75,28 +76,29 @@ CAMERA_CONTEXT_MESSAGE = {
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.
-
 CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | CAMERA_CONTEXT | CAMERA_CONTEXT_MESSAGE
 
 
-# 基本的にはコンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-
-
 def camera_manifest_json(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-manifest.json", CONTEXT, content_type="application/json")
 
 
 def camera_serviceworker_js(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-serviceworker.js", CONTEXT, content_type="text/javascript")
 
 
 def camera_app_js(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.js", CONTEXT, content_type="text/javascript")
 
 
 def camera_app_css(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.css", CONTEXT, content_type="text/css")
 
 
 def camera_app_html(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.html", CONTEXT)

@@ -7,7 +7,6 @@ from django.shortcuts import render
 from django.templatetags.static import static
 
 # タマリンク固有で書き換えたいシステム的な情報を定義する.
-
 LINK_CONTEXT = {
 
     # アイコン類のパス.
@@ -40,6 +39,9 @@ LINK_CONTEXT = {
     "DATABASE_VERSION": "1",
     "DATABASE_USER_DUMMY_ID": "current_user",
 
+    # Service worker が使用するキャッシュの名前.
+    "CACHE_NAME": "V20211128-01",
+
     # アプリとしてのふるまいを決める値.
     "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
 
@@ -47,7 +49,6 @@ LINK_CONTEXT = {
 }
 
 # タマリンク固有で書き換えたいユーザに見せる各種メッセージを定義する.
-
 LINK_CONTEXT_MESSAGE = {
 
     # PWAとしてマニフェストに書くための情報.
@@ -85,27 +86,29 @@ LINK_CONTEXT_MESSAGE = {
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.
-
 CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | LINK_CONTEXT | LINK_CONTEXT_MESSAGE
 
 
-# 基本的にはコンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-
 def link_manifest_json(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "link-manifest.json", CONTEXT, content_type="application/json")
 
 
 def link_serviceworker_js(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "link-serviceworker.js", CONTEXT, content_type="text/javascript")
 
 
 def link_app_js(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "link-app.js", CONTEXT, content_type="text/javascript")
 
 
 def link_app_css(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "link-app.css", CONTEXT, content_type="text/css")
 
 
 def link_app_html(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "link-app.html", CONTEXT)

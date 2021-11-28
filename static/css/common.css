@@ -74,6 +74,7 @@ tr.form {
 }
 
 td.label {
+    text-align: right;
     font-size: small;
 }
 
@@ -111,6 +112,10 @@ div.message {
     line-height: 1.7;
 }
 
+div.app-guide-base {
+    margin: 2em 0 2.5em 0;
+}
+
 div.app-guide {
     display: inline;
     position: relative;
@@ -132,7 +137,10 @@ a.app-guide {
     display: inline;
     color: black;
     vertical-align: middle;
-    font-size: smaller;
     margin-left: 0.5em;
     text-decoration: none;
+}
+
+a.help {
+    display: block;
 }
