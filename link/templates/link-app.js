@@ -364,11 +364,8 @@ async function download_file() {
 
     // Mediaサービスからファイルを取得する.
     console.log("calling media service to get media content: ", file.encrypted_data);
-    const media_response = await fetch(file.encrypted_data, {
-        headers: {
-            "Authorization": "{{TOKEN_FORMAT}} " + token
-        }
-    });
+    const media_response = await fetch(file.encrypted_data);
+
     console.assert(media_response);
     console.log("media service respond :", media_response);
 
