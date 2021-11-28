@@ -11,7 +11,7 @@ CAMERA_CONTEXT = {
 
     # アイコン類のパス.
     "FAVICON": static("image/camera-favicon.ico"),
-    "ICON_180": static("image/camera-icon-180x180.png"),    
+    "ICON_180": static("image/camera-icon-180x180.png"),
     "ICON_192": static("image/camera-icon-192x192.png"),
     "ICON_512": static("image/camera-icon-512x512.png"),
 
