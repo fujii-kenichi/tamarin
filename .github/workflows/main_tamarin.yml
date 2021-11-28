@@ -60,4 +60,4 @@ jobs:
         with:
           app-name: 'tamarin'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C664D62704E84A68B96ED7A1535CECC9 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_73F681A73BE14D9EBC82E4D2B8DBD060 }}
