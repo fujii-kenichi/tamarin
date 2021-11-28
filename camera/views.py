@@ -16,9 +16,9 @@ CAMERA_CONTEXT = {
     "ICON_512": static("image/camera-icon-512x512.png"),
 
     # JSライブライのパス.
-    "DEXIE_JS": static("lib/dexie.min.js"),
-    "CRYPTO_JS": static("lib/crypto-js.min.js"),
-    "IMAGECAPTURE_JS": static("lib/imagecapture.js"),
+    "DEXIE_JS": static("js/dexie.min.js"),
+    "CRYPTO_JS": static("js/crypto-js.min.js"),
+    "IMAGECAPTURE_JS": static("js/imagecapture.js"),
 
     # UI用画像のパス.
     "LOADING_ICON": static("image/loading.gif"),

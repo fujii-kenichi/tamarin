@@ -16,8 +16,8 @@ LINK_CONTEXT = {
     "ICON_512": static("image/link-icon-512x512.png"),
 
     # JSライブライのパス.
-    "DEXIE_JS": static("lib/dexie.min.js"),
-    "CRYPTO_JS": static("lib/crypto-js.min.js"),
+    "DEXIE_JS": static("js/dexie.min.js"),
+    "CRYPTO_JS": static("js/crypto-js.min.js"),
 
     # UI用画像のパス.
     "LOADING_ICON": static("image/loading.gif"),

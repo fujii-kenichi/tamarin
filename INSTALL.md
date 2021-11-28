@@ -7,17 +7,17 @@
 
 ### PostgreSQL (Debug)
 
-PostgreSQL 13はすでにインストールしてあるという前提.
+PostgreSQL 12/13はすでにインストールしてあるという前提.
 
 ```bash
 sudo passwd postgres
 sudo -u postgres psql
-CREATE DATABASE tamarin-db;
-CREATE USER tamarin-db-admin WITH PASSWORD '内緒のパスワード';
-ALTER ROLE tamarin-db-admin SET client_encoding TO 'utf8';
-ALTER ROLE tamarin-db-admin SET default_transaction_isolation TO 'read committed';
-ALTER ROLE tamarin-db-admin SET timezone TO 'Asia/Tokyo';
-GRANT ALL PRIVILEGES ON DATABASE tamarin-db TO tamarin-db-admin;
+CREATE DATABASE tamarin_db;
+CREATE USER tamarin_db_admin WITH PASSWORD '内緒のパスワード';
+ALTER ROLE tamarin_db_admin SET client_encoding TO 'utf8';
+ALTER ROLE tamarin_db_admin SET default_transaction_isolation TO 'read committed';
+ALTER ROLE tamarin_db_admin SET timezone TO 'Asia/Tokyo';
+GRANT ALL PRIVILEGES ON DATABASE tamarin_db TO tamarin_db_admin;
 \q
 ```
 
@@ -25,8 +25,8 @@ DjangoにPostgreSQLを使うように指示 (これをしなければローカ�
 
 ```bash
 export DATABASE=POSTGRESQL
-export DATABASE_NAME=tamarin-db
-export DATABASE_USER=tamarin-db-admin
+export DATABASE_NAME=tamarin_db
+export DATABASE_USER=tamarin_db_admin
 export DATABASE_PASSWORD=内緒のパスワード
 export DATABASE_HOST=localhost
 export DATABASE_PORT=5432
