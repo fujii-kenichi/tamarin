@@ -33,6 +33,9 @@ USE_TZ = True
 # カスタマイズされたユーザモデルを使用.
 AUTH_USER_MODEL = "connector.User"
 
+# アップロードできるファイルサイズを指定.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
 # アプリケーション関連の設定.
 ROOT_URLCONF = "tamarin.urls"
 WSGI_APPLICATION = "tamarin.wsgi.application"

@@ -710,7 +710,7 @@ async function upload_photo() {
         default:
             // 予期していないステータスコードが返ってきちゃったので(危ないので)とりあえずエラーとする.
             // TODO: もうちょっとステータスコードの処理を増やしたほうがいいかも...
-            console.warn("unexpected status code returned from media service  :", media_response);
+            console.warn("unexpected status code returned from media service  :", media_response.status);
             state = "service_error";
             break;
     }
