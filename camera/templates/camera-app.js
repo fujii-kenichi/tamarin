@@ -255,7 +255,7 @@ async function setup_camera() {
         image_capture = new ImageCapture(stream.getVideoTracks()[0]);
         console.assert(image_capture);
     } catch (error) {
-        console.error("camera setup error :", error);
+        console.error("camera setup error :", error.toString());
         state = "open_error_view";
     }
 }
@@ -303,17 +303,17 @@ async function init() {
                 if (status.state === "granted") {
                     // 使える場合はそちらに写真アップロード機能を任せる.
                     const result = await registration.periodicSync.register("{{SYNC_TAG}}", { minInterval: PERIODIC_SYNC_INTERVAL });
-                    console.info("background sync registered :", result);
+                    console.info("background sync registered :", result.toString());
                     background_sync = true;
                 }
             }
         } catch (error) {
             // このエラーは(いまのところは)許容する.
-            console.warn("periodic sync feature is not avaialbe - use own upload mechanism :", error);
+            console.warn("periodic sync feature is not avaialbe - use own upload mechanism :", error.toString());
         }
     } catch (error) {
         // service workerが登録できなかった場合は起動できないエラーとして扱う.
-        console.error("service worker registration error :", error);
+        console.error("service worker registration error :", error.toString());
         state = "open_error_view";
     }
 }
@@ -382,10 +382,10 @@ async function load_user(new_state) {
         // Userサービスからすでにidが取れているのであれば、大丈夫そうだと判断してオフラインでの動作を続行する.                    
         // そうでない場合はまあオフラインなんで意味ないんだけど(とはいってもこのまま続行もできないので)認証パネルを出すようにして抜ける.
         if (current_user.user_id) {
-            console.warn("assuming current user would be valid in offline :", current_user);
+            console.warn("assuming current user would be valid in offline :", current_user.user_id);
             state = new_state;
         } else {
-            console.warn("current user may be insufficient in offline :", current_user);
+            console.warn("current user may be insufficient in offline :", current_user.username);
             state = "authentication_failed";
         }
 
@@ -412,7 +412,7 @@ async function load_user(new_state) {
 
     // レスポンスのステータスが200じゃなかったら、不明なエラーということでステートを変えて抜ける.
     if (user_response.status !== 200) {
-        console.error("could not get user :", user_response);
+        console.error("could not get user :", user_response.status);
         state = "service_error";
         return;
     }
@@ -610,8 +610,10 @@ async function take_photo(scene_tag) {
         const context_tag = CAMERA_CONTEXT_TAG.value;
         console.assert(context_tag);
 
-        // ここまでで処理にいったいどれくらい時間がかかったのかをログに書いておく.
+        // ここまでの処理にかかった時間をログに書いておく.
         console.info("photo processing time in ms :", new Date() - start_time);
+
+        // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.
 
         // データベースに保管する.
         console.log("adding photo to database.");
@@ -701,7 +703,7 @@ async function upload_photo() {
 
         case 401:
             // 認証エラーということはたぶんトークンの期限切れ.
-            console.warn("photo uploaded failed with 401 - may be token expired :", current_user);
+            console.warn("photo uploaded failed with 401 - may be token expired :", current_user.user_id);
 
             // トークンを取っておいて次回のこの処理では失敗しないことを願う.
             await get_token();
@@ -882,7 +884,7 @@ async function main_loop() {
         }
     } catch (error) {
         // 何かしらの例外処理が発生した.
-        console.error("internal error - unhandled exception in main loop :", error);
+        console.error("internal error - unhandled exception in main loop :", error.toString());
 
         // カメラビューに強制的に戻す.
         // TODO: これももう少し丁寧なエラーハンドリングをしたほうがいいかも...

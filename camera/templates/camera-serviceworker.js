@@ -20,6 +20,7 @@ self.addEventListener('install', (event) => {
             "{{CRYPTO_JS}}",
             "{{IMAGECAPTURE_JS}}",
             "{{FAVICON}}",
+            "{{ICON_180}}",
             "{{ICON_192}}",
             "{{ICON_512}}",
             "{{LOADING_ICON}}",

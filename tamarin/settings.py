@@ -163,7 +163,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
 ]
 
-# シークレットキーを設定.
+# シークレットキー：本番環境では必ず上書きすること!
 SECRET_KEY = os.getenv("SECRET_KEY", r"dummy-key-must-be-overridden",)
 
 # セキュリティ関連の設定.
@@ -199,7 +199,7 @@ APP_CONTEXT = {
     # タマリンサービスのバージョンを定義.
     "VERSION": "v0.0.01",
 
-    # デバッグ設定：Djangoの設定を引き継ぐ.
+    # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
 
     # シークレットキー情報：Djangoの設定を引き継ぐ.
@@ -211,17 +211,17 @@ APP_CONTEXT = {
     # 認証するときにユーザが入力するユーザ名やパスワードの入力フィールドに渡す最大長.
     "AUTH_MAX_LENGTH": 100,
 
-    # Token APIのエンドポイントとフォーマットを設定.
+    # Token APIのエンドポイントとフォーマット.
     "CREATE_TOKEN_URL": "../connector/auth/jwt/create",
     "TOKEN_FORMAT": "JWT",
 
-    # User APIのエンドポイントを設定.
+    # User APIのエンドポイント.
     "USER_API_URL": "../connector/api/users/",
 
-    # Media APIのエンドポイントを設定.
+    # Media APIのエンドポイント.
     "MEDIA_API_URL": "../connector/api/medias/",
 
-    # PWAとしての起動かどうかを判定するためのURLパラメータを定義.
+    # PWAとしての起動かどうかを判定するためのURLパラメータ.
     "MODE_APP": "?mode=app",
 }
 

@@ -11,6 +11,7 @@ CAMERA_CONTEXT = {
 
     # アイコン類のパス.
     "FAVICON": static("image/camera-favicon.ico"),
+    "ICON_180": static("image/camera-icon-180x180.png"),    
     "ICON_192": static("image/camera-icon-192x192.png"),
     "ICON_512": static("image/camera-icon-512x512.png"),
 
@@ -32,7 +33,7 @@ CAMERA_CONTEXT = {
     "AUTH_HELP_URL": static("auth-help.html"),
 
     # manifest で指定する画面モード.
-    "DISPLAY": "fullscreen",
+    "DISPLAY": "standalone",
 
     # manifest で指定する色.
     "THEME_COLOR": "pink",
@@ -53,7 +54,8 @@ CAMERA_CONTEXT = {
     "PERIODIC_SYNC_INTERVAL": 3 * 1000,  # Periodic Syncでこちらを呼び出してほしい時間間隔(ミリ秒).
     "AUTO_RELOAD_TRIGGER": 30 * 1000 / 200,  # 何もせずこの時間を過ぎたら自動リロード機能を実行(ミリ秒)
 
-    "MAX_PHOTO_COUNT": 10,  # カメラとしてローカルに写真を保持しておける枚数. あんまり多いとIndexedDBが耐えられないかも...
+    # カメラとしてローカルに写真を保持しておける枚数. あんまり多いとIndexedDBが耐えられないかも...
+    "MAX_PHOTO_COUNT": 10,
 }
 
 # タマリンカメラ固有で書き換えたいユーザに見せる各種メッセージを定義する.
