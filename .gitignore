@@ -134,4 +134,11 @@ dmypy.json
 # django migration files.
 migrations/
 
+# django media files.
+media/
 
+# django database file.
+db.sqlite3
+
+# Mac ?
+.DS_Store

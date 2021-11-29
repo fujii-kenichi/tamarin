@@ -75,7 +75,7 @@ CAMERA_CONTEXT_MESSAGE = {
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを取得する",
     "ENCRYPTION_LABEL": "暗号化する",
-    "VERSION_LABEL": "ビルドバージョン",
+    "VERSION_LABEL": "バージョン",
     "SETTING_OK_LABEL": "設定",
 }
 

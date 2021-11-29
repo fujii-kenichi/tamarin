@@ -516,9 +516,6 @@ async function update_camera_view() {
         }
         CAMERA_CONTEXT_TAG.innerHTML = inner_html;
     }
-
-    // 強制的に再生を開始する.
-    CAMERA_PREVIEW.play();
 }
 
 /**
@@ -804,6 +801,9 @@ async function main_loop() {
 
                 // 撮影済み枚数の表示を更新する.
                 await update_photo_counter();
+
+                // 強制的に再生を開始する.
+                CAMERA_PREVIEW.play();
                 break;
 
             case "open_setting_view":
