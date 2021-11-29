@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" タマリンコネクタにおけるデータモデルのシリアライザ.
-    by fujii.kenichi@tamariva.co.jp
+"""
+タマリンコネクタにおけるデータモデルのシリアライザ.
+@author: fujii.kenichi@tamariva.co.jp
 """
 from rest_framework import serializers
 

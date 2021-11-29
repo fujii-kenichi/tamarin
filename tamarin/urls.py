@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""tamarin URL Configuration
+"""
+tamarin URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -13,15 +14,26 @@ Class-based views
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+
+@author: fujii.kenichi@tamariva.co.jp    
 """
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.http.response import HttpResponse
 from django.urls import include, path
 from django.urls.conf import re_path
 from django.views.static import serve
 
+
+def heartbeat(request):
+    """ ハートビート用の処理：なるべくトラフィック増やさないように... """
+    return HttpResponse("VERSION:" + settings.APP_CONTEXT["VERSION"] + ", DEBUG:" + str(settings.DEBUG) + ", APP_DEBUG:" + settings.APP_CONTEXT["DEBUG"])
+
+
 urlpatterns = [
+    #  ハートビート.
+    path("heartbeat/", heartbeat),
 
     # 管理画面.
     path("manager/", admin.site.urls),

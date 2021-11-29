@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" タマリンコネクタのデータモデル.
-    by fujii.kenichi@tamariva.co.jp
+"""
+タマリンコネクタのデータモデル.
+@author: fujii.kenichi@tamariva.co.jp
 """
 import uuid
 

@@ -6,13 +6,19 @@
 /* 画面間で共通した設定. */
 
 body.app {
-    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "sans-serif";
     color: black;
     background-color: pink;
     margin: 0;
     border: 0;
     padding: 0;
     min-width: 20em;
+    /* コンテンツが選択できないようにする：タッチミスでの動作不良を抑制. */
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 div.panel_view {
@@ -43,14 +49,14 @@ div.panel_title {
 }
 
 div.panel_subtitle {
-    font-size: x-small;
+    font-size: small;
     margin-bottom: 1em;
 }
 
 div.panel_header {
-    margin-bottom: 1em;
     font-size: larger;
     color: dimgray;
+    margin-bottom: 1em;
 }
 
 div.panel_message {
@@ -80,17 +86,10 @@ input.button {
 
 div.camera_view {
     display: none;
-    background-color: darkgray;
-}
-
-div.camera_main {
-    display: flex;
-    justify-content: center;
 }
 
 div.camera_menu {
     text-align: center;
-    background-color: pink;
     padding: 0.3em;
 }
 
@@ -99,39 +98,69 @@ input.author_name {
 }
 
 select.context_tag {
+    font-size: large;
     width: 10em;
 }
 
+@media screen and (orientation: portrait) {
+    input.author_name {
+        width: 5em;
+    }
+    select.context_tag {
+        width: 5em;
+    }
+}
+
 input.photo_count {
-    width: 3em;
+    text-align: center;
+    width: 2em;
 }
 
 input.camera_menu {
-    border: 0;
+    font-size: large;
+}
+
+div.camera_main {
+    display: flex;
+    background-color: black;
 }
 
 video.camera_preview {
-    background-color: black;
-    max-width: calc(100% - 5em);
-    height: calc(100vh - 2.5em);
-}
-
-div.camera_shutters {
-    width: 5.5em;
+    height: calc(100vh - 3em);
 }
 
 div.camera_shutter {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    right: 2em;
 }
 
-button.camera_shutter {
+div.camera_shutter_button {
     display: block;
     margin: 0.5em;
     width: 5em;
     height: 5em;
+    line-height: 5em;
     border-radius: 5em;
+    border-color: lightgray;
+    border-width: 0.1em;
+    font-size: small;
+    text-align: center;
+}
+
+@media screen and (orientation: portrait) {
+    div.camera_shutter {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0.5em;
+        text-align: center;
+    }
+    div.camera_shutter_button {
+        display: inline-block;
+    }
 }
 
 audio.camera_shutter_sound {
@@ -166,9 +195,18 @@ input.auth_button {
 }
 
 a.help_link {
-    font-size: x-small;
+    display: block;
+    font-size: small;
+    color: black;
     text-decoration: none;
+}
+
+a.app_open_link {
+    display: block;
+    font-size: small;
     color: dimgray;
+    margin: 0.5em;
+    text-decoration: none;
 }
 
 

@@ -28,6 +28,9 @@ const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 // シャッターを切ったときにそれっぽい効果をだすためにビデオを一瞬止める時間(ミリ秒).
 const SHUTTER_PAUSE_TIME = 1 * 1000;
 
+// デバイス初期化用の文字列.
+const DEVICE_PARAM = String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"');
+
 // HTMLの各要素.
 const CAMERA_VIEW = document.getElementById("camera_view");
 const AUTH_VIEW = document.getElementById("auth_view");
@@ -42,8 +45,6 @@ const CAMERA_SHUTTER = document.getElementById("camera_shutter");
 const CAMERA_AUTHOR_NAME = document.getElementById("camera_author_name");
 const CAMERA_CONTEXT_TAG = document.getElementById("camera_context_tag");
 const CAMERA_PHOTO_COUNT = document.getElementById("camera_photo_count");
-const CAMERA_AUTH = document.getElementById("camera_auth");
-const CAMERA_RELOAD = document.getElementById("camera_reload");
 const CAMERA_SETTING = document.getElementById("camera_setting");
 const CAMERA_DEBUG = document.getElementById("camera_debug");
 const CAMERA_SHUTTER_SOUND = document.getElementById("camera_shutter_sound");
@@ -57,7 +58,6 @@ const AUTH_OK = document.getElementById("auth_ok");
 const SETTING_SHUTTER_SOUND = document.getElementById("setting_shutter_sound");
 const SETTING_AUTO_RELOAD = document.getElementById("setting_auto_reload");
 const SETTING_ENCRYPTION = document.getElementById("setting_encryption");
-const SETTING_DEVICE_PARAM = document.getElementById("setting_device_param");
 const SETTING_OK = document.getElementById("setting_ok");
 
 const DEBUG_LOG = document.getElementById("debug_log");
@@ -83,16 +83,7 @@ let current_user = {
     context_tag: null,
     shutter_sound: true,
     auto_reload: true,
-    encryption: true,
-    device_param: JSON.stringify({
-        "audio": false,
-        "video": {
-            "width": { "ideal": 1920, "max": 1920 },
-            "height": { "ideal": 1080, 'max': 1080 },
-            // "facingMode": "user"
-            "facingMode": { exact: "environment" }
-        }
-    })
+    encryption: true
 };
 
 // オンラインかオフラインを示す情報.
@@ -230,10 +221,10 @@ async function setup_camera() {
     console.assert(!image_capture);
 
     try {
-        // データベースに保存されていた設定値を使ってJSONを作る.
-        console.info("getting media devices using param :", current_user.device_param);
-        const device_param = JSON.parse(current_user.device_param);
+        // Viewから渡された設定値を使ってJSONを作る.
+        const device_param = JSON.parse(DEVICE_PARAM);
         console.assert(device_param);
+        console.info("getting user media devices using param :", device_param);
 
         // カメラストリームに接続する.
         const stream = await navigator.mediaDevices.getUserMedia(device_param);
@@ -498,7 +489,7 @@ async function update_camera_view() {
                 const c = scene_color.length > i ? scene_color[i].trim() : "{{THEME_COLOR}}";
                 console.assert(c);
 
-                inner_html += ("<button class=\"camera_shutter\" style=\"background-color:" + c + ";\" onclick='take_photo(\"" + v + "\")'>" + v + "</button>");
+                inner_html += ("<div class=\"camera_shutter_button\" style=\"background-color:" + c + ";\" onclick='take_photo(\"" + v + "\")'>" + v + "</div>");
             }
         } else {
             console.warn("scene tag is empty - no camera shutter.");
@@ -525,6 +516,9 @@ async function update_camera_view() {
         }
         CAMERA_CONTEXT_TAG.innerHTML = inner_html;
     }
+
+    // 強制的に再生を開始する.
+    CAMERA_PREVIEW.play();
 }
 
 /**
@@ -824,7 +818,6 @@ async function main_loop() {
                 SETTING_SHUTTER_SOUND.checked = current_user.shutter_sound;
                 SETTING_AUTO_RELOAD.checked = current_user.auto_reload;
                 SETTING_ENCRYPTION.checked = current_user.encryption;
-                SETTING_DEVICE_PARAM.value = current_user.device_param;
                 break;
 
             case "in_setting_view":
@@ -905,22 +898,22 @@ async function main() {
     // ローディングビューを表示する.
     LOADING_VIEW.style.display = "block";
 
-    // UIのイベントをセットアップする：再認証ボタン.
-    CAMERA_AUTH.onclick = (async(event) => {
+    // UIのイベントをセットアップする：再認証.
+    CAMERA_AUTHOR_NAME.onclick = (async(event) => {
         state = "open_auth_view";
     });
 
-    // UIのイベントをセットアップする：リロードボタン.
-    CAMERA_RELOAD.onclick = (async(event) => {
+    // UIのイベントをセットアップする：リロード.
+    CAMERA_PHOTO_COUNT.onclick = (async(event) => {
         state = "open_reload_view";
     });
 
-    // UIのイベントをセットアップする：設定ボタン.    
+    // UIのイベントをセットアップする：設定.    
     CAMERA_SETTING.onclick = (async(event) => {
         state = "open_setting_view";
     });
 
-    // UIのイベントをセットアップする：認証ボタン.        
+    // UIのイベントをセットアップする：認証実行ボタン.
     AUTH_OK.onclick = (async(event) => {
         current_user.author_name = AUTH_AUTHOR_NAME.value.trim();
         current_user.username = AUTH_USERNAME.value.trim();
@@ -946,7 +939,6 @@ async function main() {
         current_user.shutter_sound = SETTING_SHUTTER_SOUND.checked;
         current_user.auto_reload = SETTING_AUTO_RELOAD.checked;
         current_user.encryption = SETTING_ENCRYPTION.checked;
-        current_user.device_param = JSON.stringify(JSON.parse(SETTING_DEVICE_PARAM.value));
 
         // データベースを更新してからリロードに移るようにする.
         // 認証エラーなどの場合にはさらに適切なステートに遷移することが期待できる.

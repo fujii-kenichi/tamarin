@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-""" タマリンカメラの画面を生成.
-    by fujii.kenichi@tamariva.co.jp
+""" 
+タマリンカメラの画面を生成.
+@author: fujii.kenichi@tamariva.co.jp
 """
+import re
+
 from django.conf import settings
 from django.shortcuts import render
 from django.templatetags.static import static
@@ -73,17 +76,40 @@ CAMERA_CONTEXT_MESSAGE = {
     "AUTO_RELOAD_LABEL": "自動でタグを取得する",
     "ENCRYPTION_LABEL": "暗号化する",
     "VERSION_LABEL": "ビルドバージョン",
-    "DEVICE_PARAM_LABEL": "デバイス初期化情報",
     "SETTING_OK_LABEL": "設定",
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.
 CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | CAMERA_CONTEXT | CAMERA_CONTEXT_MESSAGE
 
+# user-agent判定用文字列.
+MOBILE_AGENT_RE = re.compile(r".*(iphone|ipod|mobile|android)", re.IGNORECASE)
 
-def camera_manifest_json(request):
-    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-manifest.json", CONTEXT, content_type="application/json")
+# モバイルデバイス向けの初期化パラメータ.
+DEVICE_PARAM_MOBILE = {
+    "DEVICE_PARAM": "\
+      {\
+        \"audio\" : false,\
+        \"video\" : {\
+            \"width\" : { \"ideal\" : 1920, \"max\" : 1920 },\
+            \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
+            \"facingMode\" : { \"exact\" : \"environment\" }\
+         }\
+      }"
+}
+
+# PC向けの初期化パラメータ.
+DEVICE_PARAM_PC = {
+    "DEVICE_PARAM": "\
+      {\
+        \"audio\" : false,\
+        \"video\" : {\
+            \"width\" : { \"ideal\" : 1920, \"max\" : 1920 },\
+            \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
+            \"facingMode\" : \"user\"\
+         }\
+      }"
+}
 
 
 def camera_serviceworker_js(request):
@@ -91,9 +117,23 @@ def camera_serviceworker_js(request):
     return render(request, "camera-serviceworker.js", CONTEXT, content_type="text/javascript")
 
 
-def camera_app_js(request):
+def camera_app_webmanifest(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-app.js", CONTEXT, content_type="text/javascript")
+    return render(request, "camera-app.webmanifest", CONTEXT, content_type="application/manifest+json")
+
+
+def camera_app_js(request):
+    context = CONTEXT
+    user_agent = request.META['HTTP_USER_AGENT']
+
+    # user-agentでリクエストを判定してデバイス初期化パラメータを決定する.
+    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
+        context |= DEVICE_PARAM_MOBILE
+    else:
+        context |= DEVICE_PARAM_PC
+
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
+    return render(request, "camera-app.js", context, content_type="text/javascript")
 
 
 def camera_app_css(request):
@@ -102,5 +142,6 @@ def camera_app_css(request):
 
 
 def camera_app_html(request):
+
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.html", CONTEXT)

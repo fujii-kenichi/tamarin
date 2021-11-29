@@ -6,7 +6,6 @@
 /* 画面間で共通した設定. */
 
 body.app {
-    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "sans-serif";
     color: black;
     background-color: pink;
     margin: 0;
@@ -200,9 +199,18 @@ a.signup_link {
 }
 
 a.help_link {
-    font-size: x-small;
+    display: block;
+    font-size: small;
+    color: black;
     text-decoration: none;
+}
+
+a.app_open_link {
+    display: block;
+    font-size: small;
     color: dimgray;
+    margin: 0.5em;
+    text-decoration: none;
 }
 
 

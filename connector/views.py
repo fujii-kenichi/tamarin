@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" タマリンコネクタの画面とAPI処理を制御.
-    by fujii.kenichi@tamariva.co.jp
+"""
+タマリンコネクタの画面とAPI処理を制御.
+@author: fujii.kenichi@tamariva.co.jp
 """
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render

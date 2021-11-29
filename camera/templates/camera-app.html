@@ -16,7 +16,7 @@
     <meta name="author" content="{{AUTHOR}}">
     <meta name="theme-color" content="{{THEME_COLOR}}">
     <link rel="shortcut icon" href="{{FAVICON}}">
-    <link rel="manifest" href="camera-manifest.json">
+    <link rel="manifest" href="camera-app.webmanifest">
     <link rel="stylesheet" href="camera-app.css">
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
@@ -31,17 +31,15 @@
     <div id="camera_view" class="camera_view">
         <div class="camera_menu">
             <input id="camera_author_name" class="input readonly author_name camera_menu" type="text" readonly>
-            <input id="camera_auth" class="button camera_menu" type="button" value="&#x1F3E0;">
             <select id="camera_context_tag" class="input context_tag camera_menu"></select>
-            <input id="camera_reload" class="button camera_menu" type="button" value="&#127820;">
             <input id="camera_photo_count" class="input readonly photo_count camera_menu" type="text" readonly>
             <input id="camera_setting" class="button camera_menu" type="button" value="&#128295;">
             <input id="camera_debug" class="button camera_menu" type="button" value="&#128027;">
         </div>
         <div class="camera_main">
             <video id="camera_preview" class="camera_preview" autoplay playsinline></video>
-            <div class="camera_shutters">
-                <div id="camera_shutter" class="camera_shutter"></div>
+            <div id="camera_shutter" class="camera_shutter">
+                <div class="camera_shutter_button"></div>
             </div>
         </div>
         <audio id="camera_shutter_sound" class="camera_shutter_sound" src="{{CAMERA_SHUTTER_SOUND}}" preload="auto"></audio>
@@ -88,12 +86,6 @@
                     <td class="setting">{{VERSION_LABEL}}</td>
                     <td class="setting">{{VERSION}}</td>
                 </tr>
-                <tr>
-                    <td class="setting">{{DEVICE_PARAM_LABEL}}</td>
-                    <td class="setting">
-                        <input id="setting_device_param" class="input">
-                    </td>
-                </tr>
             </table>
             <input id="setting_ok" class="button setting_button" type="button" value="{{SETTING_OK_LABEL}}">
         </div>
@@ -113,6 +105,7 @@
             <div class="panel_subtitle">{{VERSION}}</div>
             <div class="panel_message">{{INSTALL_LABEL}}</div>
             <a class="help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
+            <a class="app_open_link" href="{{MODE_APP}}">{{APP_OPEN_LABEL}}</a>
         </div>
     </div>
     <!-- エラービュー：エラーを表示. -->

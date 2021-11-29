@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" タマリンクの画面を生成.
-    by fujii.kenichi@tamariva.co.jp
+"""
+タマリンクの画面を生成.
+@author: fujii.kenichi@tamariva.co.jp
 """
 from django.conf import settings
 from django.shortcuts import render
@@ -88,14 +89,14 @@ LINK_CONTEXT_MESSAGE = {
 CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | LINK_CONTEXT | LINK_CONTEXT_MESSAGE
 
 
-def link_manifest_json(request):
-    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "link-manifest.json", CONTEXT, content_type="application/json")
-
-
 def link_serviceworker_js(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "link-serviceworker.js", CONTEXT, content_type="text/javascript")
+
+
+def link_app_webmanifest(request):
+    # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
+    return render(request, "link-app.webmanifest", CONTEXT, "application/manifest+json")
 
 
 def link_app_js(request):

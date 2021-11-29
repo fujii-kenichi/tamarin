@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+タマリンコネクタのAzure版メディアストレージ.
+@author: fujii.kenichi@tamariva.co.jp
+"""
 from django.conf import settings
 from storages.backends.azure_storage import AzureStorage
 

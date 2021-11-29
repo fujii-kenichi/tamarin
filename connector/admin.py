@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" タマリンコネクタの管理画面.
-    by fujii.kenichi@tamariva.co.jp
+"""
+タマリンコネクタの管理画面.
+@author: fujii.kenichi@tamariva.co.jp
 """
 
 from django.contrib import admin

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" タマリンコネクタの各ページをルーティングする.
-    by fujii.kenichi@tamariva.co.jp
+"""
+タマリンコネクタの各ページをルーティングする.
+@author: fujii.kenichi@tamariva.co.jp
 """
 from django.urls import include, path
 from rest_framework import routers

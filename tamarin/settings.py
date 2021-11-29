@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
+
+@author: fujii.kenichi@tamariva.co.jp
 """
 
 import os
@@ -197,7 +199,7 @@ if DEBUG == "True":
 APP_CONTEXT = {
 
     # タマリンサービスのバージョンを定義.
-    "VERSION": "v0.0.01",
+    "VERSION": "0.0.01B",
 
     # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
@@ -237,8 +239,9 @@ APP_CONTEXT_MESSAGE = {
     "AUTHOR": "タマリバ株式会社",
 
     # 表示されるメッセージ:インストールビュー.
-    "INSTALL_LABEL": "インストールの準備ができました！",
-    "INSTALL_HELP_LABEL": "やりかたがわからない？",
+    "INSTALL_LABEL": "インストールできます！",
+    "INSTALL_HELP_LABEL": "やりかたはこちら",
+    "APP_OPEN_LABEL": "(このまま開く)",
 
     # 表示されるメッセージ:ローディングビュー.
     "LOADING_LABEL": "お待ちください...",
