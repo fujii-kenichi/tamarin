@@ -65,6 +65,7 @@ const DEBUG_RELOAD = document.getElementById("debug_reload");
 const DEBUG_CLEAR = document.getElementById("debug_clear");
 const DEBUG_RESET = document.getElementById("debug_reset");
 const DEBUG_STATE = document.getElementById("debug_state");
+const DEBUG_CAMERA = document.getElementById("debug_camera");
 const DEBUG_CLOSE = document.getElementById("debug_close");
 
 // データベース(IndexedDBを使うためのDexie)のインスタンス.
@@ -154,7 +155,7 @@ async function setup_debug_log() {
             return original_info(args);
         }
 
-        // デバッグ用のUIを設定する.
+        // デバッグ用UIのイベントを設定する.
         CAMERA_DEBUG.onclick = (async(event) => {
             DEBUG_VIEW.style.display = "block";
             load_debug_log();
@@ -169,15 +170,19 @@ async function setup_debug_log() {
             load_debug_log();
         });
 
+        DEBUG_STATE.onclick = (async(event) => {
+            DEBUG_LOG.value = "{ online: " + online + ", background_sync: " + background_sync + " }";
+        });
+
         DEBUG_RESET.onclick = (async(event) => {
-            const count = await database.photo.count();
             await database.photo.clear();
             await database.user.clear();
             DEBUG_LOG.value = "reset database.";
         });
 
-        DEBUG_STATE.onclick = (async(event) => {
-            DEBUG_LOG.value = "{ online: " + online + ", background_sync: " + background_sync + " }";
+        DEBUG_CAMERA.onclick = (async(event) => {
+            await setup_camera();
+            DEBUG_LOG.value = "setup camera.";
         });
 
         DEBUG_CLOSE.onclick = (async(event) => {
@@ -218,7 +223,11 @@ async function setup_database() {
  * カメラ(撮影デバイス)をセットアップする.
  */
 async function setup_camera() {
-    console.assert(!image_capture);
+    // 作成済みのImage Captureがあった場合は...どうしたらいいんだろう...?
+    if (image_capture) {
+        console.warn("how can I destroy image capture object instance gently ...?");
+        image_capture = null;
+    }
 
     try {
         // Viewから渡された設定値を使ってJSONを作る.
@@ -240,7 +249,9 @@ async function setup_camera() {
 
         // カメラストリームをプレビューにつなげて再生を開始する. 
         CAMERA_PREVIEW.srcObject = stream;
-        CAMERA_PREVIEW.play();
+        CAMERA_PREVIEW.onloadedmetadata = (event) => {
+            CAMERA_PREVIEW.play();
+        };
 
         // 撮影用のオブジェクトを初期化しておく.
         image_capture = new ImageCapture(stream.getVideoTracks()[0]);
@@ -801,9 +812,6 @@ async function main_loop() {
 
                 // 撮影済み枚数の表示を更新する.
                 await update_photo_counter();
-
-                // 強制的に再生を開始する.
-                CAMERA_PREVIEW.play();
                 break;
 
             case "open_setting_view":

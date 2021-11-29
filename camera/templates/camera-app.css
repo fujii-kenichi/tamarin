@@ -103,12 +103,12 @@ input.camera_menu {
 
 input.author_name {
     font-size: small;
-    width: 35%;
+    width: 30%;
 }
 
 select.context_tag {
     font-size: small;
-    width: 35%;
+    width: 30%;
 }
 
 input.photo_count {
@@ -130,7 +130,7 @@ div.camera_shutter {
     position: absolute;
     top: 55%;
     transform: translateY(-50%);
-    right: 2em;
+    right: 0.5em;
 }
 
 div.camera_shutter_button {
@@ -151,10 +151,10 @@ div.camera_shutter_button {
 
 @media screen and (orientation: portrait) {
     input.author_name {
-        width: 25%;
+        width: 20%;
     }
     select.context_tag {
-        width: 25%;
+        width: 20%;
     }
     video.camera_preview {
         height: auto;
@@ -165,7 +165,7 @@ div.camera_shutter_button {
         left: 0;
         right: 0;
         top: auto;
-        bottom: 0.5em;
+        bottom: 0.1em;
         text-align: center;
     }
     div.camera_shutter_button {
