@@ -30,6 +30,7 @@ self.addEventListener('install', (event) => {
                 "camera-app.css",
                 "camera-app.js",
                 "camera-app.html",
+                "camera-app.html{{MODE_APP}}"
             ]);
         })
     );
