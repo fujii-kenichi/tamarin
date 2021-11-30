@@ -244,11 +244,6 @@ async function setup_camera() {
         console.info("stream settings :", settings);
 
         // カメラストリームをプレビューにつなげて再生を開始する. 
-        /*
-        CAMERA_PREVIEW.onloadedmetadata = (event) => {
-            CAMERA_PREVIEW.play();
-        };
-        */
         CAMERA_PREVIEW.srcObject = stream;
 
         // 撮影用のオブジェクトを初期化しておく.
