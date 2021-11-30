@@ -69,7 +69,6 @@ const DEBUG_CLOSE = document.getElementById("debug_close");
 let database = null;
 
 // 現在アプリでサインインしているユーザを示す変数(新規作成時の初期値を含む).
-// PCでの実行の場合は facingMode: "user" でフロントカメラの使用をリクエストする.
 let current_user = {
     dummy_id: "{{DATABASE_USER_DUMMY_ID}}",
     user_id: null,
@@ -239,16 +238,18 @@ async function setup_camera() {
 
         // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
 
-        // カメラストリームを写真撮影用として設定する.
+        // カメラストリームの情報を取得する.
         const settings = stream.getVideoTracks()[0].getSettings();
         console.assert(settings);
         console.info("stream settings :", settings);
 
         // カメラストリームをプレビューにつなげて再生を開始する. 
-        CAMERA_PREVIEW.srcObject = stream;
+        /*
         CAMERA_PREVIEW.onloadedmetadata = (event) => {
             CAMERA_PREVIEW.play();
         };
+        */
+        CAMERA_PREVIEW.srcObject = stream;
 
         // 撮影用のオブジェクトを初期化しておく.
         image_capture = new ImageCapture(stream.getVideoTracks()[0]);

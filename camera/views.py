@@ -87,8 +87,8 @@ DEVICE_PARAM_MOBILE = {
       {\
         \"audio\" : false,\
         \"video\" : {\
-            \"width\" : { \"ideal\" : 1920, \"max\" : 1920 },\
-            \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
+            \"width\" : { \"min\" : 1920, \"max\" : 1920 },\
+            \"height\" : { \"min\" : 1080, \"max\" : 1080 },\
             \"facingMode\" : { \"exact\" : \"environment\" }\
          }\
       }"

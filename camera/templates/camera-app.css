@@ -115,6 +115,7 @@ div.camera_main {
 }
 
 video.camera_preview {
+    background-color: black;
     width: auto;
     height: calc(100vh - 2.5em);
 }
