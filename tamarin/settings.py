@@ -199,7 +199,8 @@ if DEBUG == "True":
 APP_CONTEXT = {
 
     # タマリンサービスのバージョンを定義.
-    "VERSION": "0.0.01B",
+    # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない：デバッグ時も注意！
+    "VERSION": "0.0.01D",
 
     # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
@@ -211,7 +212,7 @@ APP_CONTEXT = {
     "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
 
     # 認証するときにユーザが入力するユーザ名やパスワードの入力フィールドに渡す最大長.
-    "AUTH_MAX_LENGTH": 100,
+    "AUTH_MAX_LENGTH": 150,
 
     # Token APIのエンドポイントとフォーマット.
     "CREATE_TOKEN_URL": "../connector/auth/jwt/create",
@@ -252,7 +253,7 @@ APP_CONTEXT_MESSAGE = {
     "PASSWORD_LABEL": "サービスのパスワード",
     "AUTH_OK_LABEL": "サインイン",
     "AUTH_ERROR_MESSAGE": "サインインに失敗しました...",
-    "AUTH_HELP_LABEL": "うまくいかないときは",
+    "CONNECTOR_HELP_LABEL": "うまくいかないときは",
 
     # 表示されるメッセージ:エラービュー.
     "ERROR_LABEL": "アプリを実行できません",

@@ -16,9 +16,6 @@ const MEDIA_ENCRYPTION_KEY_LENGTH = Number("{{MEDIA_ENCRYPTION_KEY_LENGTH}}");
 // メインループを繰り返すときの待ち時間(ミリ秒).
 const MAIN_LOOP_INTERVAL = Number("{{MAIN_LOOP_INTERVAL}}");
 
-// Service workerでPeriodic Syncに指定する時間(ミリ秒).
-const PERIODIC_SYNC_INTERVAL = Number("{{PERIODIC_SYNC_INTERVAL}}");
-
 // 自動でConnectorからUserのデータを自動リロードする間隔(アイドル状態の回数).
 const AUTO_RELOAD_TRIGGER = Number("{{AUTO_RELOAD_TRIGGER}}");
 
@@ -105,8 +102,8 @@ let idle_count = 0;
 // 写真撮影時に使用するオブジェクト.
 let image_capture = null;
 
-// Service workerがperiodic syncをサポートしているどうか：Trueでservice workerが、falseで自分のメインループが写真のアップロードを実施する.
-let background_sync = false;
+// Service workerの登録情報.
+let serviceworker_registration = null;
 
 // 不要なUI(DOM)の更新を避けるため前の状態を記憶するための変数たち.
 let last_state = null;
@@ -171,7 +168,7 @@ async function setup_debug_log() {
         });
 
         DEBUG_STATE.onclick = (async(event) => {
-            DEBUG_LOG.value = "{ online: " + online + ", background_sync: " + background_sync + " }";
+            DEBUG_LOG.value = "{ online: " + online + " }";
         });
 
         DEBUG_RESET.onclick = (async(event) => {
@@ -223,7 +220,7 @@ async function setup_database() {
  * カメラ(撮影デバイス)をセットアップする.
  */
 async function setup_camera() {
-    // 作成済みのImage Captureがあった場合は...どうしたらいいんだろう...?
+    // TODO: 作成済みのImage Captureがあった場合の処理を追加する.
     if (image_capture) {
         console.warn("how can I destroy image capture object instance gently ...?");
         image_capture = null;
@@ -266,6 +263,7 @@ async function setup_camera() {
  * アプリの動作に必要となるプラットフォーム関連の初期化を行う.
  */
 async function init() {
+    console.assert(!serviceworker_registration);
 
     // service worker が使える環境かどうかをチェック.
     if (!("serviceWorker" in navigator)) {
@@ -285,34 +283,17 @@ async function init() {
         return;
     }
 
-    // これはperiodic syncデバッグ用.
-    // background_sync = true;
-
     // service workerの登録を行う.
     try {
-        await navigator.serviceWorker.register("camera-serviceworker.js");
-        console.info("service worker registrated.");
-        state = "start";
+        navigator.serviceWorker.register("camera-serviceworker.js").then(registration => {
+            console.log("service worker registrated :", registration);
 
-        try {
-            const registration = await navigator.serviceWorker.ready();
-
-            if ("periodicSync" in registration) {
-                // Periodic sync があったので、それを使っていいかどうか聞く.
-                const status = await navigator.permissions.query({ name: 'periodic-background-sync', });
-                console.log("period sync permission status :", status);
-
-                if (status.state === "granted") {
-                    // 使える場合はそちらに写真アップロード機能を任せる.
-                    const result = await registration.periodicSync.register("{{SYNC_TAG}}", { minInterval: PERIODIC_SYNC_INTERVAL });
-                    console.info("background sync registered :", result.toString());
-                    background_sync = true;
-                }
-            }
-        } catch (error) {
-            // このエラーは(いまのところは)許容する.
-            console.warn("periodic sync feature is not avaialbe - use own upload mechanism :", error.toString());
-        }
+            navigator.serviceWorker.ready.then(registration => {
+                console.log("service worker is ready :", registration);
+                serviceworker_registration = registration;
+                state = "start";
+            });
+        });
     } catch (error) {
         // service workerが登録できなかった場合は起動できないエラーとして扱う.
         console.error("service worker registration error :", error.toString());
@@ -631,6 +612,12 @@ async function take_photo(scene_tag) {
         }).then(() => {
             // データベースの更新が成功したら撮影済みカウンタの表示を更新する.
             update_photo_counter();
+
+            // service workerにsyncイベントを登録する.
+            console.assert(serviceworker_registration);
+            serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
+                console.info("service worker sync registrated :{{SYNC_TAG}}");
+            });
         });
     }
 
@@ -639,7 +626,7 @@ async function take_photo(scene_tag) {
 }
 
 /**
- * データベースにある写真を１枚ほどMediaサービスにアップロードする.
+ * データベースにある写真を１枚だけMediaサービスにアップロードする.
  */
 async function upload_photo() {
     // 最も古い写真をデータベースから取得する.
@@ -736,8 +723,8 @@ async function main_loop() {
         if (state !== last_state) {
             last_state = state;
             console.log("current state :", state);
-            online = navigator.onLine === false ? false : true;
         }
+        online = navigator.onLine === false ? false : true;
 
         // 対応するステートによって処理を分岐させる.
         switch (state) {
@@ -795,18 +782,20 @@ async function main_loop() {
 
             case "in_camera_view":
                 // カメラ操作ビューを表示中：写真のアップロードとユーザの自動リロードを処理する.
-
-                if (online && !background_sync && photo_count > 0) {
-                    // もし今がオンラインで、service workerによる非同期処理が無効で、写真がたまっていれば、自力でアップロードをする.
-                    await upload_photo();
-                } else {
+                if (online) {
                     idle_count++;
 
-                    // もしこのステートが十分な回数繰り返されているようであり、かつ自動リロード設定が有効な場合は、ユーザ情報のリロードをする.
-                    if (online && current_user.auto_reload && idle_count > AUTO_RELOAD_TRIGGER) {
-                        console.log("auto (silent) reloading user from user service.");
+                    if (photo_count > 0) {
+                        // もし今がオンラインで写真がたまっていれば、1枚だけアップロードをする.
+                        await upload_photo();
                         idle_count = 0;
-                        await load_user("in_camera_view");
+                    } else {
+                        // もしこのステートが十分な回数繰り返されているようであり、かつ自動リロード設定が有効な場合は、ユーザ情報のリロードをする.
+                        if (current_user.auto_reload && idle_count > AUTO_RELOAD_TRIGGER) {
+                            console.log("auto (silent) reloading user from user service.");
+                            idle_count = 0;
+                            await load_user("in_camera_view");
+                        }
                     }
                 }
 

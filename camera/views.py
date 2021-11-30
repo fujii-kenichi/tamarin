@@ -33,12 +33,12 @@ CAMERA_CONTEXT = {
     # 各種ヘルプのURL.
     "INSTALL_HELP_URL": static("install-help.html"),
     "CAMERA_HELP_URL": static("camera-help.html"),
-    "AUTH_HELP_URL": static("auth-help.html"),
+    "CONNECTOR_HELP_URL": static("connector-help.html"),
 
-    # manifest で指定する画面モード.
+    # manifestで指定する画面モード.
     "DISPLAY": "standalone",
 
-    # manifest で指定する色.
+    # manifestで指定する色.
     "THEME_COLOR": "pink",
 
     # Dexieを通じてIndexedDBの構成に使用される値.
@@ -46,15 +46,11 @@ CAMERA_CONTEXT = {
     "DATABASE_VERSION": "1",
     "DATABASE_USER_DUMMY_ID": "current_user",
 
-    # Periodic Sync の時に用いられるタグ文字列.
-    "SYNC_TAG": "tamarin-camera-sync",
-
-    # Service worker が使用するキャッシュの名前.
-    "CACHE_NAME": "V20211128-01",
+    # service workerのsyncに用いられるタグ文字列.
+    "SYNC_TAG": "upload_photo",
 
     # アプリとしてのふるまいを決める値.
     "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
-    "PERIODIC_SYNC_INTERVAL": 3 * 1000,  # Periodic Syncでこちらを呼び出してほしい時間間隔(ミリ秒).
     "AUTO_RELOAD_TRIGGER": 30 * 1000 / 200,  # 何もせずこの時間を過ぎたら自動リロード機能を実行(ミリ秒)
 
     # カメラとしてローカルに写真を保持しておける枚数. あんまり多いとIndexedDBが耐えられないかも...
@@ -92,7 +88,7 @@ DEVICE_PARAM_MOBILE = {
         \"audio\" : false,\
         \"video\" : {\
             \"width\" : { \"ideal\" : 1920, \"max\" : 1920 },\
-            \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
+            \"height\" : { \"ideal\" : 1920, \"max\" : 1920 },\
             \"facingMode\" : { \"exact\" : \"environment\" }\
          }\
       }"
@@ -105,7 +101,7 @@ DEVICE_PARAM_PC = {
         \"audio\" : false,\
         \"video\" : {\
             \"width\" : { \"ideal\" : 1920, \"max\" : 1920 },\
-            \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
+            \"height\" : { \"ideal\" : 1920, \"max\" : 1920 },\
             \"facingMode\" : \"user\"\
          }\
       }"

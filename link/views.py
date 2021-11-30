@@ -26,13 +26,13 @@ LINK_CONTEXT = {
     # 各種ヘルプのURL.
     "INSTALL_HELP_URL": static("install-help.html"),
     "LINK_HELP_URL": static("link-help.html"),
-    "AUTH_HELP_URL": static("auth-help.html"),
+    "CONNECTOR_HELP_URL": static("connector-help.html"),
     "SIGNUP_URL": "../connector/signup",
 
-    # manifest で指定する画面モード.
+    # manifestで指定する画面モード.
     "DISPLAY": "minimal-ui",
 
-    # manifest で指定する色.
+    # manifestで指定する色.
     "THEME_COLOR": "pink",
 
     # Dexieを通じてIndexedDBの構成に使用される値.
@@ -40,12 +40,9 @@ LINK_CONTEXT = {
     "DATABASE_VERSION": "1",
     "DATABASE_USER_DUMMY_ID": "current_user",
 
-    # Service worker が使用するキャッシュの名前.
-    "CACHE_NAME": "V20211128-01",
-
     # アプリとしてのふるまいを決める値.
     "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
-    "MAX_TAG_LENGTH": 200,  # シーンや状況といったタグの入力フィールドにおける最大文字長.
+    "MAX_TAG_LENGTH": 250,  # シーンや状況といったタグの入力フィールドにおける最大文字長.
 }
 
 # タマリンク固有で書き換えたいユーザに見せる各種メッセージを定義する.
@@ -54,23 +51,23 @@ LINK_CONTEXT_MESSAGE = {
     # PWAとしてマニフェストに書くための情報.
     "NAME": "タマリンク",
     "SHORT_NAME": "タマリンク",
-    "DESCRIPTION": "タマリンの同期アプリです",
+    "DESCRIPTION": "タマリンのダウンロードアプリです",
 
     # 各UI要素に対応した文字列.
     "SIGNUP_LABEL": "サインアップ",
     "LINK_HELP_LABEL": "詳しい使い方をみる",
 
-    "USER_SECTION_LABEL": "カメラの設定",
-    "SCENE_TAG_LABEL": "シーンの名前",
-    "SCENE_COLOR_LABEL": "シーンの色",
-    "CONTEXT_TAG_LABEL": "状況の名前",
+    "USER_SECTION_LABEL": "タマリンカメラで撮影をするための設定",
+    "SCENE_TAG_LABEL": "シーンの名前(リスト)",
+    "SCENE_COLOR_LABEL": "シーンの色(リスト)",
+    "CONTEXT_TAG_LABEL": "状況の名前(リスト)",
 
-    "MEDIA_SECTION_LABEL": "ダウンロードの設定",
-    "DOWNLOAD_RULE_LABEL": "フォルダ振り分けルール",
+    "MEDIA_SECTION_LABEL": "サービスから写真をダウンロードをするための設定",
+    "DOWNLOAD_RULE_LABEL": "フォルダへの振り分けルール",
     "DOWNLOAD_RULE_1": "(1) 撮影者を優先 - [ 撮影日付 ▶ 撮影者 ▶ 状況 ▶ シーン ▶ 撮影時刻(画像ファイル) ]",
     "DOWNLOAD_RULE_2": "(2) 状況を優先 - [ 撮影日付 ▶ 状況 ▶ 撮影者 ▶ シーン ▶ 撮影時刻(画像ファイル) ]",
 
-    "DOWNLOAD_ONLY_LABEL": "削除しない",
+    "DOWNLOAD_ONLY_LABEL": "ダウンロード後も保持する",
 
     "UPDATE_LABEL": "設定を保存する",
     "DOWNLOAD_LABEL": "ダウンロードを開始する",

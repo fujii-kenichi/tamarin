@@ -4,7 +4,6 @@
 
 <head>
     <meta charset="utf-8">
-    <title>{{NAME}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <!-- モバイルSafari対応:ここから -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,6 +21,7 @@
     <script src="{{CRYPTO_JS}}" defer></script>
     <script src="{{IMAGECAPTURE_JS}}" defer></script>
     <script src="camera-app.js" defer></script>
+    <title>{{NAME}}</title>
 </head>
 
 <body class="app" onload="main()">
@@ -30,9 +30,9 @@
     <!-- カメラビュー：ユーザがカメラ操作をするビュー. -->
     <div id="camera_view" class="camera_view">
         <div class="camera_menu">
-            <input id="camera_author_name" class="input readonly author_name camera_menu" type="text" readonly>
-            <select id="camera_context_tag" class="input context_tag camera_menu"></select>
-            <input id="camera_photo_count" class="input readonly photo_count camera_menu" type="text" readonly>
+            <input id="camera_author_name" class="button author_name camera_menu" type="button">
+            <select id="camera_context_tag" class="select context_tag camera_menu"></select>
+            <input id="camera_photo_count" class="button photo_count camera_menu" type="button">
             <input id="camera_setting" class="button camera_menu" type="button" value="&#128295;">
             <input id="camera_debug" class="button camera_menu" type="button" value="&#128027;">
         </div>
@@ -55,7 +55,7 @@
             <input id="auth_username" class="input auth_input" type="text" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
             <input id="auth_password" class="input auth_input" type="password" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
             <input id="auth_ok" class="button auth_button" type="button" value="{{AUTH_OK_LABEL}}">
-            <a class="help_link" href="{{AUTH_HELP_URL}}" target="_blank">{{AUTH_HELP_LABEL}}</a>
+            <a class="help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
         </div>
     </div>
     <!-- 設定ビュー：ユーザが設定値の確認と変更をするビュー. -->

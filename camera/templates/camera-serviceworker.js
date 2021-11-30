@@ -13,49 +13,33 @@ importScripts("{{CRYPTO_JS}}");
 self.addEventListener('install', (event) => {
     console.log("service worker received install event :", event);
 
-    // キャッシュに必要なファイルを設定する.
-    caches.open("{{CACHE_NAME}}").then(cache => {
-        return cache.addAll([
-            "{{DEXIE_JS}}",
-            "{{CRYPTO_JS}}",
-            "{{IMAGECAPTURE_JS}}",
-            "{{FAVICON}}",
-            "{{ICON_180}}",
-            "{{ICON_192}}",
-            "{{ICON_512}}",
-            "{{LOADING_ICON}}",
-            "{{ERROR_ICON}}",
-            "{{CAMERA_SHUTTER_SOUND}}",
-            "camera-app.css",
-            "camera-app.js",
-            "camera-app.html",
-        ]);
-    });
-
-    event.waitUntil(skipWaiting());
+    event.waitUntil(
+        // キャッシュに必要なファイルを設定する.
+        caches.open("{{VERSION}}").then(cache => {
+            return cache.addAll([
+                "{{DEXIE_JS}}",
+                "{{CRYPTO_JS}}",
+                "{{IMAGECAPTURE_JS}}",
+                "{{FAVICON}}",
+                "{{ICON_180}}",
+                "{{ICON_192}}",
+                "{{ICON_512}}",
+                "{{LOADING_ICON}}",
+                "{{ERROR_ICON}}",
+                "{{CAMERA_SHUTTER_SOUND}}",
+                "camera-app.css",
+                "camera-app.js",
+                "camera-app.html",
+            ]);
+        })
+    );
 });
-
-/**
- * activate イベントの処理を定義する.
- */
-self.addEventListener("activate", (event => {
-    console.log("service worker received activate event :", event);
-
-    // 古いキャッシュを削除する.
-    caches.keys().then((key_list) => {
-        return Promise.all(key_list.map((key) => {
-            return caches.delete(key);
-        }));
-    });
-
-    event.waitUntil(clients.claim());
-}));
 
 /**
  * fetch イベントの処理を定義する.
  */
 self.addEventListener("fetch", (event => {
-    console.log("service worker received fetch event :", event);
+    // console.log("service worker received fetch event :", event);
 
     // キャッシュからとってこれたら返却する.
     event.respondWith(caches.match(event.request).then(response => {
@@ -64,19 +48,41 @@ self.addEventListener("fetch", (event => {
 }));
 
 /**
- * periodic sync イベントの処理を定義する.
+ * activate イベントの処理を定義する.
  */
-self.addEventListener("periodicsync", (event => {
-    console.log("service worker received sync event :", event);
+self.addEventListener("activate", (event => {
+    console.log("service worker received activate event :", event);
 
-    // 写真アップロード処理のタスクを定義する.
-    // TODO: await使ってないのでネストが深くなっている...
+    // 古いキャッシュを削除する.    
+    event.waitUntil(
+        caches.keys().then(cache_names => {
+            return Promise.all(cache_names.map(name => {
+                if (name !== "{{VERSION}}") {
+                    return caches.delete(name);
+                }
+            }));
+        })
+    );
+
+    // 最初からイベントを発行するよう依頼.
+    clients.claim();
+}));
+
+/**
+ * sync イベントの処理を定義する.
+ */
+self.addEventListener("sync", (event => {
+    console.log("service worker received sync event :", event);
+    // TODO: 本当ならここでeventと{{SYNC_TAG}}を比較するべき.
+    // TODO: ちょっとネストが深くなっているのでawaitに変える?
+
+    // 写真を1枚だけアップロードする処理のタスクを定義する.
     const task = new Promise(() => {
         console.log("background sync task started.");
 
         const online = navigator.onLine === false ? false : true;
 
-        // オフラインなら何もしない.
+        // オフラインなら何もしない. TODO: これ不要かも？
         if (!online) {
             console.log("nothing to do with offline.");
             return;
@@ -107,6 +113,9 @@ self.addEventListener("periodicsync", (event => {
                     console.log("photo database is empty.");
                     return;
                 }
+
+                // 写真があった場合はまたアップロードしたいので自分自身を呼ぶイベントを登録しておく.
+                self.registration.sync.register("{{SYNC_TAG}}");
 
                 console.info("start uploading photo to media service :", photo.id);
                 const start_time = new Date();

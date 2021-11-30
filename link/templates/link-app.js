@@ -25,7 +25,6 @@ const INSTALL_VIEW = document.getElementById("install_view");
 const ERROR_VIEW = document.getElementById("error_view");
 
 const USER = document.getElementById("user");
-const AUTH = document.getElementById("auth");
 
 const SCENE_TAG = document.getElementById("scene_tag");
 const SCENE_COLOR = document.getElementById("scene_color");
@@ -66,9 +65,6 @@ let download_folder = null;
 
 // ダウンロードするファイル(写真)のリスト.
 let download_file_list = null;
-
-// オンラインかオフラインを示す情報.
-let online = false;
 
 // メインループのステートマシンにおけるステートを示す変数.
 let state = "init";
@@ -525,9 +521,9 @@ async function main_loop() {
         // ステートとオンラインの状況を最新化する.
         if (state !== last_state) {
             last_state = state;
-            online = navigator.onLine == false ? false : true;
             console.log("current state :", state);
         }
+        const online = navigator.onLine == false ? false : true;
 
         // オフラインだったら問答無用でエラーにしておしまい.
         if (!online) {
@@ -685,7 +681,7 @@ async function main() {
     LOADING_VIEW.style.display = "block";
 
     // UIのイベントをセットアップする：再認証ボタン.
-    AUTH.onclick = (async(event) => {
+    USER.onclick = (async(event) => {
         AUTH_ERROR_MESSAGE.style.display = "none";
         state = "open_auth_view";
     });

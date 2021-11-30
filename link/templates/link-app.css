@@ -11,7 +11,6 @@ body.app {
     margin: 0;
     border: 0;
     padding: 0;
-    min-width: 20em;
 }
 
 div.panel_view {
@@ -42,14 +41,14 @@ div.panel_title {
 }
 
 div.panel_subtitle {
-    font-size: x-small;
+    font-size: small;
     margin-bottom: 1em;
 }
 
 div.panel_header {
-    margin-bottom: 1em;
     font-size: larger;
     color: dimgray;
+    margin-bottom: 1em;
 }
 
 div.panel_message {
@@ -79,6 +78,7 @@ input.button {
 
 div.main_view {
     display: none;
+    line-height: 2;
 }
 
 div.header {
@@ -110,7 +110,7 @@ div.main_name {
 div.main_version {
     display: inline;
     vertical-align: middle;
-    font-size: x-small;
+    font-size: small;
     color: dimgray;
 }
 
@@ -122,7 +122,7 @@ div.menu {
 }
 
 input.user {
-    width: 20em;
+    padding: 0.5em;
     color: dimgray;
 }
 
@@ -134,7 +134,7 @@ a.header {
 
 table.section {
     margin: 2em;
-    width: 90%;
+    width: calc(100% - 3em);
     border-top: 0.2em solid lavenderblush;
 }
 
@@ -143,7 +143,7 @@ caption.section {
 }
 
 td.label {
-    width: 12em;
+    width: 16em;
     min-width: 8em;
     font-size: small;
     border-bottom: 0.1em solid lavenderblush;
@@ -189,20 +189,23 @@ input.auth_button {
     margin: 1em 0.25em 0 0.25em;
 }
 
-a.signup_link {
-    display: inline-block;
-    text-decoration: none;
-    font-size: small;
-    color: dimgray;
-    padding: 0.2em 2em 0.2em 2em;
-    border: 0;
-}
-
 a.help_link {
     display: block;
     font-size: small;
+    color: dimgray;
+    text-decoration: none;
+}
+
+a.signup_link {
+    display: block;
     color: black;
     text-decoration: none;
+    font-size: small;
+    width: 20em;
+    background-color: skyblue;
+    padding: 0.2em 2em 0.2em 2em;
+    border: 0;
+    margin-top: 1em;
 }
 
 a.app_open_link {

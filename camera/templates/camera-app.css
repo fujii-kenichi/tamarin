@@ -63,13 +63,6 @@ div.panel_message {
     margin-bottom: 1em;
 }
 
-input.readonly {
-    background-color: lavenderblush;
-    border-color: white;
-    border-style: solid;
-    border-width: 0.1em;
-}
-
 input.input {
     border-color: white;
     border-style: solid;
@@ -103,18 +96,18 @@ input.camera_menu {
 
 input.author_name {
     font-size: small;
-    width: 30%;
+    max-width: 30%;
 }
 
 select.context_tag {
     font-size: small;
-    width: 30%;
+    max-width: 30%;
 }
 
 input.photo_count {
     font-size: small;
     text-align: center;
-    width: 2em;
+    max-width: 2em;
 }
 
 div.camera_main {
@@ -122,8 +115,8 @@ div.camera_main {
 }
 
 video.camera_preview {
-    height: calc(100vh - 3em);
     width: auto;
+    height: calc(100vh - 2.5em);
 }
 
 div.camera_shutter {
@@ -151,14 +144,14 @@ div.camera_shutter_button {
 
 @media screen and (orientation: portrait) {
     input.author_name {
-        width: 20%;
+        max-width: 20%;
     }
     select.context_tag {
-        width: 20%;
+        max-width: 20%;
     }
     video.camera_preview {
-        height: auto;
         width: 100vw;
+        height: auto;
     }
     div.camera_shutter {
         position: absolute;
@@ -207,7 +200,7 @@ input.auth_button {
 a.help_link {
     display: block;
     font-size: small;
-    color: black;
+    color: dimgray;
     text-decoration: none;
 }
 
