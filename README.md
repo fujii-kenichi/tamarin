@@ -1,25 +1,25 @@
 # タマリンプロジェクト
 
-## 概要
+## 1. 概要
 
-- タマリンプロジェクトのソースコードです.
+- タマリンプロジェクトのソースコードです。
 
-## デザイン(アーキテクチャ)
+## 2. ライセンス
 
-- [DESIGN.md](./DESIGN.md) をみてください.
+- [LICENSE](./LICENSE) をみてください。
 
-## インストール方法
+## 3. アーキテクチャ
 
-- [INSTALL.md](./INSTALL.md) をみてください.
+- [ARCHITECTURE.md](./ARCHITECTURE.md) をみてください。
 
-## 使用方法
+## 4. デプロイ
 
-- インストールして <http://localhost:8000/connector/> をみてください.
+- [DEPLOY.md](./DEPLOY.md) をみてください。
 
-## 制限や制約
+## 5. いろいろメモ
 
-- インストールして <http://localhost:8000/static/release-note.html> をみてください.
+- [MEMO.md](./MEMO.md) をみてください。
 
-## デバッグ用ページ
+## 6. Notice
 
-- インストールして <http://localhost:8000/connector/debug> をみてください.
+- as you can see in this repository, all source code and documents are written in Japanese due to the project policy "use the most apripreate language for us". and also the default locale at runtime is JA. Yes, this project is developed by the japanese programmer. So if you do not understand Japanese but are interested in this project, you can feel free to contact us in English. thanks!
