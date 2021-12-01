@@ -106,6 +106,7 @@ let serviceworker_registration = null;
 
 // 不要なUI(DOM)の更新を避けるため前の状態を記憶するための変数たち.
 let last_state = null;
+let last_online = null;
 let last_author_name = null;
 let last_scene_tag = null;
 let last_scene_color = null;
@@ -730,11 +731,13 @@ async function main_loop() {
     }
 
     try {
-        // ステートとオンラインの状況を最新化する.
+        // ステートの状況を最新化する.
         if (state !== last_state) {
             last_state = state;
             console.log("current state :", state);
         }
+
+        // オンラインの状況を最新化する.
         online = navigator.onLine === false ? false : true;
 
         // 対応するステートによって処理を分岐させる.
@@ -742,6 +745,9 @@ async function main_loop() {
             case "init":
                 // 初期化：初期化処理をする(次のステートはinit()の中で設定される).
                 await init();
+
+                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
+                last_online = online;
                 break;
 
             case "start":
@@ -787,6 +793,9 @@ async function main_loop() {
 
                 // カメラを初期化する.
                 await setup_camera();
+
+                // オンライン状態変化によるカメラリセットをトリガーされないようにする.                
+                last_online = online;
 
                 // UI表示を最新化する.
                 await update_camera_view();
@@ -889,7 +898,11 @@ async function main_loop() {
             case "reset_camera":
                 // 何らかの理由でVideoのプレビューがエラーになった.
                 // 少なくともiOSでオンラインからオフラインにすると発生する.
+
                 // とりあえずカメラの初期化からやりなおしてみる...
+                await setup_camera();
+
+                // 初期化のエラーは無視して必ずカメラビューに戻る.
                 state = "open_camera_view";
                 break;
 
@@ -899,6 +912,14 @@ async function main_loop() {
                 state = "open_error_view";
                 break;
         }
+
+        // オンライン状態が変化していたらカメラを強制リセット：iOSでこうしないとプレビューが消える.
+        // TODO: この措置は本当にこれでいいのか...?
+        if (last_online != online) {
+            last_online = online;
+            await setup_camera();
+        }
+
     } catch (error) {
         // 何かしらの例外処理が発生した.
         console.error("internal error - unhandled exception in main loop :", error.toString());
