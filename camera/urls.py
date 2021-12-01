@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 タマリンカメラの各ページをルーティングする.
-@author: fujii.kenichi@tamariva.co.jp    
+@author: fujii.kenichi@tamariva.co.jp
 """
 from django.urls import path
 

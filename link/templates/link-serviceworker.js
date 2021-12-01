@@ -11,14 +11,14 @@
  * install イベントの処理を定義する.
  */
 self.addEventListener('install', (event) => {
-    // なにもしない...        
+    // なにもしない...
 });
 
 /**
  * activate イベントの処理を定義する.
  */
 self.addEventListener("activate", (event => {
-    // なにもしない...    
+    // なにもしない...
 }));
 
 /**

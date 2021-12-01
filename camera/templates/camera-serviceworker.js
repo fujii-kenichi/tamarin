@@ -57,7 +57,7 @@ self.addEventListener("fetch", (event => {
 self.addEventListener("activate", (event => {
     console.log("service worker received activate event :", event);
 
-    // 古いキャッシュを削除する.    
+    // 古いキャッシュを削除する.
     event.waitUntil(
         caches.keys().then(cache_names => {
             return Promise.all(cache_names.map(name => {

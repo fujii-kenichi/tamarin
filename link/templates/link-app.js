@@ -84,11 +84,11 @@ let timeout_id = null;
 async function setup_database() {
     console.assert(!database);
 
-    // Dexieのインスタンスを作る.    
+    // Dexieのインスタンスを作る.
     database = new Dexie("{{DATABASE_NAME}}");
     console.assert(database);
 
-    // インデックスを設定する.    
+    // インデックスを設定する.
     database.version("{{DATABASE_VERSION}}").stores({
         user: "dummy_id, user_id"
     });
@@ -107,10 +107,8 @@ async function init() {
     }
 
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
-    const param = document.location.search;
-
-    if (param !== "{{MODE_APP}}") {
-        console.log("no {{MODE_APP}} param in url :", document.location.search);
+    if (document.location.search !== "{{MODE_APP}}") {
+        console.log("no {{MODE_APP}} param in url.");
         state = "open_install_view";
         return;
     }
@@ -122,7 +120,7 @@ async function init() {
         return;
     }
 
-    // service workerの登録を行う.    
+    // service workerの登録を行う.
     try {
         await navigator.serviceWorker.register("link-serviceworker.js");
         console.info("serviceworker registrated.");
@@ -137,7 +135,7 @@ async function init() {
  * Tokenサービスから現在のユーザにもとづいた有効なトークンを生成する.
  */
 async function get_token() {
-    // これを呼んだら以前のトークンはもう忘れておく.    
+    // これを呼んだら以前のトークンはもう忘れておく.
     token = null;
 
     // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
@@ -159,7 +157,7 @@ async function get_token() {
     console.assert(token_response);
     console.log("token service respond :", token_response);
 
-    // レスポンスが200のときだけトークンを更新する.    
+    // レスポンスが200のときだけトークンを更新する.
     if (token_response.status == 200) {
         const result = await token_response.json();
         console.assert(result);
@@ -182,7 +180,7 @@ async function load_user(new_state) {
     const user = await database.user.get("{{DATABASE_USER_DUMMY_ID}}");
 
     if (!user) {
-        // データベースにユーザーが存在しない場合は、初回起動とみなして認証ビューを開くようにステートを変えて抜ける.        
+        // データベースにユーザーが存在しない場合は、初回起動とみなして認証ビューを開くようにステートを変えて抜ける.
         console.warn("could not find current user in database - may be the first run.");
         state = "open_auth_view";
         return;
@@ -238,11 +236,11 @@ async function load_user(new_state) {
     console.assert(current_user.context_tag);
     CONTEXT_TAG.value = current_user.context_tag;
 
-    // 更新されたユーザを示す変数をさらにデータベースに保存する.    
+    // 更新されたユーザを示す変数をさらにデータベースに保存する.
     console.log("save current user to database :", current_user);
     await database.user.put(current_user);
 
-    // 呼び出し元が期待する次のステートに遷移するようにして処理を終了する.    
+    // 呼び出し元が期待する次のステートに遷移するようにして処理を終了する.
     state = new_state;
 }
 
@@ -510,7 +508,7 @@ async function download_file() {
 async function main_loop() {
     let keep_main_loop = true;
 
-    // 前のタイマーを破棄する.    
+    // 前のタイマーを破棄する.
     if (timeout_id) {
         clearTimeout(timeout_id);
     }
@@ -528,7 +526,7 @@ async function main_loop() {
             state = "open_error_view";
         }
 
-        // 対応するステートによって処理を分岐させる.        
+        // 対応するステートによって処理を分岐させる.
         switch (state) {
             case "init":
                 // 初期化：初期化処理をする(次のステートはinit()の中で設定される).
@@ -546,7 +544,7 @@ async function main_loop() {
                 break;
 
             case "open_auth_view":
-                //  認証ビューを開く：認証ビューだけを有効化する.                
+                //  認証ビューを開く：認証ビューだけを有効化する.
                 state = "in_auth_view";
                 LOADING_VIEW.style.display = "none";
                 MAIN_VIEW.style.display = "none";
@@ -558,7 +556,7 @@ async function main_loop() {
                 break;
 
             case "in_auth_view":
-                // 認証ビューを表示中：このステートを繰り返す.                
+                // 認証ビューを表示中：このステートを繰り返す.
                 break;
 
             case "authentication_failed":
@@ -575,7 +573,7 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "none";
                 DOWNLOAD_VIEW.style.display = "none";
 
-                // UI要素の情報を更新しておく.                
+                // UI要素の情報を更新しておく.
                 USER.value = current_user.username;
                 DOWNLOAD_RULE.value = current_user.download_rule;
                 DOWNLOAD_ONLY.checked = current_user.download_only;
@@ -607,7 +605,7 @@ async function main_loop() {
                 DOWNLOAD_COUNT.value = "";
                 DOWNLOAD_FILE.value = "";
 
-                // ユーザの情報をデータベースとUserサービスに保存する.                
+                // ユーザの情報をデータベースとUserサービスに保存する.
                 await save_user();
 
                 // 次にダウンロード可能なファイルのリストを作成する.
@@ -650,13 +648,13 @@ async function main_loop() {
                 break;
 
             default:
-                // 未定義のステート：実装エラーとみなしてエラービューを表示して終了する.                
+                // 未定義のステート：実装エラーとみなしてエラービューを表示して終了する.
                 console.error("internal error - unknown state :", state);
                 state = "open_error_view";
                 break;
         }
     } catch (error) {
-        // 何かしらの例外処理が発生した.        
+        // 何かしらの例外処理が発生した.
         console.error("internal error - unhandled exception in main loop :", error);
 
         // メインビューに強制的に戻す.
@@ -675,7 +673,7 @@ async function main_loop() {
  * アプリケーションのメイン.
  */
 async function main() {
-    // ローディングビューを表示する.    
+    // ローディングビューを表示する.
     LOADING_VIEW.style.display = "block";
 
     // UIのイベントをセットアップする：再認証ボタン.
@@ -684,12 +682,12 @@ async function main() {
         state = "open_auth_view";
     });
 
-    // UIのイベントをセットアップする：更新ボタン.    
+    // UIのイベントをセットアップする：更新ボタン.
     UPDATE.onclick = (async(event) => {
         state = "save_setting";
     });
 
-    // UIのイベントをセットアップする：認証ボタン.    
+    // UIのイベントをセットアップする：認証ボタン.
     AUTH_OK.onclick = (async(event) => {
         current_user.username = AUTH_USERNAME.value.trim();
         current_user.encrypted_password = CryptoJS.AES.encrypt(AUTH_PASSWORD.value, SECRET_KEY).toString();
@@ -708,7 +706,7 @@ async function main() {
         state = "start";
     });
 
-    // UIのイベントをセットアップする：ダウンロードボタン.     
+    // UIのイベントをセットアップする：ダウンロードボタン.
     DOWNLOAD.onclick = (async(event) => {
         // フォルダ選択ダイアログをだす.
         download_folder = await window.showDirectoryPicker();
@@ -719,7 +717,7 @@ async function main() {
         state = "open_download_view";
     });
 
-    // UIのイベントをセットアップする：ダウンロードキャンセルボタン.     
+    // UIのイベントをセットアップする：ダウンロードキャンセルボタン.
     DOWNLOAD_CANCEL.onclick = (async(event) => {
         // ステートをメインビューに戻す.
         // ボタンの押下自体は非同期だが、メインループのステート処理に戻ってきたときは、

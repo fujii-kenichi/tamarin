@@ -133,7 +133,7 @@ async function load_debug_log() {
 async function setup_debug_log() {
 
     if (DEBUG) {
-        // デバッグモードだったらconsoleへのログ出力を横取りしてバッファにも溜めておく.            
+        // デバッグモードだったらconsoleへのログ出力を横取りしてバッファにも溜めておく.
         const original_error = console.error;
         console.error = (...args) => {
             debug_log.push(Array.from(args));
@@ -222,7 +222,7 @@ async function setup_database() {
 async function init() {
     console.assert(!serviceworker_registration);
 
-    // service worker が使える環境かどうかをチェック.
+    // service worker が使える環境かどうかをチェックする.
     if (!("serviceWorker" in navigator)) {
         console.error("no service worker in navigator.");
         state = "open_error_view";
@@ -230,10 +230,8 @@ async function init() {
     }
 
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
-    const param = document.location.search;
-
-    if (param !== "{{MODE_APP}}") {
-        console.log("no {{MODE_APP}} param in url :", document.location.search);
+    if (document.location.search !== "{{MODE_APP}}") {
+        console.log("no {{MODE_APP}} param in url.");
         state = "open_install_view";
         return;
     }
@@ -242,7 +240,6 @@ async function init() {
     try {
         navigator.serviceWorker.register("camera-serviceworker.js").then(registration => {
             console.log("service worker registrated :", registration);
-
             navigator.serviceWorker.ready.then(registration => {
                 console.log("service worker is ready :", registration);
                 serviceworker_registration = registration;
@@ -369,7 +366,7 @@ async function load_user(new_state) {
     // オフライン時の判断をする.
     if (!online) {
 
-        // Userサービスからすでにidが取れているのであれば、大丈夫そうだと判断してオフラインでの動作を続行する.                    
+        // Userサービスからすでにidが取れているのであれば、大丈夫そうだと判断してオフラインでの動作を続行する.
         // そうでない場合はまあオフラインなんで意味ないんだけど(とはいってもこのまま続行もできないので)認証パネルを出すようにして抜ける.
         if (current_user.user_id) {
             console.warn("assuming current user would be valid in offline :", current_user.user_id);
@@ -466,7 +463,7 @@ async function update_camera_view() {
         CAMERA_AUTHOR_NAME.value = last_author_name;
     }
 
-    // "シーン"の情報が前と違っていたら更新する.    
+    // "シーン"の情報が前と違っていたら更新する.
     if (last_scene_tag !== current_user.scene_tag || last_scene_color !== current_user.scene_color) {
         last_scene_tag = current_user.scene_tag;
         last_scene_color = current_user.scene_color;
@@ -480,6 +477,7 @@ async function update_camera_view() {
             console.assert(scene_color);
 
             // CSVのタグを分解してループを回してボタンを生成してセットする.
+            // TODO: ここでは最大の個数とか適切な色名だとかは一歳チェックしていない：入っていたデータが正しいという前提なので注意!
             for (let i = 0; i < scene_tag.length; i++) {
                 const v = scene_tag[i].trim();
                 console.assert(v);
@@ -496,14 +494,15 @@ async function update_camera_view() {
         CAMERA_SHUTTER.innerHTML = inner_html;
     }
 
-    // "状況"の情報が前と違っていたら更新する.        
+    // "状況"の情報が前と違っていたら更新する.
     if (last_context_tag !== current_user.context_tag) {
         last_context_tag = current_user.context_tag;
         let inner_html = "";
 
         if (current_user.context_tag) {
 
-            // CSVのタグを分解してループを回してオプションタグ(選択肢)を生成してセットする.            
+            // CSVのタグを分解してループを回してオプションタグ(選択肢)を生成してセットする.
+            // TODO: ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータが正しいという前提なので注意!
             for (const t of last_context_tag.split(/,/)) {
                 const v = t.trim();
                 console.assert(v);
@@ -621,15 +620,16 @@ async function take_photo(scene_tag) {
             encrypted_data: data
         }).then(() => {
             // データベースの更新が成功したら撮影済みカウンタの表示を更新する.
-            update_photo_counter();
+            update_photo_counter().then(() => {
+                console.assert(serviceworker_registration);
 
-            // service workerにsyncイベントを登録する.
-            console.assert(serviceworker_registration);
-            if ("sync" in serviceworker_registration) {
-                serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
-                    console.info("service worker sync registrated :{{SYNC_TAG}}");
-                });
-            }
+                // service workerにsyncイベントを登録する.
+                if ("sync" in serviceworker_registration) {
+                    serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
+                        console.info("service worker sync registrated :{{SYNC_TAG}}");
+                    });
+                }
+            });
         });
     }
 
@@ -644,7 +644,7 @@ async function upload_photo() {
     // 最も古い写真をデータベースから取得する.
     const photo = await database.photo.orderBy("date_taken").first();
 
-    // なかったらなにもしないで終了する.
+    // 写真がなかったらなにもしないで終了する.
     if (!photo) {
         console.log("photo database is empty.");
         return;
@@ -713,7 +713,7 @@ async function upload_photo() {
         default:
             // 予期していないステータスコードが返ってきちゃったので(危ないので)とりあえずエラーとする.
             // TODO: もうちょっとステータスコードの処理を増やしたほうがいいかも...
-            console.warn("unexpected status code returned from media service  :", media_response.status);
+            console.warn("unexpected status code returned from media service :", media_response.status);
             state = "service_error";
             break;
     }
@@ -794,7 +794,7 @@ async function main_loop() {
                 // カメラを初期化する.
                 await setup_camera();
 
-                // オンライン状態変化によるカメラリセットをトリガーされないようにする.                
+                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
                 last_online = online;
 
                 // UI表示を最新化する.
@@ -840,14 +840,14 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "none";
                 SETTING_VIEW.style.display = "block";
 
-                // UI要素の情報を更新しておく.                
+                // UI要素の情報を更新しておく.
                 SETTING_SHUTTER_SOUND.checked = current_user.shutter_sound;
                 SETTING_AUTO_RELOAD.checked = current_user.auto_reload;
                 SETTING_ENCRYPTION.checked = current_user.encryption;
                 break;
 
             case "in_setting_view":
-                // 設定ビューを表示中：このステートを繰り返す.                
+                // 設定ビューを表示中：このステートを繰り返す.
                 break;
 
             case "open_reload_view":
@@ -953,7 +953,7 @@ async function main() {
         state = "open_reload_view";
     });
 
-    // UIのイベントをセットアップする：設定.    
+    // UIのイベントをセットアップする：設定.
     CAMERA_SETTING.onclick = (async(event) => {
         state = "open_setting_view";
     });
@@ -978,7 +978,7 @@ async function main() {
         state = "open_reload_view";
     });
 
-    // UIのイベントをセットアップする：設定更新ボタン.            
+    // UIのイベントをセットアップする：設定更新ボタン.
     SETTING_OK.onclick = (async(event) => {
         // 現在のユーザを示す変数に設定値を適用する.
         current_user.shutter_sound = SETTING_SHUTTER_SOUND.checked;

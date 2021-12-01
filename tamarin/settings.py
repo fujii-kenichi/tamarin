@@ -200,7 +200,7 @@ APP_CONTEXT = {
 
     # タマリンサービスのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない：デバッグ時も注意！
-    "VERSION": "0.0.01L",
+    "VERSION": "0.0.01M",
 
     # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
@@ -249,7 +249,7 @@ APP_CONTEXT_MESSAGE = {
 
     # 表示されるメッセージ:認証ビュー.
     "AUTHOR_NAME_LABEL": "あなたのお名前",
-    "USERNAME_LABEL":  "サービスのユーザ名",
+    "USERNAME_LABEL": "サービスのユーザ名",
     "PASSWORD_LABEL": "サービスのパスワード",
     "AUTH_OK_LABEL": "サインイン",
     "AUTH_ERROR_MESSAGE": "サインインに失敗しました...",
