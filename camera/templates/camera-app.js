@@ -551,7 +551,8 @@ async function take_photo(scene_tag) {
     CAMERA_PREVIEW.pause();
     setTimeout(() => {
         CAMERA_PREVIEW.play().catch(error => {
-            console.error("camera preview returns error on play :", error);
+            console.error("camera preview returns error on play :", error.toString());
+            state = "reset_camera";
         });
     }, SHUTTER_PAUSE_TIME);
 
@@ -814,7 +815,8 @@ async function main_loop() {
 
                 // プレビューを強制的に再生開始.
                 CAMERA_PREVIEW.play().catch(error => {
-                    console.error("camera preview returns error on play :", error);
+                    console.error("camera preview returns error on play :", error.toString());
+                    state = "reset_camera";
                 });
 
                 // 撮影済み枚数の表示を更新する.
@@ -882,6 +884,13 @@ async function main_loop() {
 
                 // TODO: いきなり終わるんじゃなくて、もっとエラー内容に応じたリカバリ処理をすること！
                 state = "open_error_view";
+                break;
+
+            case "reset_camera":
+                // 何らかの理由でVideoのプレビューがエラーになった.
+                // 少なくともiOSでオンラインからオフラインにすると発生する.
+                // とりあえずカメラの初期化からやりなおしてみる...
+                state = "open_camera_view";
                 break;
 
             default:
