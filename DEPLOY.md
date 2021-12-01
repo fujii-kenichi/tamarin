@@ -110,7 +110,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
     ```
 
 - この段階でこの PostgreSQL はインターネット上に全公開ですので、とっとと以下のことをやります。
-  - ローカルマシンでの開発と同じように sudo -u postgres psql でユーザとデータベースとテーブルを作ります. ちなみに以下にようにするとローカルから VM 上の PostgreSQL に(この段階では)つなげることができます。
+  - ローカルマシンでの開発と同じように sudo -u postgres psql でユーザとデータベースとテーブルを作ります。ちなみに以下にようにするとローカルから VM 上の PostgreSQL に(この段階では)つなげることができます。
 
     ```bash
     psql -h "VMのパブリックIPアドレス" -U tamarin_db_admin postgres
@@ -127,7 +127,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
     python3 manage.py createsuperuser
     ```
 
-  - ここまで無事に来たら PostgreSQL を閉じます。Azure のコンソールから当該 VM のネットワークにおける受信ポートの規則に、PostgreSQL(5432) は ServiceTag:AzureCloud からのみ開けるルールを追加します。さきほどの psql コマンドで無事に **接続ができなくなっている** ことを確認します。
+  - ここまで無事に来たら PostgreSQL をインターネットからのアクセスができないようにします。そのために、Azure のコンソールから当該 VM のネットワークにおける受信ポートの規則に、PostgreSQL(5432) は ServiceTag:AzureCloud からのみ開けるルールを追加します。さきほどの psql コマンドで無事に **接続ができなくなっている** ことを確認します。
     - ちなみに本当は使用する Azure App Service のインスタンスからのみ接続できるように絞るほうが適切です。今回は Azure App Service が無償プランのせいか NSG をうまく設定できなかったのでとりあえず AzureCloud で制限しています...
 
 ### 2-2. Azure ストレージの作成
