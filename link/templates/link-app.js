@@ -108,8 +108,6 @@ async function init() {
 
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
     const param = document.location.search;
-    console.assert(param);
-    console.log("startup parameter :", param);
 
     if (param !== "{{MODE_APP}}") {
         console.log("no {{MODE_APP}} param in url :", document.location.search);
@@ -440,17 +438,17 @@ async function download_file() {
     switch (current_user.download_rule) {
         case "1":
             path_name.push(date);
+            path_name.push(author_name);
             path_name.push(context_tag);
             path_name.push(scene_tag);
-            path_name.push(author_name);
             file_name = time + "." + ext;
             break;
 
         case "2":
             path_name.push(date);
-            path_name.push(author_name);
             path_name.push(context_tag);
             path_name.push(scene_tag);
+            path_name.push(author_name);
             file_name = time + "." + ext;
             break;
 

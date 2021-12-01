@@ -216,46 +216,6 @@ async function setup_database() {
 }
 
 /**
- * カメラ(撮影デバイス)をセットアップする.
- */
-async function setup_camera() {
-    // TODO: 作成済みのImage Captureがあった場合の処理を追加する.
-    if (image_capture) {
-        console.warn("how can I destroy image capture object instance gently ...?");
-        image_capture = null;
-    }
-
-    try {
-        // Viewから渡された設定値を使ってJSONを作る.
-        const device_param = JSON.parse(DEVICE_PARAM);
-        console.assert(device_param);
-        console.info("getting user media devices using param :", device_param);
-
-        // カメラストリームに接続する.
-        const stream = await navigator.mediaDevices.getUserMedia(device_param);
-        console.assert(stream);
-        console.log("connected to stream :", stream);
-
-        // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
-
-        // カメラストリームの情報を取得する.
-        const settings = stream.getVideoTracks()[0].getSettings();
-        console.assert(settings);
-        console.info("stream settings :", settings);
-
-        // カメラストリームをプレビューにつなげて再生を開始する. 
-        CAMERA_PREVIEW.srcObject = stream;
-
-        // 撮影用のオブジェクトを初期化しておく.
-        image_capture = new ImageCapture(stream.getVideoTracks()[0]);
-        console.assert(image_capture);
-    } catch (error) {
-        console.error("camera setup error :", error.toString());
-        state = "open_error_view";
-    }
-}
-
-/**
  * アプリの動作に必要となるプラットフォーム関連の初期化を行う.
  */
 async function init() {
@@ -270,8 +230,6 @@ async function init() {
 
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
     const param = document.location.search;
-    console.assert(param);
-    console.log("startup parameter :", param);
 
     if (param !== "{{MODE_APP}}") {
         console.log("no {{MODE_APP}} param in url :", document.location.search);
@@ -293,6 +251,58 @@ async function init() {
     } catch (error) {
         // service workerが登録できなかった場合は起動できないエラーとして扱う.
         console.error("service worker registration error :", error.toString());
+        state = "open_error_view";
+    }
+}
+
+/**
+ * カメラをセットアップする.
+ */
+async function setup_camera() {
+    try {
+        // TODO: 作成済みのImage Captureがあった場合の処理を追加する.
+        if (image_capture) {
+            image_capture = null;
+        }
+
+        // Videoに結びつけているストリームをリセットする.
+        if (CAMERA_PREVIEW.srcObject) {
+            CAMERA_PREVIEW.srcObject.getVideoTracks().forEach(track => {
+                track.stop()
+                CAMERA_PREVIEW.srcObject.removeTrack(track)
+            })
+            CAMERA_PREVIEW.pause();
+            CAMERA_PREVIEW.removeAttribute("srcObject");
+            CAMERA_PREVIEW.load();
+            CAMERA_PREVIEW.srcObject = null;
+        }
+
+        // Viewから渡された設定値を使ってJSONを作る.
+        const device_param = JSON.parse(DEVICE_PARAM);
+        console.assert(device_param);
+        console.info("getting user media devices using param :", device_param);
+
+        // ストリームに接続する.
+        const stream = await navigator.mediaDevices.getUserMedia(device_param);
+        console.assert(stream);
+        console.log("connected to stream :", stream);
+
+        // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
+        {
+            // ストリームの情報を取得する.
+            const settings = stream.getVideoTracks()[0].getSettings();
+            console.assert(settings);
+            console.info("stream settings :", settings);
+        }
+
+        // ストリームをVideoにつなげて再生を開始する. 
+        CAMERA_PREVIEW.srcObject = stream;
+
+        // 撮影用のImage Captureオブジェクトを初期化しておく.
+        image_capture = new ImageCapture(stream.getVideoTracks()[0]);
+        console.assert(image_capture);
+    } catch (error) {
+        console.error("camera setup error :", error.toString());
         state = "open_error_view";
     }
 }
@@ -540,7 +550,9 @@ async function take_photo(scene_tag) {
     // 一瞬プレビューのビデオを止めることで撮影したっぽい効果をだす.
     CAMERA_PREVIEW.pause();
     setTimeout(() => {
-        CAMERA_PREVIEW.play();
+        CAMERA_PREVIEW.play().catch(error => {
+            console.error("camera preview returns error on play :", error);
+        });
     }, SHUTTER_PAUSE_TIME);
 
     // 実際の画像情報を取得する.
@@ -611,9 +623,11 @@ async function take_photo(scene_tag) {
 
             // service workerにsyncイベントを登録する.
             console.assert(serviceworker_registration);
-            serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
-                console.info("service worker sync registrated :{{SYNC_TAG}}");
-            });
+            if ("sync" in serviceworker_registration) {
+                serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
+                    console.info("service worker sync registrated :{{SYNC_TAG}}");
+                });
+            }
         });
     }
 
@@ -770,10 +784,13 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "none";
                 SETTING_VIEW.style.display = "none";
 
-                idle_count = 0;
+                // カメラを初期化する.
+                await setup_camera();
 
                 // UI表示を最新化する.
                 await update_camera_view();
+
+                idle_count = 0;
                 break;
 
             case "in_camera_view":
@@ -794,6 +811,11 @@ async function main_loop() {
                         }
                     }
                 }
+
+                // プレビューを強制的に再生開始.
+                CAMERA_PREVIEW.play().catch(error => {
+                    console.error("camera preview returns error on play :", error);
+                });
 
                 // 撮影済み枚数の表示を更新する.
                 await update_photo_counter();
@@ -943,7 +965,6 @@ async function main() {
     // 依存するもろもろのセットアップ処理を行う.
     await setup_debug_log();
     await setup_database();
-    await setup_camera();
 
     // メインループの１回目を開始する.
     await main_loop();
