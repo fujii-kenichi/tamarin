@@ -127,8 +127,8 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
     python3 manage.py createsuperuser
     ```
 
-  - ここまで無事に来たら PostgreSQL をインターネットからのアクセスができないようにします。そのために、Azure のコンソールから当該 VM のネットワークにおける受信ポートの規則に、PostgreSQL(5432) は ServiceTag:AzureCloud からのみ開けるルールを追加します。さきほどの psql コマンドで無事に **接続ができなくなっている** ことを確認します。
-    - ちなみに本当は使用する Azure App Service のインスタンスからのみ接続できるように絞るほうが適切です。今回は Azure App Service が無償プランのせいか NSG をうまく設定できなかったのでとりあえず AzureCloud で制限しています...
+- ここまで無事に来たら PostgreSQL をインターネットからのアクセスができないようにします。そのために、Azure のコンソールから当該 VM のネットワークにおける受信ポートの規則に、PostgreSQL(5432) は ServiceTag:AzureCloud からのみ開けるルールを追加します。さきほどの psql コマンドで無事に **接続ができなくなっている** ことを確認します。
+  - ちなみに本当は使用する Azure App Service のインスタンスからのみ接続できるように絞るほうが適切です。今回は Azure App Service が無償プランのせいか NSG をうまく設定できなかったのでとりあえず AzureCloud で制限しています...
 
 ### 2-2. Azure ストレージの作成
 
