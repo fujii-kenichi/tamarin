@@ -112,12 +112,22 @@ input.photo_count {
     max-width: 2em;
 }
 
+input.debug {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 div.camera_main {
     display: flex;
 }
 
 video.camera_preview {
-    background-color: pink;
+    background-color: red;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     width: auto;
     height: calc(100vh - 2.5em);
 }
@@ -147,17 +157,11 @@ div.camera_shutter_button {
 
 @media screen and (orientation: portrait) {
     input.author_name {
-        max-width: 20%;
+        max-width: 25%;
     }
     select.context_tag {
-        max-width: 20%;
+        max-width: 25%;
     }
-    /*
-    video.camera_preview {
-        width: 100vw;
-        height: auto;
-    }
-    */
     div.camera_shutter {
         position: absolute;
         left: 0;

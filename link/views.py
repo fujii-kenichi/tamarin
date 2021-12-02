@@ -51,7 +51,7 @@ LINK_CONTEXT_MESSAGE = {
     # PWAとしてマニフェストに書くための情報.
     "NAME": "タマリンク",
     "SHORT_NAME": "タマリンク",
-    "DESCRIPTION": "タマリンのダウンロードアプリです",
+    "DESCRIPTION": "タマリンの管理アプリです",
 
     # 各UI要素に対応した文字列.
     "SIGNUP_LABEL": "サインアップ",

@@ -3,7 +3,7 @@
  * by fujii.kenichi@tamariva.co.jp
  * 
  * ↓ このファイルのバイト数を変えることで、ブラウザに更新を伝えるためのコメント.
- * "しのぶれどいろにいでにけりわがこいはものや..."
+ * "しのぶれどいろにいでにけりわがこいはものやおもうと..."
  */
 "use strict";
 
@@ -32,7 +32,6 @@ self.addEventListener("install", (event) => {
                 "{{CAMERA_SHUTTER_SOUND}}",
                 "camera-app.css",
                 "camera-app.js",
-                "camera-app.html",
                 "camera-app.html{{MODE_APP}}"
             ]);
         })
