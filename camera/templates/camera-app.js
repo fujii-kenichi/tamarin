@@ -19,7 +19,7 @@ const MAIN_LOOP_INTERVAL = Number("{{MAIN_LOOP_INTERVAL}}");
 // 自動でConnectorからUserのデータを自動リロードする間隔(アイドル状態の回数).
 const AUTO_RELOAD_TRIGGER = Number("{{AUTO_RELOAD_TRIGGER}}");
 
-// データベース(IndexedDB)に入れることのできる写真の最大枚数(つまりオフラインで撮影して溜めて置ける最大の枚数.
+// データベース(IndexedDB)に入れることのできる写真の最大枚数(=オフラインで撮影して溜めておける最大の枚数).
 const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 
 // シャッターを切ったときにそれっぽい効果をだすためにビデオを一瞬止める時間(ミリ秒).
@@ -61,7 +61,6 @@ const DEBUG_LOG = document.getElementById("debug_log");
 const DEBUG_RELOAD = document.getElementById("debug_reload");
 const DEBUG_CLEAR = document.getElementById("debug_clear");
 const DEBUG_RESET = document.getElementById("debug_reset");
-const DEBUG_STATE = document.getElementById("debug_state");
 const DEBUG_CAMERA = document.getElementById("debug_camera");
 const DEBUG_CLOSE = document.getElementById("debug_close");
 
@@ -78,9 +77,9 @@ let current_user = {
     scene_tag: null,
     scene_color: null,
     context_tag: null,
-    shutter_sound: true,
-    auto_reload: true,
-    encryption: true
+    shutter_sound: true, // シャッターサウンドはデフォルトでオン.
+    auto_reload: true, // 自動リロードはデフォルトでオン.
+    encryption: true // 暗号化もデフォルトでオン.
 };
 
 // オンラインかオフラインを示す情報.
@@ -92,19 +91,16 @@ let state = "init";
 // Tokenサービスが返してきたアクセストークン(無い場合はnull).
 let token = null;
 
-// データベースに今何枚の写真があるか？.
+// データベースに今何枚の写真があるかを示す情報.
 let photo_count = 0;
 
 // 自動リロードをトリガーするための待ち状態カウント.
 let idle_count = 0;
 
-// 写真撮影時に使用するオブジェクト.
-let image_capture = null;
-
 // Service workerの登録情報.
 let serviceworker_registration = null;
 
-// 不要なUI(DOM)の更新を避けるため前の状態を記憶するための変数たち.
+// 不要なUI(DOM)の更新を避けるために前の状態を記憶するための変数たち.
 let last_state = null;
 let last_online = null;
 let last_author_name = null;
@@ -165,10 +161,6 @@ async function setup_debug_log() {
         DEBUG_CLEAR.onclick = (async(event) => {
             debug_log = [];
             load_debug_log();
-        });
-
-        DEBUG_STATE.onclick = (async(event) => {
-            DEBUG_LOG.value = "{ online: " + online + " }";
         });
 
         DEBUG_RESET.onclick = (async(event) => {
@@ -242,8 +234,15 @@ async function init() {
             console.log("service worker registrated :", registration);
             navigator.serviceWorker.ready.then(registration => {
                 console.log("service worker is ready :", registration);
+
+                // 登録できたら次のステートをinitへ.
                 serviceworker_registration = registration;
                 state = "start";
+
+                // TODO: これは実験的な措置:メッセージハンドラを登録しておく.
+                self.addEventListener("message", (event) => {
+                    console.log("receive message event :", event);
+                })
             });
         });
     } catch (error) {
@@ -258,12 +257,7 @@ async function init() {
  */
 async function setup_camera() {
     try {
-        // TODO: 作成済みのImage Captureがあった場合の処理を追加する.
-        if (image_capture) {
-            image_capture = null;
-        }
-
-        // Videoに結びつけているストリームをリセットする.
+        // プレビューに結びつけているストリームをリセットする.
         if (CAMERA_PREVIEW.srcObject) {
             CAMERA_PREVIEW.srcObject.getVideoTracks().forEach(track => {
                 track.stop()
@@ -293,13 +287,10 @@ async function setup_camera() {
             console.info("stream settings :", settings);
         }
 
-        // ストリームをVideoにつなげて再生を開始する. 
+        // ストリームをプレビューにつなげて再生を開始する. 
         CAMERA_PREVIEW.srcObject = stream;
-
-        // 撮影用のImage Captureオブジェクトを初期化しておく.
-        image_capture = new ImageCapture(stream.getVideoTracks()[0]);
-        console.assert(image_capture);
     } catch (error) {
+        // カメラがうまく初期化できなかったら致命的エラーとして扱う.
         console.error("camera setup error :", error.toString());
         state = "open_error_view";
     }
@@ -423,7 +414,7 @@ async function load_user(new_state) {
     current_user.context_tag = result_user[0].context_tag;
     console.assert(current_user.context_tag);
 
-    // 更新されたユーザを示す変数をさらにデータベースに保存する.
+    // 更新されたユーザを示す変数をデータベースに保存する.
     console.log("save current user to database :", current_user);
     await database.user.put(current_user);
 
@@ -438,7 +429,6 @@ async function load_user(new_state) {
  * 撮影済みの写真枚数の表示を更新する.
  */
 async function update_photo_counter() {
-
     // データベースのレコード数を枚数とみなす.
     photo_count = await database.photo.count();
 
@@ -453,7 +443,6 @@ async function update_photo_counter() {
  * カメラ操作ビューの表示内容を更新する.
  */
 async function update_camera_view() {
-
     // まず撮影済み枚数の表示を更新する.
     await update_photo_counter();
 
@@ -477,7 +466,7 @@ async function update_camera_view() {
             console.assert(scene_color);
 
             // CSVのタグを分解してループを回してボタンを生成してセットする.
-            // TODO: ここでは最大の個数とか適切な色名だとかは一歳チェックしていない：入っていたデータが正しいという前提なので注意!
+            // TODO: ここでは最大の個数とか適切な色名だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
             for (let i = 0; i < scene_tag.length; i++) {
                 const v = scene_tag[i].trim();
                 console.assert(v);
@@ -502,7 +491,7 @@ async function update_camera_view() {
         if (current_user.context_tag) {
 
             // CSVのタグを分解してループを回してオプションタグ(選択肢)を生成してセットする.
-            // TODO: ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータが正しいという前提なので注意!
+            // TODO: ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
             for (const t of last_context_tag.split(/,/)) {
                 const v = t.trim();
                 console.assert(v);
@@ -530,7 +519,16 @@ async function take_photo(scene_tag) {
         return;
     }
 
-    // 今の日時を撮影日時とする(EXIFを用いる等ではなくここで生成する点に注意!)
+    // シャッター音を再生する.
+    // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
+    if (current_user.shutter_sound) {
+        // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.        
+        CAMERA_SHUTTER_SOUND.pause();
+        CAMERA_SHUTTER_SOUND.currentTime = 0;
+        CAMERA_SHUTTER_SOUND.play();
+    }
+
+    // 今の日時を撮影日時とする.EXIFではなくここで生成する点に注意!
     const start_time = new Date();
     console.assert(start_time);
 
@@ -538,103 +536,112 @@ async function take_photo(scene_tag) {
     const date_taken = start_time.toJSON();
     console.assert(date_taken);
 
-    // シャッター音を再生する.
-    // safariがUIスレッドでないとサウンド再生を許可してくれないのでここで再生する.
-    // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.
-    if (current_user.shutter_sound) {
-        CAMERA_SHUTTER_SOUND.pause();
-        CAMERA_SHUTTER_SOUND.currentTime = 0;
-        CAMERA_SHUTTER_SOUND.play();
-    }
-
-    // 一瞬プレビューのビデオを止めることで撮影したっぽい効果をだす.
-    CAMERA_PREVIEW.pause();
-    setTimeout(() => {
-        CAMERA_PREVIEW.play().catch(error => {
-            console.error("camera preview returns error on play :", error.toString());
-            state = "reset_camera";
-        });
-    }, SHUTTER_PAUSE_TIME);
-
-    // 実際の画像情報を取得する.
-    const image = await image_capture.takePhoto();
-    console.assert(image);
-    console.log("image captured :", image);
-    console.info("captured image type :", image.type);
-    console.info("captured image size :", image.size);
-
-    // 画像を読み込む準備をする.
-    const image_reader = new FileReader();
-    console.assert(image_reader);
-
-    image_reader.onload = () => {
-        // 画像の読み込みが完了したらここにくる.
-        let data = image_reader.result;
-        console.assert(data);
-
-        // "暗号化していない"を示す値で暗号キーを初期化する.
-        let key = "none";
-
-        // 設定に基づいて暗号化の処理を行う.
-        if (current_user.encryption) {
-
-            // 暗号キーは乱数で毎回自動生成する.
-            key = CryptoJS.lib.WordArray.random(MEDIA_ENCRYPTION_KEY_LENGTH).toString();
-            console.assert(key);
-
-            // 画像をBASE64に変換する.
-            const base64_raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
-            console.assert(base64_raw);
-            console.log("base64 raw data size :", base64_raw.length);
-
-            // BASE64を作成したキーで暗号化する.
-            const base64_encrypted = CryptoJS.AES.encrypt(base64_raw, key).toString();
-            console.assert(base64_encrypted);
-            console.log("base64 encrypted data size :", base64_encrypted.length);
-
-            // 処理結果を撮影データにすり替える.
-            data = base64_encrypted;
-        }
-        console.assert(data);
-        console.assert(key);
-
-        // "状況"を示す情報を取得する.
-        const context_tag = CAMERA_CONTEXT_TAG.value;
-        console.assert(context_tag);
-
-        // ここまでの処理にかかった時間をログに書いておく.
-        console.info("photo processing time in ms :", new Date() - start_time);
-
-        // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.
-
-        // データベースに保管する.
-        console.log("adding photo to database.");
-        database.photo.add({
-            owner: current_user.user_id,
-            date_taken: date_taken,
-            author_name: current_user.author_name,
-            scene_tag: scene_tag,
-            context_tag: context_tag,
-            content_type: image.type,
-            encryption_key: key,
-            encrypted_data: data
-        }).then(() => {
-            // データベースの更新が成功したら撮影済みカウンタの表示を更新する.
-            update_photo_counter().then(() => {
-                console.assert(serviceworker_registration);
-
-                // service workerにsyncイベントを登録する.
-                if ("sync" in serviceworker_registration) {
-                    serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
-                        console.info("service worker sync registrated :{{SYNC_TAG}}");
-                    });
-                }
+    // 写真撮影のタスクを定義する.
+    // 非同期に処理することで少しでも応答性能をあげようという試み...
+    const task = new Promise(() => {
+        // 一瞬プレビューのビデオを止めることで撮影したっぽい効果をだす.
+        CAMERA_PREVIEW.pause();
+        setTimeout(() => {
+            CAMERA_PREVIEW.play().catch(error => {
+                // safariだとここでエラーが起きることがあるので無視しないでキャッチしておく.
+                console.error("camera preview returns error on play :", error.toString());
+                state = "preview_error";
             });
-        });
-    }
+        }, SHUTTER_PAUSE_TIME);
 
-    // 画像を読み込む.
-    image_reader.readAsArrayBuffer(image);
+        // プレビューに紐づけられているストリームをとってくる.
+        const stream = CAMERA_PREVIEW.srcObject;
+        console.assert(stream);
+
+        // 撮影用のImage Captureオブジェクトをつくる.
+        const image_capture = new ImageCapture(stream.getVideoTracks()[0]);
+        console.assert(image_capture);
+
+        // 実際の画像情報を取得する.
+        image_capture.takePhoto().then(image => {
+            console.assert(image);
+            console.log("image captured :", image);
+            console.info("captured image type :", image.type);
+            console.info("captured image size :", image.size);
+
+            // 画像を読み込む準備をする.
+            const image_reader = new FileReader();
+            console.assert(image_reader);
+
+            image_reader.onload = () => {
+                // 画像の読み込みが完了したらここにくる.
+                let data = image_reader.result;
+                console.assert(data);
+
+                // "暗号化していない"を示す値で暗号キーを初期化する.
+                let key = "{{NO_ENCRYPTION_KEY}}";
+
+                // 設定に基づいて暗号化の処理を行う.
+                if (current_user.encryption) {
+
+                    // 暗号キーは乱数で毎回自動生成する.
+                    key = CryptoJS.lib.WordArray.random(MEDIA_ENCRYPTION_KEY_LENGTH).toString();
+                    console.assert(key);
+
+                    // 画像をBASE64に変換する.
+                    const base64_raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
+                    console.assert(base64_raw);
+                    console.log("base64 raw data size :", base64_raw.length);
+
+                    // BASE64を作成したキーで暗号化する.
+                    const base64_encrypted = CryptoJS.AES.encrypt(base64_raw, key).toString();
+                    console.assert(base64_encrypted);
+                    console.log("base64 encrypted data size :", base64_encrypted.length);
+
+                    // 処理結果を撮影データにすり替える.
+                    data = base64_encrypted;
+                }
+                console.assert(data);
+                console.assert(key);
+
+                // "状況"を示す情報を取得する.
+                const context_tag = CAMERA_CONTEXT_TAG.value;
+                console.assert(context_tag);
+
+                // ここまでの処理にかかった時間をログに書いておく.
+                console.info("photo processing time in ms :", new Date() - start_time);
+
+                // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.
+
+                // データベースに保管する.
+                console.log("adding photo to database.");
+                database.photo.add({
+                    owner: current_user.user_id,
+                    date_taken: date_taken,
+                    author_name: current_user.author_name,
+                    scene_tag: scene_tag,
+                    context_tag: context_tag,
+                    content_type: image.type,
+                    encryption_key: key,
+                    encrypted_data: data
+                }).then(() => {
+                    // データベースの更新が成功したら撮影済みカウンタの表示を更新する.
+                    update_photo_counter().then(() => {
+                        console.assert(serviceworker_registration);
+
+                        // 可能であればservice workerにsyncイベントを登録する.
+                        if ("sync" in serviceworker_registration) {
+                            serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
+                                console.info("service worker sync registrated :{{SYNC_TAG}}");
+                            });
+                        }
+                    });
+                });
+            }
+
+            // 画像を読み込む.
+            image_reader.readAsArrayBuffer(image);
+        });
+    });
+
+    // タスクを実行する.
+    console.assert(task);
+    return task;
 }
 
 /**
@@ -743,7 +750,7 @@ async function main_loop() {
         // 対応するステートによって処理を分岐させる.
         switch (state) {
             case "init":
-                // 初期化：初期化処理をする(次のステートはinit()の中で設定される).
+                // 初期化：初期化処理をする.次のステートはinit()の中で設定される.
                 await init();
 
                 // オンライン状態変化によるカメラリセットをトリガーされないようにする.
@@ -774,7 +781,7 @@ async function main_loop() {
                 break;
 
             case "in_auth_view":
-                // 認証ビューを表示中：このステートを繰り返す.
+                // 認証ビューを表示中：このステートの時はなにもしない.
                 break;
 
             case "authentication_failed":
@@ -825,7 +832,7 @@ async function main_loop() {
                 // プレビューを強制的に再生開始.
                 CAMERA_PREVIEW.play().catch(error => {
                     console.error("camera preview returns error on play :", error.toString());
-                    state = "reset_camera";
+                    state = "preview_error";
                 });
 
                 // 撮影済み枚数の表示を更新する.
@@ -847,7 +854,7 @@ async function main_loop() {
                 break;
 
             case "in_setting_view":
-                // 設定ビューを表示中：このステートを繰り返す.
+                // 設定ビューを表示中：このステートの時は何もしない.
                 break;
 
             case "open_reload_view":
@@ -895,8 +902,8 @@ async function main_loop() {
                 state = "open_error_view";
                 break;
 
-            case "reset_camera":
-                // 何らかの理由でVideoのプレビューがエラーになった.
+            case "preview_error":
+                // 何らかの理由でプレビューがエラーになった.
                 // 少なくともiOSでオンラインからオフラインにすると発生する.
 
                 // とりあえずカメラの初期化からやりなおしてみる...
@@ -913,7 +920,8 @@ async function main_loop() {
                 break;
         }
 
-        // オンライン状態が変化していたらカメラを強制リセット：iOSでこうしないとプレビューが消える.
+        // オンライン状態が変化していたらカメラを強制リセットする.
+        // iOSでこうしないとプレビューが消える.
         // TODO: この措置は本当にこれでいいのか...?
         if (last_online != online) {
             last_online = online;
@@ -940,7 +948,7 @@ async function main_loop() {
  * アプリケーションのメイン.
  */
 async function main() {
-    // ローディングビューを表示する.
+    // ローディングビューを表示しておく.
     LOADING_VIEW.style.display = "block";
 
     // UIのイベントをセットアップする：再認証.

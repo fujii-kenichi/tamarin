@@ -56,8 +56,8 @@ let current_user = {
     scene_tag: null,
     scene_color: null,
     context_tag: null,
-    download_rule: 1,
-    download_only: false
+    download_rule: 1, // ダウンロードルールのデフォルトは1番.
+    download_only: false // ダウンロード後でもファイルを維持するかどうかのデフォルトはオフ(=つまりファイルを削除する)
 };
 
 // ダウンロードフォルダへのハンドル.
@@ -72,7 +72,7 @@ let state = "init";
 // Tokenサービスが返してきたアクセストークン(無い場合はnull).
 let token = null;
 
-// 不要なUI(DOM)の更新を避けるため前の状態を記憶するための変数.
+// 不要なUI(DOM)の更新を避けるために前の状態を記憶するための変数たち.
 let last_state = null;
 
 // メインループで使うタイマー.
@@ -98,8 +98,7 @@ async function setup_database() {
  * アプリの動作に必要となるプラットフォーム関連の初期化を行う.
  */
 async function init() {
-
-    // service worker が使える環境かどうかをチェック.
+    // service worker が使える環境かどうかをチェックする.
     if (!("serviceWorker" in navigator)) {
         console.error("no service worker in navigator.");
         state = "open_error_view";
@@ -113,7 +112,7 @@ async function init() {
         return;
     }
 
-    // ファイルシステムAPIのサポートをチェック.
+    // ファイルシステムAPIのサポートをチェックする.
     if (!("showDirectoryPicker" in window)) {
         console.error("no showDirectoryPicker feature.");
         state = "open_error_view";
@@ -236,7 +235,7 @@ async function load_user(new_state) {
     console.assert(current_user.context_tag);
     CONTEXT_TAG.value = current_user.context_tag;
 
-    // 更新されたユーザを示す変数をさらにデータベースに保存する.
+    // 更新されたユーザを示す変数をデータベースに保存する.
     console.log("save current user to database :", current_user);
     await database.user.put(current_user);
 
@@ -275,7 +274,7 @@ async function save_user() {
     console.assert(user_response);
     console.log("user service respond :", user_response);
 
-    // 200以外だったらエラーなのでとりあえず再認証を要求するようにしておく.
+    // レスポンスが200以外だったらエラーなのでとりあえず再認証を要求するようにしておく.
     if (user_response.status !== 200) {
         state = "authentication_failed";
     }
@@ -374,7 +373,7 @@ async function download_file() {
     let data = null;
 
     // 暗号化キーが指定されているかをチェックする.
-    if (file.encryption_key !== "none") {
+    if (file.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
         // 暗号化されている場合にはデータ場BASE64なのでテキストとして取得する.
         const base64_raw = await media_response.text();
         console.assert(base64_raw);
@@ -529,7 +528,7 @@ async function main_loop() {
         // 対応するステートによって処理を分岐させる.
         switch (state) {
             case "init":
-                // 初期化：初期化処理をする(次のステートはinit()の中で設定される).
+                // 初期化：初期化処理をする.次のステートはinit()の中で設定される.
                 await init();
                 break;
 
@@ -556,7 +555,7 @@ async function main_loop() {
                 break;
 
             case "in_auth_view":
-                // 認証ビューを表示中：このステートを繰り返す.
+                // 認証ビューを表示中：このステートのときはなにもしない.
                 break;
 
             case "authentication_failed":
@@ -580,7 +579,7 @@ async function main_loop() {
                 break;
 
             case "in_main_view":
-
+                // メインビューを表示中：このステートのときはなにもしない.
                 break;
 
             case "save_setting":

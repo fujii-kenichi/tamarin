@@ -166,7 +166,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
    | 名前 | 値 | 備考 |
    | ---- | ---- | ---- |
    | DEBUG | False | Django の設定なので基本的に本番では False |
-   | APP_DEBUG | False | JavaScript での PWA 向けの設定 |
+   | APP_DEBUG | False | PWA 向けの設定でデバッグ中は True にする |
    | SECRET_KEY | 任意の文字列 | シークレットキー文字列 |
    | ALLOWED_HOSTS | App Service が待ち受ける FQDN | 例) hoge.azurewebsites.net |
    | DB_ENGINE | POSTGRESQL | データベースとして PostgreSQL を使用することを指示 |

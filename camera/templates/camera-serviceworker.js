@@ -3,7 +3,7 @@
  * by fujii.kenichi@tamariva.co.jp
  * 
  * ↓ このファイルのバイト数を変えることで、ブラウザに更新を伝えるためのコメント.
- * "しのぶれどいろにいでにけりわがこいはものや..."
+ * "しのぶれどいろにいでにけりわがこいは..."
  */
 "use strict";
 
@@ -13,11 +13,11 @@ importScripts("{{CRYPTO_JS}}");
 /**
  * install イベントの処理を定義する.
  */
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
     console.log("service worker received install event :", event);
 
     event.waitUntil(
-        // キャッシュに必要なファイルを設定する.
+        // キャッシュへ必要なファイルを押し込む.
         caches.open("{{VERSION}}").then(cache => {
             return cache.addAll([
                 "{{DEXIE_JS}}",
@@ -45,7 +45,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener("fetch", (event => {
     // console.log("service worker received fetch event :", event);
 
-    // キャッシュからとってこれたら返却する.
+    // キャッシュからとってこれたらそれを返却する.
     event.respondWith(caches.match(event.request).then(response => {
         return response ? response : fetch(event.request);
     }));
@@ -57,7 +57,7 @@ self.addEventListener("fetch", (event => {
 self.addEventListener("activate", (event => {
     console.log("service worker received activate event :", event);
 
-    // 古いキャッシュを削除する.
+    // バージョンの違う古いキャッシュを削除する.
     event.waitUntil(
         caches.keys().then(cache_names => {
             return Promise.all(cache_names.map(name => {
@@ -68,7 +68,7 @@ self.addEventListener("activate", (event => {
         })
     );
 
-    // 最初からイベントを発行するよう依頼.
+    // 最初からイベントを発行するよう依頼する.
     clients.claim();
 }));
 
@@ -124,7 +124,7 @@ self.addEventListener("sync", (event => {
                 console.info("start uploading photo to media service :", photo.id);
                 const start_time = new Date();
 
-                // INdexedDBにパスワードを保存する際の暗号化に使うキー.
+                // INdexedDBにパスワードを保存する際の暗号化に使うキーを準備する.
                 const SECRET_KEY = String("{{SECRET_KEY}}");
 
                 // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
@@ -198,8 +198,7 @@ self.addEventListener("sync", (event => {
                             } else {
                                 // 想定外のステータスコードが返ってきた.
                                 console.error("unexpected status code from media service :", media_response.status);
-
-                                // TODO: 本当はなにか適切なエラーハンドリングをするべき.
+                                // TODO: 本当はここでなにか適切なエラーハンドリングをするべき.
                             }
                         });
                     });
@@ -210,4 +209,12 @@ self.addEventListener("sync", (event => {
 
     // タスクの終了を待つ.
     event.waitUntil(task);
+}));
+
+/**
+ * message イベントの処理を定義する.
+ */
+self.addEventListener("message", (event => {
+    console.log("service worker received message event :", event);
+    // 今はなにもしない.    
 }));

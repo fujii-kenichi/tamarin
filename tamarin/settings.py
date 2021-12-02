@@ -200,7 +200,7 @@ APP_CONTEXT = {
 
     # タマリンサービスのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない：デバッグ時も注意！
-    "VERSION": "0.0.01M",
+    "VERSION": "0.0.01Q",
 
     # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
@@ -210,6 +210,9 @@ APP_CONTEXT = {
 
     # メディアを暗号化する時に自動生成するキーの長さ.
     "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
+
+    # 暗号化をしていないことを示す特別なキーの値.
+    "NO_ENCRYPTION_KEY": "none",
 
     # 認証するときにユーザが入力するユーザ名やパスワードの入力フィールドに渡す最大長.
     "AUTH_MAX_LENGTH": 150,

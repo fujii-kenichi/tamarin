@@ -38,7 +38,7 @@
             <input id="camera_debug" class="button camera_menu" type="button" value="&#128027;">
         </div>
         <div class="camera_main">
-            <video id="camera_preview" class="camera_preview" autoplay playsinline muted></video>
+            <video id="camera_preview" class="camera_preview" autoplay playsinline muted disableRemotePlayback x-webkit-airplay="deny"></video>
             <div id="camera_shutter" class="camera_shutter">
                 <div class="camera_shutter_button"></div>
             </div>
@@ -118,12 +118,11 @@
     </div>
     <!-- デバッグビュー：デバッグ用のビュー. -->
     <div id="debug_view" class="panel_view">
-        <input id="debug_reload" class="button" type="button" value="RELOAD">
-        <input id="debug_clear" class="button" type="button" value="CLEAR">
-        <input id="debug_state" class="button" type="button" value="GET STATE">
-        <input id="debug_reset" class="button" type="button" value="RESET">
-        <input id="debug_camera" class="button" type="button" value="CAMERA">
-        <input id="debug_close" class="button" type="button" value="CLOSE">
+        <input id="debug_close" class="button" type="button" value="X">
+        <input id="debug_reload" class="button" type="button" value="LD">
+        <input id="debug_clear" class="button" type="button" value="CLR">
+        <input id="debug_reset" class="button" type="button" value="RST">
+        <input id="debug_camera" class="button" type="button" value="V">
         <textarea id="debug_log" class="debug_log" readonly></textarea>
     </div>
 </body>

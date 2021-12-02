@@ -10,7 +10,7 @@
 /**
  * install イベントの処理を定義する.
  */
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
     // なにもしない...
 });
 
