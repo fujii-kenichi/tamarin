@@ -269,7 +269,7 @@ async function setup_camera() {
             CAMERA_PREVIEW.srcObject = null;
         }
 
-        // Viewから渡された設定値を使ってJSONを作る.
+        // 設定値を使ってJSONを作る.
         const device_param = JSON.parse(DEVICE_PARAM);
         console.assert(device_param);
         console.info("getting user media devices using param :", device_param);

@@ -152,10 +152,12 @@ div.camera_shutter_button {
     select.context_tag {
         max-width: 20%;
     }
+    /*
     video.camera_preview {
         width: 100vw;
         height: auto;
     }
+    */
     div.camera_shutter {
         position: absolute;
         left: 0;
