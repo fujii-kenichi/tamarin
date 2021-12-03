@@ -23,10 +23,10 @@ const AUTO_RELOAD_TRIGGER = Number("{{AUTO_RELOAD_TRIGGER}}");
 const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 
 // デバイス初期化用の文字列.
-const DEVICE_PARAM = String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"');
+const DEVICE_PARAM = JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'));
 
 // 写真撮影用の文字列.
-const IMAGE_CAPTURE_PARAM = String("{{IMAGE_CAPTURE_PARAM}}").replaceAll("&quot;", '"');
+const IMAGE_CAPTURE_PARAM = JSON.parse(String("{{IMAGE_CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
 
 // HTMLの各要素.
 const CAMERA_VIEW = document.getElementById("camera_view");
@@ -275,13 +275,9 @@ async function setup_camera() {
             CAMERA_PREVIEW.srcObject = null;
         }
 
-        // 設定値を使ってJSONを作る.
-        const device_param = JSON.parse(DEVICE_PARAM);
-        console.assert(device_param);
-        console.info("getting user media devices using param :", device_param);
-
         // ストリームに接続する.
-        const stream = await navigator.mediaDevices.getUserMedia(device_param);
+        console.info("getting user media devices using param :", DEVICE_PARAM);
+        const stream = await navigator.mediaDevices.getUserMedia(DEVICE_PARAM);
         console.assert(stream);
         console.log("connected to stream :", stream);
 
@@ -557,6 +553,7 @@ async function take_photo(scene_tag) {
         console.assert(image_capture);
 
         // 実際の画像情報を取得する.
+        console.log("image capture param :", IMAGE_CAPTURE_PARAM);
         image_capture.takePhoto(IMAGE_CAPTURE_PARAM).then(image => {
             console.assert(image);
             console.log("image captured :", image);
@@ -902,13 +899,13 @@ async function main_loop() {
 
             case "force_update":
                 // アプリの強制アップデートが指示された.
-
-                // service workerにメッセージをポストする.
+                // まずservice workerにメッセージをポストする.
                 navigator.serviceWorker.controller.postMessage({
                     type: "{{FORCE_UPDATE_TAG}}"
                 });
 
-                // 表示をローディングビューにして終了する.
+                // 表示をローディングビューにしてメインループを終了しておく.
+                // 実際の処理はservice workerからくるメッセージに反応するところで行う.
                 keep_main_loop = false;
                 LOADING_VIEW.style.display = "block";
                 CAMERA_VIEW.style.display = "none";
@@ -1011,7 +1008,13 @@ async function main() {
 
     // UIのイベントをセットアップする：バージョンアップ.
     SETTING_VERSION.onclick = (async(event) => {
-        state = "force_update";
+        // オンラインなら強制アップデートを要求するステートにする.
+        if (online) {
+            state = "force_update";
+        } else {
+            console.warn("could not start update in off-line.");
+            // TODO: 本当はここでオフラインアップデートはできないというフィードバックを返すべき?
+        }
     });
 
     // UIのイベントをセットアップする：設定更新ボタン.
