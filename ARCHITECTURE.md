@@ -30,18 +30,8 @@
 
 ## 4. 最終的な構成
 
-- TODO: ここに以下の構成要素での図を書く
-- Client: タマリンカメラ
-  - JavaScript / HTML / CSS
-    - iPHone/ iPod : Mobile Safari / IndexedDB / Service worker (Off-line)
-    - Android : Mobile Chrome / IndexedDB / Service worker (Off-line + Sync)
-    - 依存ライブラリ: Crypto-js / Dexie / Image Capture
-- Client: タマリンク
-  - JavaScript / HTML / CSS
-    - Windows 10 : Chromium Edge | Chrome / IndexedDB
-    - 依存ライブラリ: Crypto-js / Dexie
-- Server: コネクタ
-  - App Service : Django / Python
-    - HTTPS + JWT Access token
-  - VM : Linux + PostgreSQL
-  - メディアストレージ : Azure ストレージ (ダウンロードはここから直接)
+<https://app.diagrams.net> で書いた図を貼っておきます。
+
+
+[](./tamarin-overview.drawio.svg)
+<img src="./tamarin-overview.drawio.svg">
