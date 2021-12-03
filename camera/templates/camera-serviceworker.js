@@ -13,13 +13,13 @@ importScripts("{{CRYPTO_JS}}");
 /**
  * install イベントの処理を定義する.
  */
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (event => {
     console.log("service worker received install event :", event);
 
     event.waitUntil(
         // キャッシュへ必要なファイルを押し込む.
         caches.open("{{VERSION}}").then(cache => {
-            return cache.addAll([
+            cache.addAll([
                 "{{DEXIE_JS}}",
                 "{{CRYPTO_JS}}",
                 "{{IMAGECAPTURE_JS}}",
@@ -32,11 +32,12 @@ self.addEventListener("install", (event) => {
                 "{{CAMERA_SHUTTER_SOUND}}",
                 "camera-app.css",
                 "camera-app.js",
+                "camera-app.html",
                 "camera-app.html{{MODE_APP}}"
-            ]);
+            ]).then(self.skipWaiting())
         })
     );
-});
+}));
 
 /**
  * fetch イベントの処理を定義する.
@@ -65,11 +66,8 @@ self.addEventListener("activate", (event => {
                     return caches.delete(name);
                 }
             }));
-        })
+        }).then(() => self.clients.claim())
     );
-
-    // 最初からイベントを発行するよう依頼する.
-    clients.claim();
 }));
 
 /**
@@ -231,14 +229,14 @@ self.addEventListener("message", (event => {
                 console.log("delete cache :", name);
                 return caches.delete(name);
             }));
-        });
-
-        // クライアントにメッセージを送る.
-        self.clients.matchAll().then(clients => {
-            for (const c of clients) {
-                console.log("post message to client :", c);
-                c.postMessage({ type: "{{FORCE_UPDATE_TAG}}" });
-            }
+        }).then(() => {
+            // クライアントにメッセージを送る.
+            self.clients.matchAll().then(clients => {
+                for (const c of clients) {
+                    console.log("post message to client :", c);
+                    c.postMessage({ type: "{{FORCE_UPDATE_TAG}}" });
+                }
+            });
         });
     });
 

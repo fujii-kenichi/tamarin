@@ -108,7 +108,6 @@ let image_capture = null;
 
 // 不要な情報の更新を避けるために前の状態を記憶するための変数たち.
 let last_state = null;
-let last_online = null;
 let last_author_name = null;
 let last_scene_tag = null;
 let last_scene_color = null;
@@ -170,14 +169,13 @@ async function setup_debug_log() {
         });
 
         DEBUG_RESET.onclick = (async(event) => {
-            await database.photo.clear();
             await database.user.clear();
+            await database.photo.clear();
             DEBUG_LOG.value = "reset database.";
         });
 
         DEBUG_CAMERA.onclick = (async(event) => {
             await setup_camera();
-            DEBUG_LOG.value = "setup camera.";
         });
 
         DEBUG_CLOSE.onclick = (async(event) => {
@@ -283,6 +281,8 @@ class MyImageCapture {
  * カメラをセットアップする.
  */
 async function setup_camera() {
+    console.info("setup camera.");
+
     try {
         // プレビューに結びつけているストリームをリセットする.
         if (CAMERA_PREVIEW.srcObject) {
@@ -773,9 +773,6 @@ async function main_loop() {
             case "init":
                 // 初期化：初期化処理をする.次のステートはinit()の中で設定される.
                 await init();
-
-                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
-                last_online = online;
                 break;
 
             case "start":
@@ -822,9 +819,6 @@ async function main_loop() {
                 // カメラを初期化する.
                 await setup_camera();
 
-                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
-                last_online = online;
-
                 // UI表示を最新化する.
                 await update_camera_view();
 
@@ -855,10 +849,8 @@ async function main_loop() {
                 // プレビューを再生状態にし、エラーならカメラを初期化する.
                 CAMERA_PREVIEW.play().catch(error => {
                     console.error("camera preview returns error on play :", error.toString());
-                    // カメラの初期化...は効果がなかった.
-                    // await setup_camera();
-                    // しょうがないのでもういっかいページを読み直してみる.
-                    window.location = "camera-app.html{{MODE_APP}}";
+                    // カメラの初期化をしてみる.
+                    setup_camera();
                 });
                 break;
 
@@ -895,7 +887,6 @@ async function main_loop() {
                 keep_main_loop = false;
                 INSTALL_VIEW.style.display = "block";
                 LOADING_VIEW.style.display = "none";
-
                 console.info("open install view - teminate main loop.");
                 break;
 
@@ -947,14 +938,6 @@ async function main_loop() {
                 console.error("internal error - unknown state :", state);
                 state = "open_error_view";
                 break;
-
-                // オンライン状態が変化していたらカメラを強制リセットする.
-                // iOSでこうしないとプレビューが消える.
-                // TODO: この措置は本当にこれでいいのか...?
-                if (last_online != online) {
-                    last_online = online;
-                    await setup_camera();
-                }
         }
     } catch (error) {
         // 何かしらの例外処理が発生した.
@@ -978,6 +961,18 @@ async function main_loop() {
 async function main() {
     // ローディングビューを表示しておく.
     LOADING_VIEW.style.display = "block";
+
+    // オンライン時のイベントをセットアップ.
+    window.addEventListener("offline", (event => {
+        console.info("received offline event :", event.toString());
+    }));
+
+    // オフライン時のイベントをセットアップ.    
+    window.addEventListener("online", (event => {
+        console.info("received online event :", event.toString());
+        // カメラをセットアップし直す.    
+        setup_camera();
+    }));
 
     // UIのイベントをセットアップする：再認証.
     CAMERA_AUTHOR_NAME.onclick = (async(event) => {
