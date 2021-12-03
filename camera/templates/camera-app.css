@@ -251,6 +251,10 @@ input.setting {
     margin: 1em 0.25em 0 0.25em;
 }
 
+input.version {
+    background-color: whitesmoke;
+}
+
 input.setting_button {
     display: block;
     width: 100%;

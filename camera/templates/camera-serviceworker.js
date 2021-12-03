@@ -3,7 +3,7 @@
  * by fujii.kenichi@tamariva.co.jp
  * 
  * ↓ このファイルのバイト数を変えることで、ブラウザに更新を伝えるためのコメント.
- * "しのぶれどいろにいでにけりわがこいはものやおもうとひとのとふまで..."
+ * {{DUMMY_COMMENT}}
  */
 "use strict";
 
@@ -61,6 +61,7 @@ self.addEventListener("activate", (event => {
         caches.keys().then(cache_names => {
             return Promise.all(cache_names.map(name => {
                 if (name !== "{{VERSION}}") {
+                    console.log("delete old cache :", name);
                     return caches.delete(name);
                 }
             }));
@@ -83,9 +84,11 @@ self.addEventListener("sync", (event => {
     const task = new Promise(() => {
         console.log("background sync task started.");
 
+        // オフライン状態の判定:いちおうcamera-app.jsと同じロジックでやる.
         const online = navigator.onLine === false ? false : true;
 
-        // オフラインなら何もしない. TODO: これ不要かも？
+        // オフラインなら何もしない. 
+        // TODO: そもそもオフラインなら絶対に発行されないのならこれ不要かも.
         if (!online) {
             console.log("nothing to do with offline.");
             return;
@@ -215,5 +218,30 @@ self.addEventListener("sync", (event => {
  */
 self.addEventListener("message", (event => {
     console.log("service worker received message event :", event);
-    // 今はなにもしない.    
+
+    // 強制アップデートの処理を行う.
+    // TODO: 本当はここでeventの中身を確認するべき.
+    const task = new Promise(() => {
+        console.log("force update task started.");
+
+        // すべてのキャッシュを削除する.
+        // これで構成するファイルをぜんぶもう一回取りに行くはず.
+        caches.keys().then(cache_names => {
+            return Promise.all(cache_names.map(name => {
+                console.log("delete cache :", name);
+                return caches.delete(name);
+            }));
+        });
+
+        // クライアントにメッセージを送る.
+        self.clients.matchAll().then(clients => {
+            for (const c of clients) {
+                console.log("post message to client :", c);
+                c.postMessage({ type: "{{FORCE_UPDATE_TAG}}" });
+            }
+        });
+    });
+
+    // タスクの終了を待つ.
+    event.waitUntil(task);
 }));

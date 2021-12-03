@@ -23,12 +23,14 @@ from django.contrib import admin
 from django.http.response import HttpResponse
 from django.urls import include, path
 from django.urls.conf import re_path
+from django.views.decorators.cache import never_cache
 from django.views.static import serve
 
 
+@never_cache
 def heartbeat(request):
-    """ ハートビート用の処理：なるべくトラフィック増やさないように... """
-    return HttpResponse("VERSION:" + settings.APP_CONTEXT["VERSION"] + ", DEBUG:" + str(settings.DEBUG) + ", APP_DEBUG:" + settings.APP_CONTEXT["DEBUG"])
+    """ ハートビート用の処理：キャッシュを抑制した上でシンプルな文字列だけを返す. """
+    return HttpResponse("VERSION:" + settings.APP_CONTEXT["VERSION"] + ", DEBUG:" + str(settings.DEBUG) + ", APP_DEBUG:" + settings.APP_CONTEXT["DEBUG"], content_type="text/plain")
 
 
 urlpatterns = [

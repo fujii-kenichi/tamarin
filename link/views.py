@@ -88,24 +88,24 @@ CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | LINK_CONTEXT | L
 
 def link_serviceworker_js(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "link-serviceworker.js", CONTEXT, content_type="text/javascript")
+    return render(request, "link-serviceworker.js", CONTEXT, content_type="text/javascript; charset=utf-8")
 
 
 def link_app_webmanifest(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "link-app.webmanifest", CONTEXT, "application/manifest+json")
+    return render(request, "link-app.webmanifest", CONTEXT, "application/manifest+json; charset=utf-8")
 
 
 def link_app_js(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "link-app.js", CONTEXT, content_type="text/javascript")
+    return render(request, "link-app.js", CONTEXT, content_type="text/javascript; charset=utf-8")
 
 
 def link_app_css(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "link-app.css", CONTEXT, content_type="text/css")
+    return render(request, "link-app.css", CONTEXT, content_type="text/css; charset=utf-8")
 
 
 def link_app_html(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "link-app.html", CONTEXT)
+    return render(request, "link-app.html", CONTEXT, content_type="text.html; charset=utf-8")

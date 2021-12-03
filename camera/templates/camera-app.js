@@ -55,6 +55,7 @@ const AUTH_OK = document.getElementById("auth_ok");
 const SETTING_SHUTTER_SOUND = document.getElementById("setting_shutter_sound");
 const SETTING_AUTO_RELOAD = document.getElementById("setting_auto_reload");
 const SETTING_ENCRYPTION = document.getElementById("setting_encryption");
+const SETTING_VERSION = document.getElementById("setting_version");
 const SETTING_OK = document.getElementById("setting_ok");
 
 const DEBUG_LOG = document.getElementById("debug_log");
@@ -239,10 +240,15 @@ async function init() {
                 serviceworker_registration = registration;
                 state = "start";
 
-                // TODO: これは実験的な措置:メッセージハンドラを登録しておく.
-                self.addEventListener("message", (event) => {
+                // メッセージのハンドラも登録しておく.
+                navigator.serviceWorker.onmessage = (event => {
                     console.log("receive message event :", event);
-                })
+                    // TODO: 本当はここでeventの中身を確認すべき.
+
+                    // service workerからメッセージが来たら強制アップデートをする.
+                    // すでにキャッシュはservice workerが削除しているのでもう一回自分自身を読み直せばいいはず.
+                    window.location = "camera-app.html{{MODE_APP}}"
+                });
             });
         });
     } catch (error) {
@@ -894,6 +900,23 @@ async function main_loop() {
                 }
                 break;
 
+            case "force_update":
+                // アプリの強制アップデートが指示された.
+
+                // service workerにメッセージをポストする.
+                navigator.serviceWorker.controller.postMessage({
+                    type: "{{FORCE_UPDATE_TAG}}"
+                });
+
+                // 表示をローディングビューにして終了する.
+                keep_main_loop = false;
+                LOADING_VIEW.style.display = "block";
+                CAMERA_VIEW.style.display = "none";
+                AUTH_VIEW.style.display = "none";
+                SETTING_VIEW.style.display = "none";
+                ERROR_VIEW.style.display = "none";
+                break;
+
             case "service_error":
                 // サービスエラーが発生した：エラービューに遷移する.
                 console.warn("something wrong in network service.");
@@ -984,6 +1007,11 @@ async function main() {
         console.log("updating user database :", current_user);
         await database.user.put(current_user);
         state = "open_reload_view";
+    });
+
+    // UIのイベントをセットアップする：バージョンアップ.
+    SETTING_VERSION.onclick = (async(event) => {
+        state = "force_update";
     });
 
     // UIのイベントをセットアップする：設定更新ボタン.

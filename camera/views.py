@@ -3,7 +3,9 @@
 タマリンカメラの画面を生成.
 @author: fujii.kenichi@tamariva.co.jp
 """
+import random
 import re
+import string
 
 from django.conf import settings
 from django.shortcuts import render
@@ -48,6 +50,9 @@ CAMERA_CONTEXT = {
 
     # service workerのsyncに用いられるタグ文字列.
     "SYNC_TAG": "upload_photo",
+
+    # service workerのメッセージ送受信に用いられる文字列.
+    "FORCE_UPDATE_TAG": "force_update",
 
     # アプリとしてのふるまいを決める値.
     "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
@@ -109,35 +114,45 @@ DEVICE_PARAM_PC = {
 
 
 def camera_serviceworker_js(request):
+    context = CONTEXT
+
+    # 現在のバージョンからダミーのコメントを生成するための乱数を初期化する.
+    random.seed(CONTEXT["VERSION"])
+    random_length = random.randint(1, 128)
+
+    # ダミーのコメント文字列を生成して追加する.
+    dummy_comment = ''.join(random.choices(string.ascii_letters + string.digits, k=random_length))
+    context |= {"DUMMY_COMMENT": dummy_comment}
+
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-serviceworker.js", CONTEXT, content_type="text/javascript")
+    return render(request, "camera-serviceworker.js", context, content_type="text/javascript; charset=utf-8")
 
 
 def camera_app_webmanifest(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-app.webmanifest", CONTEXT, content_type="application/manifest+json")
+    return render(request, "camera-app.webmanifest", CONTEXT, content_type="application/manifest+json; charset=utf-8")
 
 
 def camera_app_js(request):
     context = CONTEXT
-    user_agent = request.META['HTTP_USER_AGENT']
+    user_agent = request.META["HTTP_USER_AGENT"]
 
     # user-agentでリクエストを判定してデバイス初期化パラメータを決定する.
-    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
+    if MOBILE_AGENT_RE.match(request.META["HTTP_USER_AGENT"]):
         context |= DEVICE_PARAM_MOBILE
     else:
         context |= DEVICE_PARAM_PC
 
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-app.js", context, content_type="text/javascript")
+    return render(request, "camera-app.js", context, content_type="text/javascript; charset=utf-8")
 
 
 def camera_app_css(request):
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-app.css", CONTEXT, content_type="text/css")
+    return render(request, "camera-app.css", CONTEXT, content_type="text/css; charset=utf-8")
 
 
 def camera_app_html(request):
 
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-app.html", CONTEXT)
+    return render(request, "camera-app.html", CONTEXT, content_type="text.html; charset=utf-8")
