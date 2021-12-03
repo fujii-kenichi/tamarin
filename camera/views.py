@@ -60,6 +60,9 @@ CAMERA_CONTEXT = {
 
     # カメラとしてローカルに写真を保持しておける枚数. あんまり多いとIndexedDBが耐えられないかも...
     "MAX_PHOTO_COUNT": 10,
+
+    # 撮影する時に image_cpature に渡す値.
+    "IMAGE_CAPTURE_PARAM": "{ \"imageWidth\" : 1920, \"imageHeight\" : 1080 }"
 }
 
 # タマリンカメラ固有で書き換えたいユーザに見せる各種メッセージを定義する.

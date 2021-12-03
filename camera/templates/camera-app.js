@@ -25,6 +25,9 @@ const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 // デバイス初期化用の文字列.
 const DEVICE_PARAM = String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"');
 
+// 写真撮影用の文字列.
+const IMAGE_CAPTURE_PARAM = String("{{IMAGE_CAPTURE_PARAM}}").replaceAll("&quot;", '"');
+
 // HTMLの各要素.
 const CAMERA_VIEW = document.getElementById("camera_view");
 const AUTH_VIEW = document.getElementById("auth_view");
@@ -554,7 +557,7 @@ async function take_photo(scene_tag) {
         console.assert(image_capture);
 
         // 実際の画像情報を取得する.
-        image_capture.takePhoto().then(image => {
+        image_capture.takePhoto(IMAGE_CAPTURE_PARAM).then(image => {
             console.assert(image);
             console.log("image captured :", image);
             console.info("captured image type :", image.type);
