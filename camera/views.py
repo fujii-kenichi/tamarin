@@ -155,4 +155,4 @@ def camera_app_css(request):
 def camera_app_html(request):
 
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
-    return render(request, "camera-app.html", CONTEXT, content_type="text.html")
+    return render(request, "camera-app.html", CONTEXT, content_type="text/html; charset=utf-8")
