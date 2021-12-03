@@ -106,8 +106,9 @@ let serviceworker_registration = null;
 // 撮影用のimage capture オブジェクト.
 let image_capture = null;
 
-// 不要なUI(DOM)の更新を避けるために前の状態を記憶するための変数たち.
+// 不要な情報の更新を避けるために前の状態を記憶するための変数たち.
 let last_state = null;
+let last_online = null;
 let last_author_name = null;
 let last_scene_tag = null;
 let last_scene_color = null;
@@ -249,9 +250,9 @@ async function init() {
                     console.log("receive message event :", event);
                     // TODO: 本当はここでeventの中身を確認すべき.
 
-                    // service workerからメッセージが来たら強制アップデートをする.
-                    // すでにキャッシュはservice workerが削除しているのでもう一回自分自身を読み直せばいいはず.
-                    window.location = "camera-app.html{{MODE_APP}}"
+                    // service workerからメッセージが来たら強制アップデートのため自分自身を読み直す.
+                    // すでにキャッシュはservice workerが削除しているのでこれでアップデートされるはず.
+                    window.location = "camera-app.html{{MODE_APP}}";
                 });
             });
         });
@@ -772,6 +773,9 @@ async function main_loop() {
             case "init":
                 // 初期化：初期化処理をする.次のステートはinit()の中で設定される.
                 await init();
+
+                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
+                last_online = online;
                 break;
 
             case "start":
@@ -818,6 +822,9 @@ async function main_loop() {
                 // カメラを初期化する.
                 await setup_camera();
 
+                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
+                last_online = online;
+
                 // UI表示を最新化する.
                 await update_camera_view();
 
@@ -848,7 +855,10 @@ async function main_loop() {
                 // プレビューを再生状態にし、エラーならカメラを初期化する.
                 CAMERA_PREVIEW.play().catch(error => {
                     console.error("camera preview returns error on play :", error.toString());
-                    return setup_camera();
+                    // カメラの初期化...は効果がなかった.
+                    // await setup_camera();
+                    // しょうがないのでもういっかいページを読み直してみる.
+                    window.location = "camera-app.html{{MODE_APP}}";
                 });
                 break;
 
@@ -937,6 +947,14 @@ async function main_loop() {
                 console.error("internal error - unknown state :", state);
                 state = "open_error_view";
                 break;
+
+                // オンライン状態が変化していたらカメラを強制リセットする.
+                // iOSでこうしないとプレビューが消える.
+                // TODO: この措置は本当にこれでいいのか...?
+                if (last_online != online) {
+                    last_online = online;
+                    await setup_camera();
+                }
         }
     } catch (error) {
         // 何かしらの例外処理が発生した.
