@@ -108,7 +108,6 @@ let image_capture = null;
 
 // 不要なUI(DOM)の更新を避けるために前の状態を記憶するための変数たち.
 let last_state = null;
-let last_online = null;
 let last_author_name = null;
 let last_scene_tag = null;
 let last_scene_color = null;
@@ -269,7 +268,7 @@ async function init() {
 class MyImageCapture {
 
     // 写真撮影機能のみ実装.
-    takePhoto() {
+    async takePhoto() {
         return new Promise(resolve => {
             CAMERA_CANVAS.width = CAMERA_PREVIEW.videoWidth;
             CAMERA_CANVAS.height = CAMERA_PREVIEW.videoHeight;
@@ -551,9 +550,6 @@ async function take_photo(scene_tag) {
         return;
     }
 
-    // プレビューのビデオを止める.
-    CAMERA_PREVIEW.pause();
-
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     if (current_user.shutter_sound) {
@@ -654,13 +650,6 @@ async function take_photo(scene_tag) {
                                 console.info("service worker sync registrated :{{SYNC_TAG}}");
                             });
                         }
-
-                        // プレビューを再開する.
-                        CAMERA_PREVIEW.play().catch(error => {
-                            // safariだとここでエラーが起きることがあるので無視しないでキャッチしておく.
-                            console.error("camera preview returns error on play :", error.toString());
-                            state = "preview_error";
-                        });
                     });
                 });
             }
@@ -783,9 +772,6 @@ async function main_loop() {
             case "init":
                 // 初期化：初期化処理をする.次のステートはinit()の中で設定される.
                 await init();
-
-                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
-                last_online = online;
                 break;
 
             case "start":
@@ -832,9 +818,6 @@ async function main_loop() {
                 // カメラを初期化する.
                 await setup_camera();
 
-                // オンライン状態変化によるカメラリセットをトリガーされないようにする.
-                last_online = online;
-
                 // UI表示を最新化する.
                 await update_camera_view();
 
@@ -859,15 +842,14 @@ async function main_loop() {
                         }
                     }
                 }
-
-                // プレビューを強制的に再生開始.
-                CAMERA_PREVIEW.play().catch(error => {
-                    console.error("camera preview returns error on play :", error.toString());
-                    state = "preview_error";
-                });
-
                 // 撮影済み枚数の表示を更新する.
                 await update_photo_counter();
+
+                // プレビューを再生状態にし、エラーならカメラを初期化する.
+                CAMERA_PREVIEW.play().catch(error => {
+                    console.error("camera preview returns error on play :", error.toString());
+                    return setup_camera();
+                });
                 break;
 
             case "open_setting_view":
@@ -950,32 +932,12 @@ async function main_loop() {
                 state = "open_error_view";
                 break;
 
-            case "preview_error":
-                // 何らかの理由でプレビューがエラーになった.
-                // 少なくともiOSでオンラインからオフラインにすると発生する.
-
-                // とりあえずカメラの初期化からやりなおしてみる...
-                await setup_camera();
-
-                // 初期化のエラーは無視して必ずカメラビューに戻る.
-                state = "open_camera_view";
-                break;
-
             default:
                 // 未定義のステート：実装エラーとみなしてエラービューを表示して終了する.
                 console.error("internal error - unknown state :", state);
                 state = "open_error_view";
                 break;
         }
-
-        // オンライン状態が変化していたらカメラを強制リセットする.
-        // iOSでこうしないとプレビューが消える.
-        // TODO: この措置は本当にこれでいいのか...?
-        if (last_online != online) {
-            last_online = online;
-            await setup_camera();
-        }
-
     } catch (error) {
         // 何かしらの例外処理が発生した.
         console.error("internal error - unhandled exception in main loop :", error.toString());
