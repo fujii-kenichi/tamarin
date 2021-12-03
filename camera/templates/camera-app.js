@@ -22,9 +22,6 @@ const AUTO_RELOAD_TRIGGER = Number("{{AUTO_RELOAD_TRIGGER}}");
 // データベース(IndexedDB)に入れることのできる写真の最大枚数(=オフラインで撮影して溜めておける最大の枚数).
 const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 
-// シャッターを切ったときにそれっぽい効果をだすためにビデオを一瞬止める時間(ミリ秒).
-const SHUTTER_PAUSE_TIME = 1 * 1000;
-
 // デバイス初期化用の文字列.
 const DEVICE_PARAM = String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"');
 
@@ -525,6 +522,9 @@ async function take_photo(scene_tag) {
         return;
     }
 
+    // プレビューのビデオを止める.
+    CAMERA_PREVIEW.pause();
+
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     if (current_user.shutter_sound) {
@@ -534,26 +534,16 @@ async function take_photo(scene_tag) {
         CAMERA_SHUTTER_SOUND.play();
     }
 
-    // 今の日時を撮影日時とする.EXIFではなくここで生成する点に注意!
-    const start_time = new Date();
-    console.assert(start_time);
-
-    // 撮影日時をISOフォーマット(UTC)で保管.
-    const date_taken = start_time.toJSON();
-    console.assert(date_taken);
-
     // 写真撮影のタスクを定義する.
     // 非同期に処理することで少しでも応答性能をあげようという試み...
     const task = new Promise(() => {
-        // 一瞬プレビューのビデオを止めることで撮影したっぽい効果をだす.
-        CAMERA_PREVIEW.pause();
-        setTimeout(() => {
-            CAMERA_PREVIEW.play().catch(error => {
-                // safariだとここでエラーが起きることがあるので無視しないでキャッチしておく.
-                console.error("camera preview returns error on play :", error.toString());
-                state = "preview_error";
-            });
-        }, SHUTTER_PAUSE_TIME);
+        // 今の日時を撮影日時とする.EXIFではなくここで生成する点に注意!
+        const start_time = new Date();
+        console.assert(start_time);
+
+        // 撮影日時をISOフォーマット(UTC)で保管.
+        const date_taken = start_time.toJSON();
+        console.assert(date_taken);
 
         // プレビューに紐づけられているストリームをとってくる.
         const stream = CAMERA_PREVIEW.srcObject;
@@ -636,6 +626,13 @@ async function take_photo(scene_tag) {
                                 console.info("service worker sync registrated :{{SYNC_TAG}}");
                             });
                         }
+
+                        // プレビューを再開する.
+                        CAMERA_PREVIEW.play().catch(error => {
+                            // safariだとここでエラーが起きることがあるので無視しないでキャッチしておく.
+                            console.error("camera preview returns error on play :", error.toString());
+                            state = "preview_error";
+                        });
                     });
                 });
             }

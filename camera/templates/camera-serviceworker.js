@@ -3,7 +3,7 @@
  * by fujii.kenichi@tamariva.co.jp
  * 
  * ↓ このファイルのバイト数を変えることで、ブラウザに更新を伝えるためのコメント.
- * {{DUMMY_COMMENT}}
+ * {{VERSION}}:{{DUMMY_COMMENT}}
  */
 "use strict";
 
