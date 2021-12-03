@@ -45,6 +45,8 @@ const CAMERA_PHOTO_COUNT = document.getElementById("camera_photo_count");
 const CAMERA_SETTING = document.getElementById("camera_setting");
 const CAMERA_DEBUG = document.getElementById("camera_debug");
 const CAMERA_SHUTTER_SOUND = document.getElementById("camera_shutter_sound");
+const CAMERA_CANVAS = document.getElementById("camera_canvas");
+const CAMERA_CANVAS_CONTEXT = CAMERA_CANVAS.getContext("2d");
 
 const AUTH_ERROR_MESSAGE = document.getElementById("auth_error_message");
 const AUTH_AUTHOR_NAME = document.getElementById("auth_author_name");
@@ -100,6 +102,9 @@ let idle_count = 0;
 
 // Service workerの登録情報.
 let serviceworker_registration = null;
+
+// 撮影用のimage capture オブジェクト.
+let image_capture = null;
 
 // 不要なUI(DOM)の更新を避けるために前の状態を記憶するための変数たち.
 let last_state = null;
@@ -259,6 +264,22 @@ async function init() {
 }
 
 /**
+ * 実行環境にImageCaptureの実装がない時に使用する簡易版.
+ */
+class MyImageCapture {
+
+    // 写真撮影機能のみ実装.
+    takePhoto() {
+        return new Promise(resolve => {
+            CAMERA_CANVAS.width = CAMERA_PREVIEW.videoWidth;
+            CAMERA_CANVAS.height = CAMERA_PREVIEW.videoHeight;
+            CAMERA_CANVAS_CONTEXT.drawImage(CAMERA_PREVIEW, 0, 0);
+            CAMERA_CANVAS.toBlob(resolve, "image/jpeg", 1);
+        });
+    }
+}
+
+/**
  * カメラをセットアップする.
  */
 async function setup_camera() {
@@ -281,18 +302,27 @@ async function setup_camera() {
         console.assert(stream);
         console.log("connected to stream :", stream);
 
-        // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
-        {
-            // ストリームの情報を取得する.
-            const settings = stream.getVideoTracks()[0].getSettings();
-            console.assert(settings);
-            console.info("stream settings :", settings);
-        }
+        // ストリームの情報を取得する.
+        const settings = stream.getVideoTracks()[0].getSettings();
+        console.assert(settings);
+        console.info("stream settings :", settings);
 
         // ストリームをプレビューにつなげて再生を開始する. 
         CAMERA_PREVIEW.srcObject = stream;
+
+        // image captureオブジェクトを作成する.
+        if (typeof ImageCapture === "undefined") {
+            // Safariなどでは独自の実装へ.
+            image_capture = new MyImageCapture();
+            console.info("no ImageCapture - using own imprementation.");
+        } else {
+            // もちろんあれば標準のimage captureを使用する.
+            image_capture = new ImageCapture(stream.getVideoTracks()[0]);
+            console.log("using browser provided image capture :", image_capture);
+        }
+        console.assert(image_capture);
     } catch (error) {
-        // カメラがうまく初期化できなかったら致命的エラーとして扱う.
+        // うまく初期化できなかったら致命的エラーとして扱う.
         console.error("camera setup error :", error.toString());
         state = "open_error_view";
     }
@@ -548,11 +578,9 @@ async function take_photo(scene_tag) {
         const stream = CAMERA_PREVIEW.srcObject;
         console.assert(stream);
 
-        // 撮影用のImage Captureオブジェクトをつくる.
-        const image_capture = new ImageCapture(stream.getVideoTracks()[0]);
-        console.assert(image_capture);
-
         // 実際の画像情報を取得する.
+        // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
+        console.assert(image_capture);
         console.log("image capture param :", IMAGE_CAPTURE_PARAM);
         image_capture.takePhoto(IMAGE_CAPTURE_PARAM).then(image => {
             console.assert(image);

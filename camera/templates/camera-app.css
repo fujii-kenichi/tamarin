@@ -180,6 +180,10 @@ audio.camera_shutter_sound {
     display: none;
 }
 
+canvas.camera_canvas {
+    display: none;
+}
+
 
 /* 認証ビュー用の設定. */
 

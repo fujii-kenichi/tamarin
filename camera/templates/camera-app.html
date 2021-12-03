@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="camera-app.css">
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
-    <script src="{{IMAGECAPTURE_JS}}" defer></script>
     <script src="camera-app.js" defer></script>
     <title>{{NAME}}</title>
 </head>
@@ -44,6 +43,7 @@
             </div>
         </div>
         <audio id="camera_shutter_sound" class="camera_shutter_sound" src="{{CAMERA_SHUTTER_SOUND}}" preload="auto"></audio>
+        <canvas id="camera_canvas" class="camera_canvas"></canvas>
     </div>
     <!-- 認証ビュー：ユーザがサインインをするビュー. -->
     <div id="auth_view" class="panel_view">

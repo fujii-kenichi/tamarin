@@ -23,7 +23,6 @@ CAMERA_CONTEXT = {
     # JSライブライのパス.
     "DEXIE_JS": static("js/dexie.min.js"),
     "CRYPTO_JS": static("js/crypto-js.min.js"),
-    "IMAGECAPTURE_JS": static("js/imagecapture.js"),
 
     # UI用画像のパス.
     "LOADING_ICON": static("image/loading.gif"),
