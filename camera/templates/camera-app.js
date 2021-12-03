@@ -288,6 +288,10 @@ class MyImageCapture {
 async function setup_camera() {
     console.info("setup camera.");
 
+    // Videoエレメントを一回削除するなどめんどくさいことをしているのは、ひとえにiOSのSafariでプレビューが消えちゃうことがあるから.
+    // オンライン・オフラインを切り替えたり、アプリを切り替えたりするとなぜかプレビューが切れてしまう.
+    // 次善の策としてこうしているけど、これが本当に適切なやり方なのかはちょっとよくわからない.
+    // ちなみにAndroidのChromeだとVideoエレメントは作りっぱなしで大丈夫みたい...
     try {
         // いったんシャッターを消す.
         CAMERA_SHUTTER.style.display = "none";
