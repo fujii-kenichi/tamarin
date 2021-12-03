@@ -124,6 +124,7 @@ let debug_log = [];
  * 溜めておいたデバッグログをUIに読み込む.
  */
 async function load_debug_log() {
+
     // TODO: Json化できない(つまり正しく情報が出ない)オブジェクトを無くすこと！
     DEBUG_LOG.value = JSON.stringify(debug_log, null, 2);
 }
@@ -246,8 +247,8 @@ async function init() {
                 // メッセージのハンドラも登録しておく.
                 navigator.serviceWorker.onmessage = (event => {
                     console.log("receive message event :", event);
-                    // TODO: 本当はここでeventの中身を確認すべき.
 
+                    // TODO: 本当はここでeventの中身を確認すべき.
                     // service workerからメッセージが来たら強制アップデートのため自分自身を読み直す.
                     // すでにキャッシュはservice workerが削除しているのでこれでアップデートされるはず.
                     window.location = "camera-app.html{{MODE_APP}}";
@@ -269,9 +270,13 @@ class MyImageCapture {
     // 写真撮影機能のみ実装.
     async takePhoto() {
         return new Promise(resolve => {
-            CAMERA_CANVAS.width = CAMERA_PREVIEW.videoWidth;
-            CAMERA_CANVAS.height = CAMERA_PREVIEW.videoHeight;
-            CAMERA_CANVAS_CONTEXT.drawImage(CAMERA_PREVIEW, 0, 0);
+            const camera_preview_video = document.getElementById("camera_preview_video");
+            console.assert(camera_preview_video);
+
+            // キャンバスに画像を転送してBlobにして返す.
+            CAMERA_CANVAS.width = camera_preview_video.videoWidth;
+            CAMERA_CANVAS.height = camera_preview_video.videoHeight;
+            CAMERA_CANVAS_CONTEXT.drawImage(camera_preview_video, 0, 0);
             CAMERA_CANVAS.toBlob(resolve, "image/jpeg", 1);
         });
     }
@@ -284,43 +289,70 @@ async function setup_camera() {
     console.info("setup camera.");
 
     try {
-        // プレビューに結びつけているストリームをリセットする.
-        if (CAMERA_PREVIEW.srcObject) {
-            CAMERA_PREVIEW.srcObject.getVideoTracks().forEach(track => {
-                track.stop()
-                CAMERA_PREVIEW.srcObject.removeTrack(track)
-            })
-            CAMERA_PREVIEW.pause();
-            CAMERA_PREVIEW.removeAttribute("srcObject");
-            CAMERA_PREVIEW.load();
-            CAMERA_PREVIEW.srcObject = null;
+        // いったんシャッターを消す.
+        CAMERA_SHUTTER.style.display = "none";
+
+        // プレビューのエレメントをとってくる.
+        let camera_preview_video = document.getElementById("camera_preview_video");
+
+        // もしすでにプレビューがあれば...
+        if (camera_preview_video) {
+
+            // プレビューに結びつけているストリームがあれば全てリセットする.
+            if (camera_preview_video.srcObject) {
+                camera_preview_video.srcObject.getVideoTracks().forEach(track => {
+                    track.stop()
+                    camera_preview_video.srcObject.removeTrack(track)
+                })
+                camera_preview_video.pause();
+                camera_preview_video.removeAttribute("srcObject");
+                camera_preview_video.load();
+                camera_preview_video.srcObject = null;
+            }
+
+            // そのあといっかい消してしまう.
+            CAMERA_PREVIEW.innerHTML = "";
         }
 
-        // ストリームに接続する.
+        // プレビューを作り直す.
+        CAMERA_PREVIEW.innerHTML = "<video id='camera_preview_video' class='camera_preview' playsinline muted/>";
+        camera_preview_video = document.getElementById("camera_preview_video");
+        console.assert(camera_preview_video);
+
+        // デバイスパラメータを用いてストリームに接続する.
         console.info("getting user media devices using param :", DEVICE_PARAM);
         const stream = await navigator.mediaDevices.getUserMedia(DEVICE_PARAM);
         console.assert(stream);
         console.log("connected to stream :", stream);
 
-        // ストリームの情報を取得する.
+        // ストリームの情報を取得して表示しておく.
         const settings = stream.getVideoTracks()[0].getSettings();
         console.assert(settings);
         console.info("stream settings :", settings);
 
-        // ストリームをプレビューにつなげて再生を開始する. 
-        CAMERA_PREVIEW.srcObject = stream;
-
-        // image captureオブジェクトを作成する.
+        // ImageCaptureオブジェクトを作成する.
+        // SafariなどImageCaptureがない場合は独自の簡易実装を使う.
         if (typeof ImageCapture === "undefined") {
-            // Safariなどでは独自の実装へ.
             image_capture = new MyImageCapture();
             console.info("no ImageCapture - using own imprementation.");
         } else {
-            // もちろんあれば標準のimage captureを使用する.
             image_capture = new ImageCapture(stream.getVideoTracks()[0]);
             console.log("using browser provided image capture :", image_capture);
         }
         console.assert(image_capture);
+
+        // ストリームをプレビューにつなげる.
+        camera_preview_video.srcObject = stream;
+
+        // 再生を開始してうまくいったらシャッターも出現させる.
+        camera_preview_video.play().then(() => {
+            CAMERA_SHUTTER.style.display = "block";
+        }).catch(error => {
+            // うまく再生が開始できなかったら致命的エラーとして扱う.
+            console.error("could not start preview video :", error.toString());
+            state = "open_error_view";
+        });
+
     } catch (error) {
         // うまく初期化できなかったら致命的エラーとして扱う.
         console.error("camera setup error :", error.toString());
@@ -332,7 +364,7 @@ async function setup_camera() {
  * Tokenサービスから現在のユーザにもとづいた有効なトークンを生成する.
  */
 async function get_token() {
-    // これを呼んだら以前のトークンはもう忘れておく.
+    // 以前のトークンは忘れておく.
     token = null;
 
     // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
@@ -506,7 +538,6 @@ async function update_camera_view() {
                 // 色は数が足りない場合はデフォルトのテーマカラーで補う.
                 const c = scene_color.length > i ? scene_color[i].trim() : "{{THEME_COLOR}}";
                 console.assert(c);
-
                 inner_html += ("<div class=\"camera_shutter_button\" style=\"background-color:" + c + ";\" onclick='take_photo(\"" + v + "\")'>" + v + "</div>");
             }
         } else {
@@ -521,13 +552,11 @@ async function update_camera_view() {
         let inner_html = "";
 
         if (current_user.context_tag) {
-
             // CSVのタグを分解してループを回してオプションタグ(選択肢)を生成してセットする.
             // TODO: ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
             for (const t of last_context_tag.split(/,/)) {
                 const v = t.trim();
                 console.assert(v);
-
                 inner_html += ("<option class=\"camera_context_tag\" value=\"" + v + "\">" + v + "</option>");
             }
         } else {
@@ -553,8 +582,8 @@ async function take_photo(scene_tag) {
 
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
+    // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.
     if (current_user.shutter_sound) {
-        // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.        
         CAMERA_SHUTTER_SOUND.pause();
         CAMERA_SHUTTER_SOUND.currentTime = 0;
         CAMERA_SHUTTER_SOUND.play();
@@ -572,7 +601,9 @@ async function take_photo(scene_tag) {
         console.assert(date_taken);
 
         // プレビューに紐づけられているストリームをとってくる.
-        const stream = CAMERA_PREVIEW.srcObject;
+        const camera_preview_video = document.getElementById("camera_preview_video");
+        console.assert(camera_preview_video);
+        const stream = camera_preview_video.srcObject;
         console.assert(stream);
 
         // 実際の画像情報を取得する.
@@ -599,7 +630,6 @@ async function take_photo(scene_tag) {
 
                 // 設定に基づいて暗号化の処理を行う.
                 if (current_user.encryption) {
-
                     // 暗号キーは乱数で毎回自動生成する.
                     key = CryptoJS.lib.WordArray.random(MEDIA_ENCRYPTION_KEY_LENGTH).toString();
                     console.assert(key);
@@ -748,12 +778,13 @@ async function upload_photo() {
 }
 
 /**
- * ひたすらぐるぐる回るアプリケーションのメインループ.
+ * ステートを変えながらひたすらぐるぐる回るアプリケーションのメインループ.
  */
 async function main_loop() {
+    // ぐるぐるを維持するかどうかを示す変数.
     let keep_main_loop = true;
 
-    // 前のタイマーを破棄する.
+    // 前のタイマーがあれば破棄しておく.
     if (timeout_id) {
         clearTimeout(timeout_id);
     }
@@ -845,13 +876,6 @@ async function main_loop() {
                 }
                 // 撮影済み枚数の表示を更新する.
                 await update_photo_counter();
-
-                // プレビューを再生状態にし、エラーならカメラを初期化する.
-                CAMERA_PREVIEW.play().catch(error => {
-                    console.error("camera preview returns error on play :", error.toString());
-                    // カメラの初期化をしてみる.
-                    setup_camera();
-                });
                 break;
 
             case "open_setting_view":
@@ -901,7 +925,7 @@ async function main_loop() {
 
                 console.error("fatal error - teminate main loop.");
 
-                // デバッグ時にはログを見せて終わりにする.
+                // デバッグ時だったらログも見せる.
                 if (DEBUG) {
                     DEBUG_VIEW.style.display = "block";
                     load_debug_log();
@@ -962,15 +986,17 @@ async function main() {
     // ローディングビューを表示しておく.
     LOADING_VIEW.style.display = "block";
 
-    // オンライン時のイベントをセットアップ.
+    // オンラインになった時のイベントをセットアップ.
     window.addEventListener("offline", (event => {
         console.info("received offline event :", event.toString());
+        // カメラをセットアップし直す.
+        setup_camera();
     }));
 
-    // オフライン時のイベントをセットアップ.    
+    // オフラインになった時のイベントをセットアップ.
     window.addEventListener("online", (event => {
         console.info("received online event :", event.toString());
-        // カメラをセットアップし直す.    
+        // カメラをセットアップし直す.
         setup_camera();
     }));
 
