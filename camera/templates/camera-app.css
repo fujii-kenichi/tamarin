@@ -127,10 +127,8 @@ div.camera_main {
 video.camera_preview {
     background-color: black;
     position: absolute;
-    /*
     left: 50%;
     transform: translateX(-50%);
-    */
     width: auto;
     height: calc(100vh - 2.5em);
 }
@@ -161,8 +159,6 @@ div.camera_shutter_button {
 
 /* カメラビュー：レスポンシブ対応 */
 
-
-/*
 @media screen and (orientation: portrait) {
     input.author_name {
         max-width: 25%;
@@ -180,7 +176,6 @@ div.camera_shutter_button {
         display: inline-block;
     }
 }
-*/
 
 audio.camera_shutter_sound {
     display: none;
