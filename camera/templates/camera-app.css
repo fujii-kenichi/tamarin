@@ -11,10 +11,6 @@ body.app {
     margin: 0;
     border: 0;
     padding: 0;
-    zoom: 1;
-    transform: 1;
-    -webkit-transform: 1;
-    -ms-transform: 1;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -163,13 +159,9 @@ div.camera_shutter_button {
 
 /* カメラビュー：レスポンシブ対応 */
 
+
+/*
 @media screen and (orientation: portrait) {
-    body.app {
-        zoom: 1;
-        transform: 1;
-        -webkit-transform: 1;
-        -ms-transform: 1;
-    }
     input.author_name {
         max-width: 25%;
     }
@@ -186,6 +178,7 @@ div.camera_shutter_button {
         display: inline-block;
     }
 }
+*/
 
 audio.camera_shutter_sound {
     display: none;
