@@ -186,7 +186,7 @@ async function setup_debug_log() {
 
         ERROR_ICON.onclick = (async(event) => {
             // エラー表示している時のアイコン.
-            // おされたらデバッグログに切り替える.
+            // おされたらデバッグビューを表示する.
             ERROR_VIEW.style.display = "none";
             DEBUG_VIEW.style.display = "block";
             load_debug_log();
@@ -306,21 +306,21 @@ async function setup_camera() {
         CAMERA_SHUTTER.style.display = "none";
 
         // プレビューのエレメントをとってくる.
-        let camera_preview_video = document.getElementById("camera_preview_video");
+        const previous_camera_preview_video = document.getElementById("camera_preview_video");
 
         // もしすでにプレビューがあれば...
-        if (camera_preview_video) {
+        if (previous_camera_preview_video) {
 
             // プレビューに結びつけているストリームがあれば全てリセットする.
-            if (camera_preview_video.srcObject) {
-                camera_preview_video.srcObject.getVideoTracks().forEach(track => {
+            if (previous_camera_preview_video.srcObject) {
+                previous_camera_preview_video.srcObject.getVideoTracks().forEach(track => {
                     track.stop();
-                    camera_preview_video.srcObject.removeTrack(track);
+                    previous_camera_preview_video.srcObject.removeTrack(track);
                 });
-                camera_preview_video.pause();
-                camera_preview_video.removeAttribute("srcObject");
-                camera_preview_video.load();
-                camera_preview_video.srcObject = null;
+                previous_camera_preview_video.pause();
+                previous_camera_preview_video.removeAttribute("srcObject");
+                previous_camera_preview_video.load();
+                previous_camera_preview_video.srcObject = null;
             }
 
             // そのあといっかい消してしまう.
@@ -329,8 +329,20 @@ async function setup_camera() {
 
         // プレビューを作り直す.
         CAMERA_PREVIEW.innerHTML = "<video id='camera_preview_video' class='camera_preview' playsinline muted/>";
-        camera_preview_video = document.getElementById("camera_preview_video");
+        const camera_preview_video = document.getElementById("camera_preview_video");
         console.assert(camera_preview_video);
+
+        // イベントを設定しておく.
+        camera_preview_video.onloadedmetadata = (async() => {
+            // 再生を開始してうまくいったらシャッターも出現させる.
+            camera_preview_video.play().then(() => {
+                CAMERA_SHUTTER.style.display = "block";
+            }).catch(error => {
+                // うまく再生が開始できなかったら致命的エラーとして扱う.
+                console.error("could not start preview video :", error.toString());
+                state = "open_error_view";
+            });
+        });
 
         // デバイスパラメータを用いてストリームに接続する.
         console.info("getting user media devices using param :", DEVICE_PARAM);
@@ -356,16 +368,6 @@ async function setup_camera() {
 
         // ストリームをプレビューにつなげる.
         camera_preview_video.srcObject = stream;
-
-        // 再生を開始してうまくいったらシャッターも出現させる.
-        camera_preview_video.play().then(() => {
-            CAMERA_SHUTTER.style.display = "block";
-        }).catch(error => {
-            // うまく再生が開始できなかったら致命的エラーとして扱う.
-            console.error("could not start preview video :", error.toString());
-            state = "open_error_view";
-        });
-
     } catch (error) {
         // うまく初期化できなかったら致命的エラーとして扱う.
         console.error("camera setup error :", error.toString());
