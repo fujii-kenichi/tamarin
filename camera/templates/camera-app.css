@@ -127,8 +127,10 @@ div.camera_main {
 video.camera_preview {
     background-color: black;
     position: absolute;
+    /*
     left: 50%;
     transform: translateX(-50%);
+    */
     width: auto;
     height: calc(100vh - 2.5em);
 }
