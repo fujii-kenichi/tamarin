@@ -3,7 +3,7 @@
     "short_name": "{{SHORT_NAME}}",
     "description": "{{DESCRIPTION}}",
     "start_url": "/camera/camera-app.html{{MODE_APP}}",
-    "id": "/camera/",
+    "id": "/camera/camera-app.html{{MODE_APP}}",
     "scope": "/camera/",
     "display": "{{DISPLAY}}",
     "orientation": "any",

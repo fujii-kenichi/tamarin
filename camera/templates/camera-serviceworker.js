@@ -32,9 +32,8 @@ self.addEventListener("install", (event => {
                 "{{CAMERA_SHUTTER_SOUND}}",
                 "camera-app.css",
                 "camera-app.js",
-                "camera-app.html",
                 "camera-app.html{{MODE_APP}}"
-            ]).then(self.skipWaiting())
+            ]).then(self.skipWaiting());
         })
     );
 }));

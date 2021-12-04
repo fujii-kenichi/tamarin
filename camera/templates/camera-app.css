@@ -135,9 +135,12 @@ video.camera_preview {
 
 div.camera_shutter {
     position: absolute;
+    text-align: center;
     top: 55%;
+    bottom: auto;
+    left: auto;
+    right: 1em;
     transform: translateY(-50%);
-    right: 0.5em;
 }
 
 div.camera_shutter_button {
@@ -164,12 +167,10 @@ div.camera_shutter_button {
         max-width: 25%;
     }
     div.camera_shutter {
-        position: absolute;
+        top: auto;
+        bottom: 0;
         left: 0;
         right: 0;
-        top: auto;
-        bottom: 0.1em;
-        text-align: center;
     }
     div.camera_shutter_button {
         display: inline-block;

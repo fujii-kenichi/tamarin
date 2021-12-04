@@ -32,6 +32,5 @@
 
 <https://app.diagrams.net> で書いた図を貼っておきます。
 
-
 [](./tamarin-overview.drawio.svg)
 <img src="./tamarin-overview.drawio.svg">

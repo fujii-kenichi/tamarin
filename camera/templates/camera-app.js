@@ -60,6 +60,7 @@ const SETTING_ENCRYPTION = document.getElementById("setting_encryption");
 const SETTING_VERSION = document.getElementById("setting_version");
 const SETTING_OK = document.getElementById("setting_ok");
 
+const ERROR_ICON = document.getElementById("error_icon");
 const DEBUG_LOG = document.getElementById("debug_log");
 const DEBUG_RELOAD = document.getElementById("debug_reload");
 const DEBUG_CLEAR = document.getElementById("debug_clear");
@@ -140,19 +141,19 @@ async function setup_debug_log() {
         console.error = (...args) => {
             debug_log.push(Array.from(args));
             return original_error(args);
-        }
+        };
 
         const original_warn = console.warn;
         console.warn = (...args) => {
             debug_log.push(Array.from(args));
             return original_warn(args);
-        }
+        };
 
         const original_info = console.info;
         console.info = (...args) => {
             debug_log.push(Array.from(args));
             return original_info(args);
-        }
+        };
 
         // デバッグ用UIのイベントを設定する.
         CAMERA_DEBUG.onclick = (async(event) => {
@@ -181,6 +182,14 @@ async function setup_debug_log() {
 
         DEBUG_CLOSE.onclick = (async(event) => {
             DEBUG_VIEW.style.display = "none";
+        });
+
+        ERROR_ICON.onclick = (async(event) => {
+            // エラー表示している時のアイコン.
+            // おされたらデバッグログに切り替える.
+            ERROR_VIEW.style.display = "none";
+            DEBUG_VIEW.style.display = "block";
+            load_debug_log();
         });
 
     } else {
@@ -305,9 +314,9 @@ async function setup_camera() {
             // プレビューに結びつけているストリームがあれば全てリセットする.
             if (camera_preview_video.srcObject) {
                 camera_preview_video.srcObject.getVideoTracks().forEach(track => {
-                    track.stop()
-                    camera_preview_video.srcObject.removeTrack(track)
-                })
+                    track.stop();
+                    camera_preview_video.srcObject.removeTrack(track);
+                });
                 camera_preview_video.pause();
                 camera_preview_video.removeAttribute("srcObject");
                 camera_preview_video.load();
@@ -687,7 +696,7 @@ async function take_photo(scene_tag) {
                         }
                     });
                 });
-            }
+            };
 
             // 画像を読み込む.
             image_reader.readAsArrayBuffer(image);
@@ -928,12 +937,6 @@ async function main_loop() {
                 ERROR_VIEW.style.display = "block";
 
                 console.error("fatal error - teminate main loop.");
-
-                // デバッグ時だったらログも見せる.
-                if (DEBUG) {
-                    DEBUG_VIEW.style.display = "block";
-                    load_debug_log();
-                }
                 break;
 
             case "force_update":

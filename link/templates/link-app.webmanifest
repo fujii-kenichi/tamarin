@@ -3,7 +3,7 @@
     "short_name": "{{SHORT_NAME}}",
     "description": "{{DESCRIPTION}}",
     "start_url": "/link/link-app.html{{MODE_APP}}",
-    "id": "/link/",
+    "id": "/link/link-app.html{{MODE_APP}}",
     "scope": "/link/",
     "display": "{{DISPLAY}}",
     "orientation": "any",
