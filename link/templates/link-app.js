@@ -317,7 +317,6 @@ async function setup_download_file_list() {
 
     // それをさらに配列にいれる.
     download_file_list = result;
-
     console.log("download file list :", download_file_list);
 
     // 次のステートはダウンロードビューとする.
@@ -356,7 +355,6 @@ async function download_file() {
     // Mediaサービスからファイルを取得する.
     console.log("calling media service to get media content: ", file.encrypted_data);
     const media_response = await fetch(file.encrypted_data);
-
     console.assert(media_response);
     console.log("media service respond :", media_response);
 
@@ -480,7 +478,6 @@ async function download_file() {
     // ダウンロードした中身を書き込んでクローズする.
     const write_handle = await file_handle.createWritable();
     console.assert(write_handle);
-
     await write_handle.write(data);
     await write_handle.close();
 
@@ -496,8 +493,10 @@ async function download_file() {
             headers: {
                 "Authorization": "{{TOKEN_FORMAT}} " + token
             }
+        }).catch(error => {
+            console.error("media delete error :", error);
+            // TODO: 本当はここに削除時のエラー処理をする必要がある.
         });
-        // TODO: 本当はここに削除時のエラー処理をする必要がある.
     }
 }
 
@@ -622,7 +621,6 @@ async function main_loop() {
                 keep_main_loop = false;
                 INSTALL_VIEW.style.display = "block";
                 LOADING_VIEW.style.display = "none";
-
                 console.error("open install view - teminate main loop.");
                 break;
 
@@ -634,14 +632,12 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "none";
                 DOWNLOAD_VIEW.style.display = "none";
                 ERROR_VIEW.style.display = "block";
-
                 console.error("fatal error - teminate main loop.");
                 break;
 
             case "service_error":
                 // サービスエラーが発生した：エラービューに遷移する.
                 console.warn("something wrong in network service - try to reload.");
-
                 // TODO: いきなり終わるんじゃなくて、もっとエラー内容に応じたリカバリ処理をすること！
                 state = "open_auth_view";
                 break;

@@ -125,7 +125,6 @@ let debug_log = [];
  * 溜めておいたデバッグログをUIに読み込む.
  */
 async function load_debug_log() {
-
     // TODO: Json化できない(つまり正しく情報が出ない)オブジェクトを無くすこと！
     DEBUG_LOG.value = JSON.stringify(debug_log, null, 2);
 }
@@ -256,7 +255,6 @@ async function init() {
                 // メッセージのハンドラも登録しておく.
                 navigator.serviceWorker.onmessage = (event => {
                     console.log("receive message event :", event);
-
                     // TODO: 本当はここでeventの中身を確認すべき.
                     // service workerからメッセージが来たら強制アップデートのため自分自身を読み直す.
                     // すでにキャッシュはservice workerが削除しているのでこれでアップデートされるはず.
@@ -672,9 +670,8 @@ async function take_photo(scene_tag) {
                 // ここまでの処理にかかった時間をログに書いておく.
                 console.info("photo processing time in ms :", new Date() - start_time);
 
-                // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.
-
                 // データベースに保管する.
+                // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.                
                 console.log("adding photo to database.");
                 database.photo.add({
                     owner: current_user.user_id,
@@ -868,6 +865,7 @@ async function main_loop() {
                 // UI表示を最新化する.
                 await update_camera_view();
 
+                // アイドルカウンタをリセットする.
                 idle_count = 0;
                 break;
 
@@ -937,7 +935,6 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "none";
                 SETTING_VIEW.style.display = "none";
                 ERROR_VIEW.style.display = "block";
-
                 console.error("fatal error - teminate main loop.");
                 break;
 
@@ -961,7 +958,6 @@ async function main_loop() {
             case "service_error":
                 // サービスエラーが発生した：エラービューに遷移する.
                 console.warn("something wrong in network service.");
-
                 // TODO: いきなり終わるんじゃなくて、もっとエラー内容に応じたリカバリ処理をすること！
                 state = "open_error_view";
                 break;
@@ -975,7 +971,6 @@ async function main_loop() {
     } catch (error) {
         // 何かしらの例外処理が発生した.
         console.error("internal error - unhandled exception in main loop :", error.toString());
-
         // カメラビューに強制的に戻す.
         // TODO: これももう少し丁寧なエラーハンドリングをしたほうがいいかも...
         state = "open_camera_view";

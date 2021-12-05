@@ -7,6 +7,7 @@
  */
 "use strict";
 
+// 依存するライブラリの読み込み.
 importScripts("{{DEXIE_JS}}");
 importScripts("{{CRYPTO_JS}}");
 
@@ -65,6 +66,7 @@ self.addEventListener("activate", (event => {
                     return caches.delete(name);
                 }
             }));
+            // 全てのクライアントに自分をコントローラとして設定して終了.
         }).then(() => self.clients.claim())
     );
 }));
@@ -76,7 +78,6 @@ self.addEventListener("sync", (event => {
     console.log("service worker received sync event :", event);
     // TODO: 本当ならここでeventと{{SYNC_TAG}}を比較するべき.
     // TODO: ちょっとネストが深くなっているのでawaitに変える?
-
     // 写真を1枚だけアップロードする処理のタスクを定義する.
     const task = new Promise(() => {
         console.log("background sync task started.");
@@ -151,6 +152,7 @@ self.addEventListener("sync", (event => {
                         return;
                     }
 
+                    // トークンがちゃんと取れたら...
                     token_response.json().then(token_result => {
                         console.assert(token_result);
                         const token = token_result.access;
@@ -160,6 +162,7 @@ self.addEventListener("sync", (event => {
                         const form_data = new FormData();
                         console.assert(form_data);
 
+                        // フォームを埋める.
                         form_data.append("owner", photo.owner);
                         form_data.append("date_taken", photo.date_taken);
                         form_data.append("author_name", photo.author_name);
@@ -230,6 +233,8 @@ self.addEventListener("message", (event => {
             }));
         }).then(() => {
             // クライアントにメッセージを送る.
+            // クライアントはこれで再度自分自身へリダイレクトする.
+            // 詳細は camera-app.js をみてね!
             self.clients.matchAll().then(clients => {
                 for (const c of clients) {
                     console.log("post message to client :", c);
