@@ -16,8 +16,11 @@ const MEDIA_ENCRYPTION_KEY_LENGTH = Number("{{MEDIA_ENCRYPTION_KEY_LENGTH}}");
 // メインループを繰り返すときの待ち時間(ミリ秒).
 const MAIN_LOOP_INTERVAL = Number("{{MAIN_LOOP_INTERVAL}}");
 
-// 自動でConnectorからUserのデータを自動リロードする間隔(アイドル状態の回数).
-const AUTO_RELOAD_TRIGGER = Number("{{AUTO_RELOAD_TRIGGER}}");
+// 自動でConnectorからUserのデータを自動リロードする間隔.
+const AUTO_RELOAD_TRIGGER = (30 * 1000) / MAIN_LOOP_INTERVAL;
+
+// 自動でプレビューの再生状態を確認する間隔.
+const PREVIEW_CHECK_TRIGGER = (3 * 1000) / MAIN_LOOP_INTERVAL;
 
 // データベース(IndexedDB)に入れることのできる写真の最大枚数(=オフラインで撮影して溜めておける最大の枚数).
 const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
@@ -99,7 +102,7 @@ let token = null;
 let photo_count = 0;
 
 // 自動リロードをトリガーするための待ち状態カウント.
-let idle_count = 0;
+let idle_count = 1;
 
 // Service workerの登録情報.
 let serviceworker_registration = null;
@@ -283,6 +286,8 @@ async function setup_camera() {
         const previous_camera_preview_video = document.getElementById("camera_preview_video");
         // もしすでにプレビューがあれば...
         if (previous_camera_preview_video) {
+            // プレビューを消す.
+            previous_camera_preview_video.style.display = "none";
             // プレビューに結びつけているストリームがあれば全てリセットする.
             if (previous_camera_preview_video.srcObject) {
                 previous_camera_preview_video.srcObject.getVideoTracks().forEach(track => {
@@ -298,19 +303,23 @@ async function setup_camera() {
             CAMERA_PREVIEW.innerHTML = "";
         }
         // プレビューを作り直す.
-        CAMERA_PREVIEW.innerHTML = "<video id=\"camera_preview_video\" class=\"camera_preview\" playsinline muted></video>";
+        CAMERA_PREVIEW.innerHTML = "<video id=\"camera_preview_video\" class=\"camera_preview\" preload=\"metadata\" playsinline muted></video>";
         const camera_preview_video = document.getElementById("camera_preview_video");
         console.assert(camera_preview_video);
-        // イベントを設定しておく.
+        // メタデータロードのイベントを設定しておく.
         camera_preview_video.onloadedmetadata = (async() => {
-            // 再生を開始してうまくいったらシャッターも出現させる.
+            console.info("loaded preview vidfeo metadata.");
+            // 再生を開始する.
             camera_preview_video.play().then(() => {
-                CAMERA_SHUTTER.style.display = "block";
+                console.info("started preview video.");
             }).catch(error => {
-                // うまく再生が開始できなかったら致命的エラーとして扱う.
                 console.error("could not start preview video :", error.toString());
-                state = "open_error_view";
             });
+        });
+        //  再生開始のイベントを設定しておく.        
+        camera_preview_video.onplay = (async() => {
+            // シャッターを出現させる.
+            CAMERA_SHUTTER.style.display = "block";
         });
         // デバイスパラメータを用いてストリームに接続する.
         console.info("getting user media devices using param :", DEVICE_PARAM);
@@ -489,7 +498,7 @@ async function update_camera_view() {
                 // 色は数が足りない場合はデフォルトのテーマカラーで補う.
                 const c = scene_color.length > i ? scene_color[i].trim() : "{{THEME_COLOR}}";
                 console.assert(c);
-                inner_html += ("<div class=\"camera_shutter_button\" style=\"background-color:" + c + ";\" onclick='take_photo(\"" + v + "\");'>" + v + "</div>");
+                inner_html += ("<div class=\"camera_shutter_button\" style=\"background-color:" + c + ";\" onmousedown='take_photo(\"" + v + "\");'>" + v + "</div>");
             }
         } else {
             console.warn("scene tag is empty - no camera shutter.");
@@ -536,8 +545,10 @@ async function take_photo(scene_tag) {
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.
     if (current_user.shutter_sound) {
-        CAMERA_SHUTTER_SOUND.pause();
-        CAMERA_SHUTTER_SOUND.currentTime = 0;
+        if (!CAMERA_SHUTTER_SOUND.paused) {
+            CAMERA_SHUTTER_SOUND.pause();
+            CAMERA_SHUTTER_SOUND.currentTime = 0;
+        }
         CAMERA_SHUTTER_SOUND.play();
     }
     // 写真撮影のタスクを定義する.
@@ -772,28 +783,37 @@ async function main_loop() {
                 // UI表示を最新化する.
                 await update_camera_view();
                 // アイドルカウンタをリセットする.
-                idle_count = 0;
+                idle_count = 1;
                 break;
 
             case "in_camera_view":
                 // カメラ操作ビューを表示中：写真のアップロードとユーザの自動リロードを処理する.
                 if (online) {
-                    idle_count++;
                     if (photo_count > 0) {
-                        // もし今がオンラインで写真がたまっていれば、1枚だけアップロードをする.
+                        // もし今がオンラインで写真がたまっていれば、1枚だけアップロードをする.                                            
                         await upload_photo();
-                        idle_count = 0;
-                    } else {
+                    } else if (current_user.auto_reload && (idle_count % AUTO_RELOAD_TRIGGER === 0)) {
                         // もしこのステートが十分な回数繰り返されているようであり、かつ自動リロード設定が有効な場合は、ユーザ情報のリロードをする.
-                        if (current_user.auto_reload && idle_count > AUTO_RELOAD_TRIGGER) {
-                            console.log("auto (silent) reloading user from user service.");
-                            idle_count = 0;
-                            await load_user("in_camera_view");
-                        }
+                        console.log("auto (silent) reloading user from user service.");
+                        await load_user("in_camera_view");
+                    }
+                    // 撮影済み枚数の表示を更新する.
+                    await update_photo_counter();
+                }
+                // ビデオプレビューが出ていない時の処理をする.
+                if (idle_count % PREVIEW_CHECK_TRIGGER === 0) {
+                    const camera_preview_video = document.getElementById("camera_preview_video");
+                    console.assert(camera_preview_video);
+                    if (camera_preview_video.paused) {
+                        console.info("camera preview is paused.");
+                        // 再生を開始して開始できなかったらカメラをセットアップしてみる.
+                        camera_preview_video.play().catch(error => {
+                            console.error("could not start preview video :", error.toString());
+                            setup_camera();
+                        });
                     }
                 }
-                // 撮影済み枚数の表示を更新する.
-                await update_photo_counter();
+                idle_count++;
                 break;
 
             case "open_setting_view":
