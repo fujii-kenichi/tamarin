@@ -961,7 +961,7 @@ async function main() {
         state = "open_reload_view";
     });
     // UIのイベントをセットアップする：状況タグ.
-    CAMERA_CONTEXT_TAG.onclick = (async(event) => {
+    CAMERA_CONTEXT_TAG.onfocus = (async(event) => {
         // Safariでセレクトできなくなる問題への対応.
         console.info("context tag select element received onclick :", event);
         if (event.isTrusted) {

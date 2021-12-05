@@ -100,11 +100,16 @@ input.camera_menu {
 
 input.author_name {
     font-size: small;
+    text-align: left;
+    width: 30%;
+    min-width: 30%;
     max-width: 30%;
 }
 
 select.context_tag {
     font-size: small;
+    width: 30%;
+    min-width: 30%;
     max-width: 30%;
 }
 
@@ -162,9 +167,13 @@ div.camera_shutter_button {
 
 @media screen and (orientation: portrait) {
     input.author_name {
+        width: 25%;
+        min-width: 25%;
         max-width: 25%;
     }
     select.context_tag {
+        width: 25%;
+        min-width: 25%;
         max-width: 25%;
     }
     div.camera_shutter {
