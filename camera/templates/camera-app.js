@@ -26,7 +26,7 @@ const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 const DEVICE_PARAM = JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'));
 
 // 写真撮影用の文字列.
-const IMAGE_CAPTURE_PARAM = JSON.parse(String("{{IMAGE_CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
+const CAPTURE_PARAM = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
 
 // HTMLの各要素.
 const CAMERA_VIEW = document.getElementById("camera_view");
@@ -138,17 +138,17 @@ async function setup_debug_log() {
         const original_error = console.error;
         console.error = (...args) => {
             debug_log.push(Array.from(args));
-            return original_error(args);
+            return original_error(...args);
         };
         const original_warn = console.warn;
         console.warn = (...args) => {
             debug_log.push(Array.from(args));
-            return original_warn(args);
+            return original_warn(...args);
         };
         const original_info = console.info;
         console.info = (...args) => {
             debug_log.push(Array.from(args));
-            return original_info(args);
+            return original_info(...args);
         };
         // デバッグ用UIのイベントを設定する.
         CAMERA_DEBUG.onclick = (async(event) => {
@@ -298,7 +298,7 @@ async function setup_camera() {
             CAMERA_PREVIEW.innerHTML = "";
         }
         // プレビューを作り直す.
-        CAMERA_PREVIEW.innerHTML = "<video id='camera_preview_video' class='camera_preview' playsinline muted/>";
+        CAMERA_PREVIEW.innerHTML = "<video id=\"camera_preview_video\" class=\"camera_preview\" playsinline muted></video>";
         const camera_preview_video = document.getElementById("camera_preview_video");
         console.assert(camera_preview_video);
         // イベントを設定しておく.
@@ -489,7 +489,7 @@ async function update_camera_view() {
                 // 色は数が足りない場合はデフォルトのテーマカラーで補う.
                 const c = scene_color.length > i ? scene_color[i].trim() : "{{THEME_COLOR}}";
                 console.assert(c);
-                inner_html += ("<div class=\"camera_shutter_button\" style=\"background-color:" + c + ";\" onclick='take_photo(\"" + v + "\")'>" + v + "</div>");
+                inner_html += ("<div class=\"camera_shutter_button\" style=\"background-color:" + c + ";\" onclick='take_photo(\"" + v + "\");'>" + v + "</div>");
             }
         } else {
             console.warn("scene tag is empty - no camera shutter.");
@@ -528,6 +528,10 @@ async function take_photo(scene_tag) {
         console.warn("photo database is full :", photo_count);
         return;
     }
+    // ビデオを消す.
+    const camera_preview_video = document.getElementById("camera_preview_video");
+    console.assert(camera_preview_video);
+    camera_preview_video.style.visibility = "hidden";
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.
@@ -553,8 +557,8 @@ async function take_photo(scene_tag) {
         // 実際の画像情報を取得する.
         // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
         console.assert(image_capture);
-        console.log("image capture param :", IMAGE_CAPTURE_PARAM);
-        image_capture.takePhoto(IMAGE_CAPTURE_PARAM).then(image => {
+        console.log("image capture param :", CAPTURE_PARAM);
+        image_capture.takePhoto(CAPTURE_PARAM).then(image => {
             console.assert(image);
             console.log("image captured :", image);
             console.info("captured image type :", image.type);
@@ -606,6 +610,8 @@ async function take_photo(scene_tag) {
                 }).then(() => {
                     // データベースの更新が成功したら撮影済みカウンタの表示を更新する.
                     update_photo_counter().then(() => {
+                        // プレビューを再開する.
+                        camera_preview_video.style.visibility = "visible";
                         console.assert(serviceworker_registration);
                         // 可能であればservice workerにsyncイベントを登録する.
                         if ("sync" in serviceworker_registration) {
@@ -839,17 +845,21 @@ async function main_loop() {
             case "force_update":
                 // アプリの強制アップデートが指示された.
                 // まずservice workerにメッセージをポストする.
-                navigator.serviceWorker.controller.postMessage({
-                    type: "{{FORCE_UPDATE_TAG}}"
-                });
-                // 表示をローディングビューにしてメインループを終了しておく.
-                // 実際の処理はservice workerからくるメッセージに反応するところで行う.
-                keep_main_loop = false;
-                LOADING_VIEW.style.display = "block";
-                CAMERA_VIEW.style.display = "none";
-                AUTH_VIEW.style.display = "none";
-                SETTING_VIEW.style.display = "none";
-                ERROR_VIEW.style.display = "none";
+                if ("postMessage" in navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: "{{FORCE_UPDATE_TAG}}"
+                    });
+                    // 表示をローディングビューにしてメインループを終了しておく.
+                    // 実際の処理はservice workerからくるメッセージに反応するところで行う.
+                    keep_main_loop = false;
+                    LOADING_VIEW.style.display = "block";
+                    CAMERA_VIEW.style.display = "none";
+                    AUTH_VIEW.style.display = "none";
+                    SETTING_VIEW.style.display = "none";
+                    ERROR_VIEW.style.display = "none";
+                } else {
+                    console.error("Cound not post message.");
+                }
                 break;
 
             case "service_error":
@@ -949,6 +959,19 @@ async function main() {
         console.log("updating user database :", current_user);
         await database.user.put(current_user);
         state = "open_reload_view";
+    });
+    // UIのイベントをセットアップする：状況タグ.
+    CAMERA_CONTEXT_TAG.onclick = (async(event) => {
+        // Safariでセレクトできなくなる問題への対応.
+        console.info("context tag select element received onclick :", event);
+        if (event.isTrusted) {
+            const mouseEvent = new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+            });
+            console.assert(mouseEvent);
+            CAMERA_CONTEXT_TAG.dispatchEvent(mouseEvent);
+        }
     });
 
     // 依存するもろもろのセットアップ処理を行う.

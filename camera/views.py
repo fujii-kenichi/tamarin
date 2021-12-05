@@ -58,10 +58,7 @@ CAMERA_CONTEXT = {
     "AUTO_RELOAD_TRIGGER": 30 * 1000 / 200,  # 何もせずこの時間を過ぎたら自動リロード機能を実行(ミリ秒)
 
     # カメラとしてローカルに写真を保持しておける枚数. あんまり多いとIndexedDBが耐えられないかも...
-    "MAX_PHOTO_COUNT": 10,
-
-    # 撮影する時に image_cpature に渡す値.
-    "IMAGE_CAPTURE_PARAM": "{ \"imageWidth\" : 1920, \"imageHeight\" : 1080 }"
+    "MAX_PHOTO_COUNT": 10
 }
 
 # タマリンカメラ固有で書き換えたいユーザに見せる各種メッセージを定義する.
@@ -89,29 +86,35 @@ CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | CAMERA_CONTEXT |
 MOBILE_AGENT_RE = re.compile(r".*(iphone|ipod|mobile|android)", re.IGNORECASE)
 
 # モバイルデバイス向けの初期化パラメータ.
-DEVICE_PARAM_MOBILE = {
+MOBILE_PARAM = {
     "DEVICE_PARAM": "\
-      {\
+    {\
         \"audio\" : false,\
         \"video\" : {\
             \"width\" :  { \"min\" : 1920, \"ideal\" : 1920, \"max\" : 1920 },\
             \"height\" : { \"min\" : 1080, \"ideal\" : 1080, \"max\" : 1080 },\
             \"facingMode\" : { \"exact\" : \"environment\" }\
-         }\
-      }"
+        }\
+    }",
+    "CAPTURE_PARAM": "{\
+        \"imageWidth\" : 1920,\
+        \"imageHeight\" : 1080\
+    }"
 }
 
 # PC向けの初期化パラメータ.
-DEVICE_PARAM_PC = {
+PC_PARAM = {
     "DEVICE_PARAM": "\
-      {\
+    {\
         \"audio\" : false,\
         \"video\" : {\
             \"width\" :  { \"ideal\" : 1920, \"max\" : 1920 },\
             \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
             \"facingMode\" : \"user\"\
-         }\
-      }"
+        }\
+    }",
+    "CAPTURE_PARAM": "{\
+    }"
 }
 
 
@@ -141,9 +144,9 @@ def camera_app_js(request):
 
     # user-agentでリクエストを判定してデバイス初期化パラメータを決定する.
     if MOBILE_AGENT_RE.match(request.META["HTTP_USER_AGENT"]):
-        context |= DEVICE_PARAM_MOBILE
+        context |= MOBILE_PARAM
     else:
-        context |= DEVICE_PARAM_PC
+        context |= PC_PARAM
 
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.js", context, content_type="text/javascript; charset=utf-8")
