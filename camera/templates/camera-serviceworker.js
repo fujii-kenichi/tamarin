@@ -16,7 +16,6 @@ importScripts("{{CRYPTO_JS}}");
  */
 self.addEventListener("install", (event => {
     console.log("service worker received install event :", event);
-
     event.waitUntil(
         // キャッシュへ必要なファイルを押し込む.
         caches.open("{{VERSION}}").then(cache => {
@@ -44,7 +43,6 @@ self.addEventListener("install", (event => {
  */
 self.addEventListener("fetch", (event => {
     // console.log("service worker received fetch event :", event);
-
     // キャッシュからとってこれたらそれを返却する.
     event.respondWith(caches.match(event.request).then(response => {
         return response ? response : fetch(event.request);
@@ -56,7 +54,6 @@ self.addEventListener("fetch", (event => {
  */
 self.addEventListener("activate", (event => {
     console.log("service worker received activate event :", event);
-
     // バージョンの違う古いキャッシュを削除する.
     event.waitUntil(
         caches.keys().then(cache_names => {
@@ -81,27 +78,22 @@ self.addEventListener("sync", (event => {
     // 写真を1枚だけアップロードする処理のタスクを定義する.
     const task = new Promise(() => {
         console.log("background sync task started.");
-
         // オフライン状態の判定:いちおうcamera-app.jsと同じロジックでやる.
         const online = navigator.onLine === false ? false : true;
-
         // オフラインなら何もしない. 
         // TODO: そもそもオフラインなら絶対に発行されないのならこれ不要かも.
         if (!online) {
             console.log("nothing to do with offline.");
             return;
         }
-
         // データベースを開く.
         const database = new Dexie("{{DATABASE_NAME}}");
         console.assert(database);
-
         // インデックスを定義する.
         database.version("{{DATABASE_VERSION}}").stores({
             user: "dummy_id, user_id",
             photo: "++id, date_taken"
         });
-
         // データベースからユーザを取得する.
         database.user.get("{{DATABASE_USER_DUMMY_ID}}").then(user => {
             // ユーザが取得できなかったらこれ以上は何もしない.
@@ -109,7 +101,6 @@ self.addEventListener("sync", (event => {
                 console.warn("could not load user from database - may be the first run.");
                 return;
             }
-
             // アップロードすべき写真をデータベースから取得する.
             database.photo.orderBy("date_taken").first().then(photo => {
                 // 写真がなければこれ以上は何もしない.
@@ -117,20 +108,16 @@ self.addEventListener("sync", (event => {
                     console.log("photo database is empty.");
                     return;
                 }
-
                 // 写真があった場合はまたアップロードしたいので自分自身を呼ぶイベントを登録しておく.
                 self.registration.sync.register("{{SYNC_TAG}}");
-
+                // 写真のアップロード開始！
                 console.info("start uploading photo to media service :", photo.id);
                 const start_time = new Date();
-
                 // INdexedDBにパスワードを保存する際の暗号化に使うキーを準備する.
                 const SECRET_KEY = String("{{SECRET_KEY}}");
-
                 // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
                 const raw_password = CryptoJS.AES.decrypt(user.encrypted_password, SECRET_KEY).toString(CryptoJS.enc.Utf8);
                 console.assert(raw_password);
-
                 // Tokenサービスを呼び出す.
                 console.log("calling token service : {{CREATE_TOKEN_URL}}");
                 fetch("{{CREATE_TOKEN_URL}}", {
@@ -145,23 +132,19 @@ self.addEventListener("sync", (event => {
                 }).then(token_response => {
                     console.assert(token_response);
                     console.log("token service respond :", token_response);
-
                     // レスポンスが200のときだけ処理を続行する.
                     if (token_response.status !== 200) {
                         console.error("could not get token :", token_response.status);
                         return;
                     }
-
                     // トークンがちゃんと取れたら...
                     token_response.json().then(token_result => {
                         console.assert(token_result);
                         const token = token_result.access;
                         console.assert(token);
-
                         // 写真アップロードに必要なフォームを作成する.
                         const form_data = new FormData();
                         console.assert(form_data);
-
                         // フォームを埋める.
                         form_data.append("owner", photo.owner);
                         form_data.append("date_taken", photo.date_taken);
@@ -170,10 +153,8 @@ self.addEventListener("sync", (event => {
                         form_data.append("context_tag", photo.context_tag);
                         form_data.append("content_type", photo.content_type);
                         form_data.append("encryption_key", photo.encryption_key);
-
                         const encrypted_data = new File([photo.encrypted_data], photo.id + ".bin", { lastModified: start_time });
                         form_data.append("encrypted_data", encrypted_data);
-
                         // Mediaサービスを呼んで写真をアップロードする.
                         console.log("calling media service : {{MEDIA_API_URL}}");
                         fetch("{{MEDIA_API_URL}}", {
@@ -185,13 +166,11 @@ self.addEventListener("sync", (event => {
                         }).then(media_response => {
                             console.assert(media_response);
                             console.log("media service returns response :", media_response);
-
                             // HTTPステータスコードで分岐する.
                             if (media_response.status === 201) {
                                 // アップロードがうまくいった.
                                 console.log("photo uploaded successfully :", photo.id);
                                 console.info("photo upload time in ms :", new Date() - start_time);
-
                                 // データベースから写真を削除する.
                                 console.log("deleting photo :", photo.id);
                                 database.photo.delete(photo.id).then(() => {
@@ -208,7 +187,6 @@ self.addEventListener("sync", (event => {
             });
         });
     });
-
     // タスクの終了を待つ.
     event.waitUntil(task);
 }));
@@ -218,12 +196,10 @@ self.addEventListener("sync", (event => {
  */
 self.addEventListener("message", (event => {
     console.log("service worker received message event :", event);
-
     // 強制アップデートの処理を行う.
     // TODO: 本当はここでeventの中身を確認するべき.
     const task = new Promise(() => {
         console.log("force update task started.");
-
         // すべてのキャッシュを削除する.
         // これで構成するファイルをぜんぶもう一回取りに行くはず.
         caches.keys().then(cache_names => {
@@ -243,7 +219,6 @@ self.addEventListener("message", (event => {
             });
         });
     });
-
     // タスクの終了を待つ.
     event.waitUntil(task);
 }));

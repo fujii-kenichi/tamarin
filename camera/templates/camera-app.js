@@ -133,7 +133,6 @@ async function load_debug_log() {
  * デバッグ用にログ出力機能をセットアップする.
  */
 async function setup_debug_log() {
-
     if (DEBUG) {
         // デバッグモードだったらconsoleへのログ出力を横取りしてバッファにも溜めておく.
         const original_error = console.error;
@@ -141,56 +140,45 @@ async function setup_debug_log() {
             debug_log.push(Array.from(args));
             return original_error(args);
         };
-
         const original_warn = console.warn;
         console.warn = (...args) => {
             debug_log.push(Array.from(args));
             return original_warn(args);
         };
-
         const original_info = console.info;
         console.info = (...args) => {
             debug_log.push(Array.from(args));
             return original_info(args);
         };
-
         // デバッグ用UIのイベントを設定する.
         CAMERA_DEBUG.onclick = (async(event) => {
             DEBUG_VIEW.style.display = "block";
             load_debug_log();
         });
-
         DEBUG_RELOAD.onclick = (async(event) => {
             load_debug_log();
         });
-
         DEBUG_CLEAR.onclick = (async(event) => {
             debug_log = [];
             load_debug_log();
         });
-
         DEBUG_RESET.onclick = (async(event) => {
             await database.user.clear();
             await database.photo.clear();
             DEBUG_LOG.value = "reset database.";
         });
-
         DEBUG_CAMERA.onclick = (async(event) => {
             await setup_camera();
         });
-
         DEBUG_CLOSE.onclick = (async(event) => {
             DEBUG_VIEW.style.display = "none";
         });
-
         ERROR_ICON.onclick = (async(event) => {
-            // エラー表示している時のアイコン.
-            // おされたらデバッグビューを表示する.
+            // エラー表示している時のアイコンがおされたらデバッグビューを表示する.
             ERROR_VIEW.style.display = "none";
             DEBUG_VIEW.style.display = "block";
             load_debug_log();
         });
-
     } else {
         // デバッグモードじゃない場合には、逆にconsole系は何もしないようにする.
         console.error = (...args) => {};
@@ -198,7 +186,6 @@ async function setup_debug_log() {
         console.info = (...args) => {};
         console.log = (...args) => {};
         console.assert = (...args) => {};
-
         // デバッグ機能の有効化ボタンを消しておく.
         CAMERA_DEBUG.style.display = "none";
     }
@@ -209,11 +196,9 @@ async function setup_debug_log() {
  */
 async function setup_database() {
     console.assert(!database);
-
     // Dexieのインスタンスを作る.
     database = new Dexie("{{DATABASE_NAME}}");
     console.assert(database);
-
     // インデックスを設定する.
     database.version("{{DATABASE_VERSION}}").stores({
         user: "dummy_id, user_id",
@@ -226,32 +211,27 @@ async function setup_database() {
  */
 async function init() {
     console.assert(!serviceworker_registration);
-
     // service worker が使える環境かどうかをチェックする.
     if (!("serviceWorker" in navigator)) {
         console.error("no service worker in navigator.");
         state = "open_error_view";
         return;
     }
-
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
     if (document.location.search !== "{{MODE_APP}}") {
         console.log("no {{MODE_APP}} param in url.");
         state = "open_install_view";
         return;
     }
-
     // service workerの登録を行う.
     try {
         navigator.serviceWorker.register("camera-serviceworker.js").then(registration => {
             console.log("service worker registrated :", registration);
             navigator.serviceWorker.ready.then(registration => {
                 console.log("service worker is ready :", registration);
-
                 // 登録できたら次のステートをinitへ.
                 serviceworker_registration = registration;
                 state = "start";
-
                 // メッセージのハンドラも登録しておく.
                 navigator.serviceWorker.onmessage = (event => {
                     console.log("receive message event :", event);
@@ -273,13 +253,11 @@ async function init() {
  * 実行環境にImageCaptureの実装がない時に使用する簡易版.
  */
 class MyImageCapture {
-
-    // 写真撮影機能のみ実装.
+    // 写真撮影機能のみ実装しています.
     async takePhoto() {
         return new Promise(resolve => {
             const camera_preview_video = document.getElementById("camera_preview_video");
             console.assert(camera_preview_video);
-
             // キャンバスに画像を転送してBlobにして返す.
             CAMERA_CANVAS.width = camera_preview_video.videoWidth;
             CAMERA_CANVAS.height = camera_preview_video.videoHeight;
@@ -294,7 +272,6 @@ class MyImageCapture {
  */
 async function setup_camera() {
     console.info("setup camera.");
-
     // Videoエレメントを一回削除するなどめんどくさいことをしているのは、ひとえにiOSのSafariでプレビューが消えちゃうことがあるから.
     // オンライン・オフラインを切り替えたり、アプリを切り替えたりするとなぜかプレビューが切れてしまう.
     // 次善の策としてこうしているけど、これが本当に適切なやり方なのかはちょっとよくわからない.
@@ -302,13 +279,10 @@ async function setup_camera() {
     try {
         // いったんシャッターを消す.
         CAMERA_SHUTTER.style.display = "none";
-
         // プレビューのエレメントをとってくる.
         const previous_camera_preview_video = document.getElementById("camera_preview_video");
-
         // もしすでにプレビューがあれば...
         if (previous_camera_preview_video) {
-
             // プレビューに結びつけているストリームがあれば全てリセットする.
             if (previous_camera_preview_video.srcObject) {
                 previous_camera_preview_video.srcObject.getVideoTracks().forEach(track => {
@@ -320,16 +294,13 @@ async function setup_camera() {
                 previous_camera_preview_video.load();
                 previous_camera_preview_video.srcObject = null;
             }
-
             // そのあといっかい消してしまう.
             CAMERA_PREVIEW.innerHTML = "";
         }
-
         // プレビューを作り直す.
         CAMERA_PREVIEW.innerHTML = "<video id='camera_preview_video' class='camera_preview' playsinline muted/>";
         const camera_preview_video = document.getElementById("camera_preview_video");
         console.assert(camera_preview_video);
-
         // イベントを設定しておく.
         camera_preview_video.onloadedmetadata = (async() => {
             // 再生を開始してうまくいったらシャッターも出現させる.
@@ -341,18 +312,15 @@ async function setup_camera() {
                 state = "open_error_view";
             });
         });
-
         // デバイスパラメータを用いてストリームに接続する.
         console.info("getting user media devices using param :", DEVICE_PARAM);
         const stream = await navigator.mediaDevices.getUserMedia(DEVICE_PARAM);
         console.assert(stream);
         console.log("connected to stream :", stream);
-
         // ストリームの情報を取得して表示しておく.
         const settings = stream.getVideoTracks()[0].getSettings();
         console.assert(settings);
         console.info("stream settings :", settings);
-
         // ImageCaptureオブジェクトを作成する.
         // SafariなどImageCaptureがない場合は独自の簡易実装を使う.
         if (typeof ImageCapture === "undefined") {
@@ -363,7 +331,6 @@ async function setup_camera() {
             console.log("using browser provided image capture :", image_capture);
         }
         console.assert(image_capture);
-
         // ストリームをプレビューにつなげる.
         camera_preview_video.srcObject = stream;
     } catch (error) {
@@ -379,11 +346,9 @@ async function setup_camera() {
 async function get_token() {
     // 以前のトークンは忘れておく.
     token = null;
-
     // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
     const raw_password = CryptoJS.AES.decrypt(current_user.encrypted_password, SECRET_KEY).toString(CryptoJS.enc.Utf8);
     console.assert(raw_password);
-
     // Tokenサービスを呼び出す.
     console.log("calling token service : {{CREATE_TOKEN_URL}}");
     const token_response = await fetch("{{CREATE_TOKEN_URL}}", {
@@ -398,12 +363,10 @@ async function get_token() {
     });
     console.assert(token_response);
     console.log("token service respond :", token_response);
-
     // レスポンスが200のときだけトークンを更新する.
     if (token_response.status === 200) {
         const result = await token_response.json();
         console.assert(result);
-
         token = result.access;
         console.assert(token);
     }
@@ -416,24 +379,19 @@ async function get_token() {
  */
 async function load_user(new_state) {
     console.assert(new_state);
-
     // データベースにユーザーが保存されているかどうかを確認する.
     console.log("loading current user from database.");
     const user = await database.user.get("{{DATABASE_USER_DUMMY_ID}}");
-
     if (!user) {
         // データベースにユーザーが存在しない場合は、初回起動とみなして認証ビューを開くようにステートを変えて抜ける.
         console.warn("could not find current user in database - may be the first run.");
         state = "open_auth_view";
         return;
     }
-
     // データベースに格納されていた情報を変数に移す.
     current_user = user;
-
     // オフライン時の判断をする.
     if (!online) {
-
         // Userサービスからすでにidが取れているのであれば、大丈夫そうだと判断してオフラインでの動作を続行する.
         // そうでない場合はまあオフラインなんで意味ないんだけど(とはいってもこのまま続行もできないので)認証パネルを出すようにして抜ける.
         if (current_user.user_id) {
@@ -443,19 +401,15 @@ async function load_user(new_state) {
             console.warn("current user may be insufficient in offline :", current_user.username);
             state = "authentication_failed";
         }
-
         // いずれにしろオフライン時はここで抜ける.
         return;
     }
-
     // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
     await get_token();
-
     if (!token) {
         state = "authentication_failed";
         return;
     }
-
     // 現在のユーザに対応するデータをUserサービスから持ってくる.
     console.log("calling user service : {{USER_API_URL}}");
     const user_response = await fetch("{{USER_API_URL}}" + "?username=" + current_user.username, {
@@ -464,40 +418,31 @@ async function load_user(new_state) {
         }
     });
     console.assert(user_response);
-
     // レスポンスのステータスが200じゃなかったら、不明なエラーということでステートを変えて抜ける.
     if (user_response.status !== 200) {
         console.error("could not get user :", user_response.status);
         state = "service_error";
         return;
     }
-
     // UserサービスからとってきたデータをJSONにする.
     const result_user = await user_response.json();
     console.assert(result_user);
     console.assert(result_user.length === 1);
-
     // そのJSONから現在のユーザを示す変数を更新する.
     console.info("update current user :", current_user.username);
     current_user.user_id = result_user[0].id;
     console.assert(current_user.user_id);
-
     current_user.scene_tag = result_user[0].scene_tag;
     console.assert(current_user.scene_tag);
-
     current_user.scene_color = result_user[0].scene_color;
     console.assert(current_user.scene_color);
-
     current_user.context_tag = result_user[0].context_tag;
     console.assert(current_user.context_tag);
-
     // 更新されたユーザを示す変数をデータベースに保存する.
     console.log("save current user to database :", current_user);
     await database.user.put(current_user);
-
     // 新しいユーザの情報でUIの表示を更新する.
     await update_camera_view();
-
     // 呼び出し元が期待する次のステートに遷移するようにして処理を終了する.
     state = new_state;
 }
@@ -508,7 +453,6 @@ async function load_user(new_state) {
 async function update_photo_counter() {
     // データベースのレコード数を枚数とみなす.
     photo_count = await database.photo.count();
-
     // 値が前と違っていたらUIを更新する.
     if (photo_count !== last_photo_count) {
         last_photo_count = photo_count;
@@ -522,32 +466,26 @@ async function update_photo_counter() {
 async function update_camera_view() {
     // まず撮影済み枚数の表示を更新する.
     await update_photo_counter();
-
     // "撮影者"の情報が前と違っていたら更新する.
     if (last_author_name !== current_user.author_name) {
         last_author_name = current_user.author_name;
         CAMERA_AUTHOR_NAME.value = last_author_name;
     }
-
     // "シーン"の情報が前と違っていたら更新する.
     if (last_scene_tag !== current_user.scene_tag || last_scene_color !== current_user.scene_color) {
         last_scene_tag = current_user.scene_tag;
         last_scene_color = current_user.scene_color;
         let inner_html = "";
-
         if (current_user.scene_tag) {
             const scene_tag = last_scene_tag.split(/,/);
             console.assert(scene_tag);
-
             const scene_color = last_scene_color.split(/,/);
             console.assert(scene_color);
-
             // CSVのタグを分解してループを回してボタンを生成してセットする.
             // TODO: ここでは最大の個数とか適切な色名だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
             for (let i = 0; i < scene_tag.length; i++) {
                 const v = scene_tag[i].trim();
                 console.assert(v);
-
                 // 色は数が足りない場合はデフォルトのテーマカラーで補う.
                 const c = scene_color.length > i ? scene_color[i].trim() : "{{THEME_COLOR}}";
                 console.assert(c);
@@ -563,7 +501,6 @@ async function update_camera_view() {
     if (last_context_tag !== current_user.context_tag) {
         last_context_tag = current_user.context_tag;
         let inner_html = "";
-
         if (current_user.context_tag) {
             // CSVのタグを分解してループを回してオプションタグ(選択肢)を生成してセットする.
             // TODO: ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
@@ -586,13 +523,11 @@ async function update_camera_view() {
  */
 async function take_photo(scene_tag) {
     console.assert(scene_tag);
-
     // もう規定枚数いっぱいいならこれ以上撮影できない.
     if (photo_count >= MAX_PHOTO_COUNT) {
         console.warn("photo database is full :", photo_count);
         return;
     }
-
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     // 一回停止して再生時間をリセットしているのは連続でシャッターを切った際に音がちゃんとかぶさるようにするため.
@@ -601,24 +536,20 @@ async function take_photo(scene_tag) {
         CAMERA_SHUTTER_SOUND.currentTime = 0;
         CAMERA_SHUTTER_SOUND.play();
     }
-
     // 写真撮影のタスクを定義する.
     // 非同期に処理することで少しでも応答性能をあげようという試み...
     const task = new Promise(() => {
         // 今の日時を撮影日時とする.EXIFではなくここで生成する点に注意!
         const start_time = new Date();
         console.assert(start_time);
-
         // 撮影日時をISOフォーマット(UTC)で保管.
         const date_taken = start_time.toJSON();
         console.assert(date_taken);
-
         // プレビューに紐づけられているストリームをとってくる.
         const camera_preview_video = document.getElementById("camera_preview_video");
         console.assert(camera_preview_video);
         const stream = camera_preview_video.srcObject;
         console.assert(stream);
-
         // 実際の画像情報を取得する.
         // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
         console.assert(image_capture);
@@ -628,48 +559,38 @@ async function take_photo(scene_tag) {
             console.log("image captured :", image);
             console.info("captured image type :", image.type);
             console.info("captured image size :", image.size);
-
             // 画像を読み込む準備をする.
             const image_reader = new FileReader();
             console.assert(image_reader);
-
             image_reader.onload = () => {
                 // 画像の読み込みが完了したらここにくる.
                 let data = image_reader.result;
                 console.assert(data);
-
                 // "暗号化していない"を示す値で暗号キーを初期化する.
                 let key = "{{NO_ENCRYPTION_KEY}}";
-
                 // 設定に基づいて暗号化の処理を行う.
                 if (current_user.encryption) {
                     // 暗号キーは乱数で毎回自動生成する.
                     key = CryptoJS.lib.WordArray.random(MEDIA_ENCRYPTION_KEY_LENGTH).toString();
                     console.assert(key);
-
                     // 画像をBASE64に変換する.
                     const base64_raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
                     console.assert(base64_raw);
                     console.log("base64 raw data size :", base64_raw.length);
-
                     // BASE64を作成したキーで暗号化する.
                     const base64_encrypted = CryptoJS.AES.encrypt(base64_raw, key).toString();
                     console.assert(base64_encrypted);
                     console.log("base64 encrypted data size :", base64_encrypted.length);
-
                     // 処理結果を撮影データにすり替える.
                     data = base64_encrypted;
                 }
                 console.assert(data);
                 console.assert(key);
-
                 // "状況"を示す情報を取得する.
                 const context_tag = CAMERA_CONTEXT_TAG.value;
                 console.assert(context_tag);
-
                 // ここまでの処理にかかった時間をログに書いておく.
                 console.info("photo processing time in ms :", new Date() - start_time);
-
                 // データベースに保管する.
                 // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.                
                 console.log("adding photo to database.");
@@ -686,7 +607,6 @@ async function take_photo(scene_tag) {
                     // データベースの更新が成功したら撮影済みカウンタの表示を更新する.
                     update_photo_counter().then(() => {
                         console.assert(serviceworker_registration);
-
                         // 可能であればservice workerにsyncイベントを登録する.
                         if ("sync" in serviceworker_registration) {
                             serviceworker_registration.sync.register("{{SYNC_TAG}}").then(() => {
@@ -696,12 +616,10 @@ async function take_photo(scene_tag) {
                     });
                 });
             };
-
             // 画像を読み込む.
             image_reader.readAsArrayBuffer(image);
         });
     });
-
     // タスクを実行する.
     console.assert(task);
     return task;
@@ -713,25 +631,20 @@ async function take_photo(scene_tag) {
 async function upload_photo() {
     // 最も古い写真をデータベースから取得する.
     const photo = await database.photo.orderBy("date_taken").first();
-
     // 写真がなかったらなにもしないで終了する.
     if (!photo) {
         console.log("photo database is empty.");
         return;
     }
-
     console.assert(photo.id);
     console.info("start uploading photo to media service :", photo.id);
-
     // アップロードにかかった時間を計測するための準備をする.
     const start_time = new Date();
     console.assert(start_time);
-
     // アップロードに使用するフォームを準備する.
     // MediaサービスのAPIはこの時だけJSONではなくてHTML Formであげていることに注意！
     const form_data = new FormData();
     console.assert(form_data);
-
     // フォームに属性情報を入れていく.
     form_data.append("owner", photo.owner);
     form_data.append("date_taken", photo.date_taken);
@@ -740,14 +653,12 @@ async function upload_photo() {
     form_data.append("context_tag", photo.context_tag);
     form_data.append("content_type", photo.content_type);
     form_data.append("encryption_key", photo.encryption_key);
-
     // フォームに写真を追加する.
     // 本当は form_data.append("data", photo.encrypted_data); でいいような気もするけど(ChromeだとOK)、
     // これだとSafariではform cacheに起因するバグ？で送信データのサイズが偶に0になってしまうということが起こる.
     // しょうがいないのでLastMOdifiedをつけるべくいったんFileオブジェクトを経由して設定する.
     const encrypted_data = new File([photo.encrypted_data], photo.id + ".bin", { lastModified: start_time });
     form_data.append("encrypted_data", encrypted_data);
-
     // Mediaサービスに写真をアップロードする.
     console.log("calling media service : {{MEDIA_API_URL}}");
     const media_response = await fetch("{{MEDIA_API_URL}}", {
@@ -759,14 +670,12 @@ async function upload_photo() {
     });
     console.assert(media_response);
     console.log("media service returns response :", media_response);
-
     // 処理結果のHTTPステータスコードをみる.
     switch (media_response.status) {
         case 201:
             // 無事にアップロードできた!
             console.log("photo uploaded successfully :", photo.id);
             console.info("photo upload time in ms :", new Date() - start_time);
-
             // データベースから該当する写真を削除する.
             console.log("deleting photo :", photo.id);
             await database.photo.delete(photo.id);
@@ -775,7 +684,6 @@ async function upload_photo() {
         case 401:
             // 認証エラーということはたぶんトークンの期限切れ.
             console.warn("photo uploaded failed with 401 - may be token expired :", current_user.user_id);
-
             // トークンを取っておいて次回のこの処理では失敗しないことを願う.
             await get_token();
             break;
@@ -795,22 +703,18 @@ async function upload_photo() {
 async function main_loop() {
     // ぐるぐるを維持するかどうかを示す変数.
     let keep_main_loop = true;
-
-    // 前のタイマーがあれば破棄しておく.
-    if (timeout_id) {
-        clearTimeout(timeout_id);
-    }
-
     try {
+        // 前のタイマーがあれば破棄しておく.
+        if (timeout_id) {
+            clearTimeout(timeout_id);
+        }
         // ステートの状況を最新化する.
         if (state !== last_state) {
             last_state = state;
             console.log("current state :", state);
         }
-
         // オンラインの状況を最新化する.
         online = navigator.onLine === false ? false : true;
-
         // 対応するステートによって処理を分岐させる.
         switch (state) {
             case "init":
@@ -835,7 +739,6 @@ async function main_loop() {
                 CAMERA_VIEW.style.display = "none";
                 AUTH_VIEW.style.display = "block";
                 SETTING_VIEW.style.display = "none";
-
                 // UI要素の情報を更新しておく.
                 AUTH_AUTHOR_NAME.value = current_user.author_name;
                 AUTH_USERNAME.value = current_user.username;
@@ -858,13 +761,10 @@ async function main_loop() {
                 CAMERA_VIEW.style.display = "block";
                 AUTH_VIEW.style.display = "none";
                 SETTING_VIEW.style.display = "none";
-
                 // カメラを初期化する.
                 await setup_camera();
-
                 // UI表示を最新化する.
                 await update_camera_view();
-
                 // アイドルカウンタをリセットする.
                 idle_count = 0;
                 break;
@@ -873,7 +773,6 @@ async function main_loop() {
                 // カメラ操作ビューを表示中：写真のアップロードとユーザの自動リロードを処理する.
                 if (online) {
                     idle_count++;
-
                     if (photo_count > 0) {
                         // もし今がオンラインで写真がたまっていれば、1枚だけアップロードをする.
                         await upload_photo();
@@ -898,7 +797,6 @@ async function main_loop() {
                 CAMERA_VIEW.style.display = "none";
                 AUTH_VIEW.style.display = "none";
                 SETTING_VIEW.style.display = "block";
-
                 // UI要素の情報を更新しておく.
                 SETTING_SHUTTER_SOUND.checked = current_user.shutter_sound;
                 SETTING_AUTO_RELOAD.checked = current_user.auto_reload;
@@ -944,7 +842,6 @@ async function main_loop() {
                 navigator.serviceWorker.controller.postMessage({
                     type: "{{FORCE_UPDATE_TAG}}"
                 });
-
                 // 表示をローディングビューにしてメインループを終了しておく.
                 // 実際の処理はservice workerからくるメッセージに反応するところで行う.
                 keep_main_loop = false;
@@ -975,7 +872,6 @@ async function main_loop() {
         // TODO: これももう少し丁寧なエラーハンドリングをしたほうがいいかも...
         state = "open_camera_view";
     }
-
     // ループ脱出が指示されていなければタイマーをセットして一定時間後にもう一回自分が呼ばれるようにして終了する.
     if (keep_main_loop) {
         timeout_id = setTimeout(main_loop, MAIN_LOOP_INTERVAL);
@@ -996,49 +892,42 @@ async function main() {
         // カメラをセットアップし直す.
         setup_camera();
     }));
-
     // オフラインになった時のイベントをセットアップ.
     window.addEventListener("online", (event => {
         console.info("received online event :", event.toString());
         // カメラをセットアップし直す.
         setup_camera();
     }));
-
     // UIのイベントをセットアップする：再認証.
     CAMERA_AUTHOR_NAME.onclick = (async(event) => {
         state = "open_auth_view";
     });
-
     // UIのイベントをセットアップする：リロード.
     CAMERA_PHOTO_COUNT.onclick = (async(event) => {
         state = "open_reload_view";
     });
-
     // UIのイベントをセットアップする：設定.
     CAMERA_SETTING.onclick = (async(event) => {
         state = "open_setting_view";
     });
-
     // UIのイベントをセットアップする：認証実行ボタン.
     AUTH_OK.onclick = (async(event) => {
+        // 画面から情報をとってくる.
         current_user.author_name = AUTH_AUTHOR_NAME.value.trim();
         current_user.username = AUTH_USERNAME.value.trim();
         current_user.encrypted_password = CryptoJS.AES.encrypt(AUTH_PASSWORD.value, SECRET_KEY).toString();
-
         // 入力は全て必須要素なのでひとつでも入っていなかったらエラーとする.
         if (!current_user.author_name || !current_user.username || !current_user.encrypted_password) {
             console.warn("insufficient input data.");
             state = "authentication_failed";
             return;
         }
-
         // データベースを更新してからリロードに移るようにする.
         // 認証エラーなどの場合にはさらに適切なステートに遷移することが期待できる.
         console.log("updating user database :", current_user);
         await database.user.put(current_user);
         state = "open_reload_view";
     });
-
     // UIのイベントをセットアップする：バージョンアップ.
     SETTING_VERSION.onclick = (async(event) => {
         // オンラインなら強制アップデートを要求するステートにする.
@@ -1049,14 +938,12 @@ async function main() {
             // TODO: 本当はここでオフラインアップデートはできないというフィードバックを返すべき?
         }
     });
-
     // UIのイベントをセットアップする：設定更新ボタン.
     SETTING_OK.onclick = (async(event) => {
         // 現在のユーザを示す変数に設定値を適用する.
         current_user.shutter_sound = SETTING_SHUTTER_SOUND.checked;
         current_user.auto_reload = SETTING_AUTO_RELOAD.checked;
         current_user.encryption = SETTING_ENCRYPTION.checked;
-
         // データベースを更新してからリロードに移るようにする.
         // 認証エラーなどの場合にはさらに適切なステートに遷移することが期待できる.
         console.log("updating user database :", current_user);
@@ -1067,7 +954,6 @@ async function main() {
     // 依存するもろもろのセットアップ処理を行う.
     await setup_debug_log();
     await setup_database();
-
     // メインループの１回目を開始する.
     await main_loop();
 }

@@ -83,11 +83,9 @@ let timeout_id = null;
  */
 async function setup_database() {
     console.assert(!database);
-
     // Dexieのインスタンスを作る.
     database = new Dexie("{{DATABASE_NAME}}");
     console.assert(database);
-
     // インデックスを設定する.
     database.version("{{DATABASE_VERSION}}").stores({
         user: "dummy_id, user_id"
@@ -104,21 +102,18 @@ async function init() {
         state = "open_error_view";
         return;
     }
-
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
     if (document.location.search !== "{{MODE_APP}}") {
         console.log("no {{MODE_APP}} param in url.");
         state = "open_install_view";
         return;
     }
-
     // ファイルシステムAPIのサポートをチェックする.
     if (!("showDirectoryPicker" in window)) {
         console.error("no showDirectoryPicker feature.");
         state = "open_error_view";
         return;
     }
-
     // service workerの登録を行う.
     try {
         await navigator.serviceWorker.register("link-serviceworker.js");
@@ -136,11 +131,9 @@ async function init() {
 async function get_token() {
     // これを呼んだら以前のトークンはもう忘れておく.
     token = null;
-
     // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
     const raw_password = CryptoJS.AES.decrypt(current_user.encrypted_password, SECRET_KEY).toString(CryptoJS.enc.Utf8);
     console.assert(raw_password);
-
     // Tokenサービスを呼び出す.
     console.log("calling token service : {{CREATE_TOKEN_URL}}");
     const token_response = await fetch("{{CREATE_TOKEN_URL}}", {
@@ -155,12 +148,10 @@ async function get_token() {
     });
     console.assert(token_response);
     console.log("token service respond :", token_response);
-
     // レスポンスが200のときだけトークンを更新する.
     if (token_response.status == 200) {
         const result = await token_response.json();
         console.assert(result);
-
         token = result.access;
         console.assert(token);
     }
@@ -173,30 +164,24 @@ async function get_token() {
  */
 async function load_user(new_state) {
     console.assert(new_state);
-
     // データベースにユーザーが保存されているかどうかを確認する.
     console.log("loading current user from database.");
     const user = await database.user.get("{{DATABASE_USER_DUMMY_ID}}");
-
     if (!user) {
         // データベースにユーザーが存在しない場合は、初回起動とみなして認証ビューを開くようにステートを変えて抜ける.
         console.warn("could not find current user in database - may be the first run.");
         state = "open_auth_view";
         return;
     }
-
     // データベースに格納されていた情報を変数に移す.
     current_user = user;
-
     // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
     await get_token();
-
     if (!token) {
         console.error("no token :", current_user);
         state = "authentication_failed";
         return;
     }
-
     // 現在のユーザに対応するデータをUserサービスから持ってくる.
     console.log("calling user service : {{USER_API_URL}}");
     const user_response = await fetch("{{USER_API_URL}}" + "?username=" + current_user.username, {
@@ -205,40 +190,32 @@ async function load_user(new_state) {
         }
     });
     console.assert(user_response);
-
     // レスポンスのステータスが200じゃなかったら、不明なエラーということでステートを変えて抜ける.
     if (user_response.status !== 200) {
         console.error("could not get user :", user_response);
         state = "service_error";
         return;
     }
-
     // UserサービスからとってきたデータをJSONにする.
     const result_user = await user_response.json();
     console.assert(result_user);
     console.assert(result_user.length === 1);
-
     // そのJSONから現在のユーザを示す変数を更新する.
     console.info("update current user :", current_user.username);
     current_user.user_id = result_user[0].id;
     console.assert(current_user.user_id);
-
     current_user.scene_tag = result_user[0].scene_tag;
     console.assert(current_user.scene_tag);
     SCENE_TAG.value = current_user.scene_tag;
-
     current_user.scene_color = result_user[0].scene_color;
     console.assert(current_user.scene_color);
     SCENE_COLOR.value = current_user.scene_color;
-
     current_user.context_tag = result_user[0].context_tag;
     console.assert(current_user.context_tag);
     CONTEXT_TAG.value = current_user.context_tag;
-
     // 更新されたユーザを示す変数をデータベースに保存する.
     console.log("save current user to database :", current_user);
     await database.user.put(current_user);
-
     // 呼び出し元が期待する次のステートに遷移するようにして処理を終了する.
     state = new_state;
 }
@@ -253,10 +230,8 @@ async function save_user() {
     current_user.context_tag = CONTEXT_TAG.value.trim();
     current_user.download_rule = DOWNLOAD_RULE.value;
     current_user.download_only = DOWNLOAD_ONLY.checked;
-
     // データベースに保存する.
     await database.user.put(current_user);
-
     // Userサービスにも保存する (PATCHで部分的な更新をしていることに注意!)
     console.log("calling user service : {{USER_API_URL}}");
     const user_response = await fetch("{{USER_API_URL}}" + current_user.user_id + "/", {
@@ -273,7 +248,6 @@ async function save_user() {
     });
     console.assert(user_response);
     console.log("user service respond :", user_response);
-
     // レスポンスが200以外だったらエラーなのでとりあえず再認証を要求するようにしておく.
     if (user_response.status !== 200) {
         state = "authentication_failed";
@@ -286,15 +260,12 @@ async function save_user() {
 async function setup_download_file_list() {
     // 最初にリストを空にしておく.
     download_file_list = null;
-
     // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
     await get_token();
-
     if (!token) {
         state = "authentication_failed";
         return;
     }
-
     // ユーザがOwnerのMediaのリストをMediaサービスから取得する.
     console.log("calling media service to get media list : {{MEDIA_API_URL}}");
     const media_response = await fetch("{{MEDIA_API_URL}}" + "?owner=" + current_user.user_id, {
@@ -304,21 +275,17 @@ async function setup_download_file_list() {
     });
     console.assert(media_response);
     console.log("media service returns response :", media_response);
-
     // 成功するはずなので200以外だったら予期しないエラーとする.
     if (media_response.status != 200) {
         state = "service_error";
         return;
     }
-
     // 返却された結果をリストにJSONにする.
     const result = await media_response.json();
     console.assert(result);
-
     // それをさらに配列にいれる.
     download_file_list = result;
     console.log("download file list :", download_file_list);
-
     // 次のステートはダウンロードビューとする.
     state = "in_download_view";
 }
@@ -334,30 +301,24 @@ async function download_file() {
         return;
     }
     console.log("remaining download file list :", download_file_list);
-
     // 対象となるファイルをリストの先頭から取得する.
     const file = download_file_list[0];
     console.assert(file);
     console.log("target file :", file);
-
     // 現在のダウンロード状況をUIに反映する.
     DOWNLOAD_COUNT.value = download_file_list.length;
     DOWNLOAD_FILE.value = file.id;
-
     // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
     await get_token();
-
     if (!token) {
         state = "authentication_failed";
         return;
     }
-
     // Mediaサービスからファイルを取得する.
     console.log("calling media service to get media content: ", file.encrypted_data);
     const media_response = await fetch(file.encrypted_data);
     console.assert(media_response);
     console.log("media service respond :", media_response);
-
     // 200以外だったら予期しないエラーとして抜ける.
     // たぶん別のタマリンクがダウンロードして削除したとか?そういう状況.
     // TODO: 本当はこのあたりもう少し親切なエラー処理をしたい...
@@ -366,34 +327,27 @@ async function download_file() {
         state = "service_error";
         return;
     }
-
     // ここからはファイル内容の復号化処理をする.
     let data = null;
-
     // 暗号化キーが指定されているかをチェックする.
     if (file.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
         // 暗号化されている場合にはデータ場BASE64なのでテキストとして取得する.
         const base64_raw = await media_response.text();
         console.assert(base64_raw);
         console.log("base64 raw data length :", base64_raw.length);
-
         // それをキーを用いて復号化する.
         const base64_decrypted = CryptoJS.AES.decrypt(base64_raw, file.encryption_key).toString(CryptoJS.enc.Utf8);
         console.assert(base64_decrypted);
         console.log("decrypted raw data length :", base64_decrypted.length);
-
         // 復号化した文字列をバイナリに変える.
         const tmp = window.atob(base64_decrypted);
         console.assert(tmp.length > 0);
         console.log("result binary length :", tmp.length);
-
         const buffer = new Uint8Array(tmp.length);
         console.assert(buffer);
-
         for (let i = 0; i < tmp.length; i++) {
             buffer[i] = tmp.charCodeAt(i);
         }
-
         // 保存するデータをすり替える.
         data = buffer;
     } else {
@@ -403,33 +357,26 @@ async function download_file() {
         console.log("loading file data :", data);
     }
     console.assert(data);
-
     // ここからは保存するパス名とファイル名を生成する処理をする.
     // まずは撮影日時を取得する.
     const date_taken = new Date(file.date_taken);
     console.assert(date_taken);
-
     // 日付と時刻を人間可読なフォーマットの文字列にする.
     // TODO: これは本当はLOCALE的な処理に任せたほうがいいような気がする.
     const date = date_taken.getFullYear() + "{{DOWNLOAD_Y}}" + (date_taken.getMonth() + 1).toString().padStart(2.0) + "{{DOWNLOAD_M}}" + date_taken.getDate().toString().padStart(2, 0) + "{{DOWNLOAD_D}}";
     console.assert(date);
-
     const time = date_taken.getHours().toString().padStart(2, 0) + "{{DOWNLOAD_H}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DOWNLOAD_M}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DOWNLOAD_S}}";
     console.assert(time);
-
     const ext = file.content_type.match(/[^¥/]+$/);
     console.assert(ext);
-
     // 撮影者情報とシーンと状況のそれぞれのタグを取得する.
     // TODO: 本来はここでファイルシステムに適切な値になっているか確認して正規化する処理が必要.
     const author_name = file.author_name;
     const scene_tag = file.scene_tag;
     const context_tag = file.context_tag;
-
     // ここからはダウンロードルールに基づいてパスとファイルを作成する.
     let path_name = [];
     let file_name = "";
-
     switch (current_user.download_rule) {
         case "1":
             path_name.push(date);
@@ -452,39 +399,31 @@ async function download_file() {
             state = "open_error_view";
             return;
     }
-
     // パスの配列とファイル名がこれで得られたことを確認する.
     console.assert(path_name.length > 0);
     console.log("generated file path :", path_name);
-
     console.assert(file_name);
     console.log("generated file name :", file_name);
-
     // パスを順番にフォルダとして開いてハンドルを再帰的に取得する.
     let folder_handle = download_folder;
     console.assert(folder_handle);
-
     for (let i = 0; i < path_name.length; i++) {
         console.log("open path :", path_name[i]);
         folder_handle = await folder_handle.getDirectoryHandle(path_name[i], { create: true });
         console.assert(folder_handle);
     }
-
     // 最後のハンドルでファイルをオープンする.
     console.log("open file :", file_name);
     const file_handle = await folder_handle.getFileHandle(file_name, { create: true });
     console.assert(file_handle);
-
     // ダウンロードした中身を書き込んでクローズする.
     const write_handle = await file_handle.createWritable();
     console.assert(write_handle);
     await write_handle.write(data);
     await write_handle.close();
-
     // ここまででファイルのダウンロードが無事に終了した.
     // リストから当該ファイルを削除して詰める.
     download_file_list.shift();
-
     // Mediaサービスからもファイルを削除する.
     if (!current_user.download_only) {
         console.log("calling media service to delete media : {{MEDIA_API_URL}}");
@@ -501,29 +440,26 @@ async function download_file() {
 }
 
 /**
- * ひたすらぐるぐる回るアプリケーションのメインループ.
+ * ステートを変えながらひたすらぐるぐる回るアプリケーションのメインループ.
  */
 async function main_loop() {
+    // ぐるぐるを維持するかどうかを示す変数.
     let keep_main_loop = true;
-
-    // 前のタイマーを破棄する.
-    if (timeout_id) {
-        clearTimeout(timeout_id);
-    }
-
     try {
+        // 前のタイマーを破棄する.
+        if (timeout_id) {
+            clearTimeout(timeout_id);
+        }
         // ステートとオンラインの状況を最新化する.
         if (state !== last_state) {
             last_state = state;
             console.log("current state :", state);
         }
         const online = navigator.onLine == false ? false : true;
-
         // オフラインだったら問答無用でエラーにしておしまい.
         if (!online) {
             state = "open_error_view";
         }
-
         // 対応するステートによって処理を分岐させる.
         switch (state) {
             case "init":
@@ -548,7 +484,6 @@ async function main_loop() {
                 MAIN_VIEW.style.display = "none";
                 AUTH_VIEW.style.display = "block";
                 DOWNLOAD_VIEW.style.display = "none";
-
                 // UI要素の情報を更新しておく.
                 AUTH_USERNAME.value = current_user.username;
                 break;
@@ -570,7 +505,6 @@ async function main_loop() {
                 MAIN_VIEW.style.display = "block";
                 AUTH_VIEW.style.display = "none";
                 DOWNLOAD_VIEW.style.display = "none";
-
                 // UI要素の情報を更新しておく.
                 USER.value = current_user.username;
                 DOWNLOAD_RULE.value = current_user.download_rule;
@@ -588,7 +522,6 @@ async function main_loop() {
                 MAIN_VIEW.style.display = "none";
                 AUTH_VIEW.style.display = "none";
                 DOWNLOAD_VIEW.style.display = "none";
-
                 // ユーザの情報をデータベースとUserサービスに保存する.
                 await save_user();
                 break;
@@ -602,10 +535,8 @@ async function main_loop() {
                 DOWNLOAD_VIEW.style.display = "block";
                 DOWNLOAD_COUNT.value = "";
                 DOWNLOAD_FILE.value = "";
-
                 // ユーザの情報をデータベースとUserサービスに保存する.
                 await save_user();
-
                 // 次にダウンロード可能なファイルのリストを作成する.
                 // setup_download_file_list() の中で次のステートが決定される.
                 await setup_download_file_list();
@@ -651,12 +582,10 @@ async function main_loop() {
     } catch (error) {
         // 何かしらの例外処理が発生した.
         console.error("internal error - unhandled exception in main loop :", error);
-
         // メインビューに強制的に戻す.
         // TODO: これももう少し丁寧なエラーハンドリングをしたほうがいいかも...
         state = "open_main_view";
     }
-
     // ループ脱出が指示されていなければタイマーをセットして一定時間後にもう一回自分が呼ばれるようにして終了する.
     if (keep_main_loop) {
         timeout_id = setTimeout(main_loop, MAIN_LOOP_INTERVAL);
@@ -676,42 +605,35 @@ async function main() {
         AUTH_ERROR_MESSAGE.style.display = "none";
         state = "open_auth_view";
     });
-
     // UIのイベントをセットアップする：更新ボタン.
     UPDATE.onclick = (async(event) => {
         state = "save_setting";
     });
-
     // UIのイベントをセットアップする：認証ボタン.
     AUTH_OK.onclick = (async(event) => {
         current_user.username = AUTH_USERNAME.value.trim();
         current_user.encrypted_password = CryptoJS.AES.encrypt(AUTH_PASSWORD.value, SECRET_KEY).toString();
-
         // 入力は全て必須要素なのでひとつでも入っていなかったらエラーとする.
         if (!current_user.username || !current_user.encrypted_password) {
             console.warn("insufficient input data.");
             state = "authentication_failed";
             return;
         }
-
         // データベースを更新してからスタートに移るようにする.
         // 認証エラーなどの場合にはさらに適切なステートに遷移することが期待できる.
         console.log("updating user database :", current_user);
         await database.user.put(current_user);
         state = "start";
     });
-
     // UIのイベントをセットアップする：ダウンロードボタン.
     DOWNLOAD.onclick = (async(event) => {
         // フォルダ選択ダイアログをだす.
         download_folder = await window.showDirectoryPicker();
         console.assert(download_folder);
-
         // 無事に返ってきたらダウンロードビューに遷移する.
         console.log("showDirectoryPicker() returns :", download_folder);
         state = "open_download_view";
     });
-
     // UIのイベントをセットアップする：ダウンロードキャンセルボタン.
     DOWNLOAD_CANCEL.onclick = (async(event) => {
         // ステートをメインビューに戻す.
@@ -722,7 +644,6 @@ async function main() {
 
     // データベースをセットアップする.
     await setup_database();
-
     // メインループの１回目を開始する.
     await main_loop();
 }
