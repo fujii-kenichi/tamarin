@@ -961,9 +961,11 @@ async function main() {
         state = "open_reload_view";
     });
     // UIのイベントをセットアップする：状況タグ.
-    CAMERA_CONTEXT_TAG.onfocus = (async(event) => {
+    CAMERA_CONTEXT_TAG.onchange = (async(event) => {
+        console.info("context tag select element received event :", event);
         // Safariでセレクトできなくなる問題への対応.
-        console.info("context tag select element received onclick :", event);
+        CAMERA_CONTEXT_TAG.blur();
+        /*
         if (event.isTrusted) {
             const mouseEvent = new MouseEvent("click", {
                 bubbles: true,
@@ -972,6 +974,7 @@ async function main() {
             console.assert(mouseEvent);
             CAMERA_CONTEXT_TAG.dispatchEvent(mouseEvent);
         }
+        */
     });
 
     // 依存するもろもろのセットアップ処理を行う.
