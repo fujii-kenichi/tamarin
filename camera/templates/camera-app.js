@@ -805,12 +805,9 @@ async function main_loop() {
                     const camera_preview_video = document.getElementById("camera_preview_video");
                     console.assert(camera_preview_video);
                     if (camera_preview_video.paused) {
-                        console.info("camera preview is paused.");
-                        // 再生を開始して開始できなかったらカメラをセットアップしてみる.
-                        camera_preview_video.play().catch(error => {
-                            console.error("could not start preview video :", error.toString());
-                            setup_camera();
-                        });
+                        console.info("camera preview is paused - force setup camera.");
+                        // うーん...カメラをセットアップしてみる...
+                        setup_camera();
                     }
                 }
                 idle_count++;
@@ -916,6 +913,10 @@ async function main() {
     // ローディングビューを表示しておく.
     LOADING_VIEW.style.display = "block";
 
+    // タッチイベントを無効にしておく.
+    window.addEventListener("touchmove", (event => {
+        event.preventDefault();
+    }));
     // オンラインになった時のイベントをセットアップ.
     window.addEventListener("offline", (event => {
         console.info("received offline event :", event.toString());
