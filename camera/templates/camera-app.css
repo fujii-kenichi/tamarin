@@ -11,6 +11,7 @@ body.app {
     margin: 0;
     border: 0;
     padding: 0;
+    height: 100vh;
     text-size-adjust: none;
     overflow: hidden;
     touch-action: none;

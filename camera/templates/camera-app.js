@@ -922,15 +922,6 @@ async function main() {
     window.addEventListener("touchmove", (event => {
         event.preventDefault();
     }));
-    // オリエンテーションイベントを処理する.
-    window.addEventListener("orientationchange", (event => {
-        console.info("receivced orientation event :", event);
-        const viewport_metatag = document.getElementById("viewport");
-        console.assert(viewport_metatag);
-        const content = viewport_metatag.getAttribute("content");
-        viewport_metatag.removeAttribute("content");
-        viewport_metatag.setAttribute("content", content);
-    }));
     // オンラインになった時のイベントをセットアップ.
     window.addEventListener("offline", (event => {
         console.info("received offline event :", event.toString());
