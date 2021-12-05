@@ -599,7 +599,6 @@ async function main_loop() {
 async function main() {
     // ローディングビューを表示する.
     LOADING_VIEW.style.display = "block";
-
     // UIのイベントをセットアップする：再認証ボタン.
     USER.onclick = (async(event) => {
         AUTH_ERROR_MESSAGE.style.display = "none";
@@ -641,7 +640,6 @@ async function main() {
         // １ファイルのダウンロードが終わったということだから、これでキャンセルになる.
         state = "open_main_view";
     });
-
     // データベースをセットアップする.
     await setup_database();
     // メインループの１回目を開始する.

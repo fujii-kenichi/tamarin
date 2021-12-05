@@ -532,6 +532,8 @@ async function update_camera_view() {
  */
 async function take_photo(scene_tag) {
     console.assert(scene_tag);
+    // Safariでセレクトできなくなる問題への対応.
+    CAMERA_CONTEXT_TAG.blur();
     // もう規定枚数いっぱいいならこれ以上撮影できない.
     if (photo_count >= MAX_PHOTO_COUNT) {
         console.warn("photo database is full :", photo_count);
@@ -917,7 +919,6 @@ async function main_loop() {
 async function main() {
     // ローディングビューを表示しておく.
     LOADING_VIEW.style.display = "block";
-
     // タッチイベントを無効にしておく.
     window.addEventListener("touchmove", (event => {
         event.preventDefault();
@@ -986,13 +987,6 @@ async function main() {
         await database.user.put(current_user);
         state = "open_reload_view";
     });
-    // UIのイベントをセットアップする：状況タグ.
-    CAMERA_CONTEXT_TAG.onchange = (async(event) => {
-        console.info("context tag select element received event :", event);
-        // Safariでセレクトできなくなる問題への対応.
-        CAMERA_CONTEXT_TAG.blur();
-    });
-
     // 依存するもろもろのセットアップ処理を行う.
     await setup_debug_log();
     await setup_database();
