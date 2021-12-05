@@ -537,9 +537,14 @@ async function take_photo(scene_tag) {
         console.warn("photo database is full :", photo_count);
         return;
     }
-    // ビデオを消す.
+    // ビデオプレビューが消えていたら撮影できない.
     const camera_preview_video = document.getElementById("camera_preview_video");
     console.assert(camera_preview_video);
+    if (camera_preview_video.style.visibility === "hidden") {
+        console.info("prevent capture if preview is hidden.");
+        return;
+    }
+    // ビデオプレビューを消す.    
     camera_preview_video.style.visibility = "hidden";
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
@@ -916,6 +921,15 @@ async function main() {
     // タッチイベントを無効にしておく.
     window.addEventListener("touchmove", (event => {
         event.preventDefault();
+    }));
+    // オリエンテーションイベントを処理する.
+    window.addEventListener("orientationchange", (event => {
+        console.info("receivced orientation event :", event);
+        const viewport_metatag = document.getElementById("viewport");
+        console.assert(viewport_metatag);
+        const content = viewport_metatag.getAttribute("content");
+        viewport_metatag.removeAttribute("content");
+        viewport_metatag.setAttribute("content", content);
     }));
     // オンラインになった時のイベントをセットアップ.
     window.addEventListener("offline", (event => {
