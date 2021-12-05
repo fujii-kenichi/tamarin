@@ -4,21 +4,18 @@
 
 <head>
     <meta charset="utf-8">
-    <!-- 本当は user-scalable=no にすべきなんだけどS8でおきるバグのためにしばらくyesに... -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=yes">
-    <!-- モバイルSafari対応:ここから -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{NAME}}">
-    <link rel="apple-touch-icon" href="{{ICON_180}}">
-    <link rel="apple-touch-startup-image" href="{{ICON_512}}">
-    <!-- モバイルSafari対応:ここまで -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="description" content="{{DESCRIPTION}}">
     <meta name="author" content="{{AUTHOR}}">
     <meta name="theme-color" content="{{THEME_COLOR}}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{NAME}}">
     <link rel="shortcut icon" href="{{FAVICON}}">
     <link rel="manifest" href="camera-app.webmanifest">
     <link rel="stylesheet" href="camera-app.css">
+    <link rel="apple-touch-icon" href="{{ICON_180}}">
+    <link rel="apple-touch-startup-image" href="{{ICON_512}}">
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
     <script src="camera-app.js" defer></script>

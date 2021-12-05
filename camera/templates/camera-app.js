@@ -965,16 +965,6 @@ async function main() {
         console.info("context tag select element received event :", event);
         // Safariでセレクトできなくなる問題への対応.
         CAMERA_CONTEXT_TAG.blur();
-        /*
-        if (event.isTrusted) {
-            const mouseEvent = new MouseEvent("click", {
-                bubbles: true,
-                cancelable: true,
-            });
-            console.assert(mouseEvent);
-            CAMERA_CONTEXT_TAG.dispatchEvent(mouseEvent);
-        }
-        */
     });
 
     // 依存するもろもろのセットアップ処理を行う.
