@@ -367,6 +367,7 @@ async function download_file() {
     console.assert(date);
     const time = date_taken.getHours().toString().padStart(2, 0) + "{{DOWNLOAD_H}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DOWNLOAD_M}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DOWNLOAD_S}}";
     console.assert(time);
+    // ファイルの拡張子をコンテントタイプから生成する.
     const ext = file.content_type.match(/[^¥/]+$/);
     console.assert(ext);
     // 撮影者情報とシーンと状況のそれぞれのタグを取得する.
@@ -375,23 +376,23 @@ async function download_file() {
     const scene_tag = file.scene_tag;
     const context_tag = file.context_tag;
     // ここからはダウンロードルールに基づいてパスとファイルを作成する.
-    let path_name = [];
-    let file_name = "";
+    let path = [];
+    let body = "";
     switch (current_user.download_rule) {
         case "1":
-            path_name.push(date);
-            path_name.push(author_name);
-            path_name.push(context_tag);
-            path_name.push(scene_tag);
-            file_name = time + "." + ext;
+            path.push(date);
+            path.push(author_name);
+            path.push(context_tag);
+            path.push(scene_tag);
+            body = time;
             break;
 
         case "2":
-            path_name.push(date);
-            path_name.push(context_tag);
-            path_name.push(scene_tag);
-            path_name.push(author_name);
-            file_name = time + "." + ext;
+            path.push(date);
+            path.push(context_tag);
+            path.push(scene_tag);
+            path.push(author_name);
+            body = time;
             break;
 
         default:
@@ -399,22 +400,36 @@ async function download_file() {
             state = "open_error_view";
             return;
     }
-    // パスの配列とファイル名がこれで得られたことを確認する.
-    console.assert(path_name.length > 0);
-    console.log("generated file path :", path_name);
-    console.assert(file_name);
-    console.log("generated file name :", file_name);
+    console.assert(path.length > 0);
+    console.log("generated file path :", path);
+    console.assert(body);
+    console.log("generated file name body :", body);
     // パスを順番にフォルダとして開いてハンドルを再帰的に取得する.
     let folder_handle = download_folder;
     console.assert(folder_handle);
-    for (let i = 0; i < path_name.length; i++) {
-        console.log("open path :", path_name[i]);
-        folder_handle = await folder_handle.getDirectoryHandle(path_name[i], { create: true });
+    for (let i = 0; i < path.length; i++) {
+        console.log("open path :", path[i]);
+        folder_handle = await folder_handle.getDirectoryHandle(path[i], { create: true });
         console.assert(folder_handle);
     }
+    // 既存のファイルとファイル名がぶつかっている間はループする.
+    let file_handle = null;
+    let number = 0;
+    let actual_file_name = null;
+    do {
+        actual_file_name = body + (number > 0 ? "(" + number + ")" : "") + "." + ext;
+        console.log("open file :", actual_file_name);
+        number++;
+        // ファイル名がぶつかっている間はずっとfile(1),(2)...と数字を上げ続ける.
+        // TODO: これは微妙に危険な(終わらない可能性のある)アルゴリズムのような気がする...
+        try {
+            file_handle = await folder_handle.getFileHandle(actual_file_name);
+        } catch (error) {
+            file_handle = null;
+        }
+    } while (file_handle);
     // 最後のハンドルでファイルをオープンする.
-    console.log("open file :", file_name);
-    const file_handle = await folder_handle.getFileHandle(file_name, { create: true });
+    file_handle = await folder_handle.getFileHandle(actual_file_name, { create: true });
     console.assert(file_handle);
     // ダウンロードした中身を書き込んでクローズする.
     const write_handle = await file_handle.createWritable();
