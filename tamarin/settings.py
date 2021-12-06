@@ -171,6 +171,11 @@ SECRET_KEY = os.getenv("SECRET_KEY", r"dummy-key-must-be-overridden",)
 # セキュリティ関連の設定.
 ALLOWED_HOSTS = ["localhost", os.getenv("ALLOWED_HOSTS"), ]
 
+if DEBUG == "True":
+    SECURE_SSL_REDIRECT=False
+else:
+    SECURE_SSL_REDIRECT=True
+
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True

@@ -14,10 +14,11 @@
   - Windows の chrome だとそれでもカメラが撮れるけど、Mac の chrome は取れない。でも Safari だと撮れる。不思議...なにかコードに間違いがあるのかもしれない。
   - ブラウザでタマリンカメラをデバッグするには chrome devtool や safari の開発メニューが便利。
 - また、シミュレータでのメモは以下の通り：
-  - シミュレータ(iPhoneはXcodeの、AndroidはAndroid Studioから呼び出せるやつ)だと残念ながらカメラがやっぱりちゃんと出ない。
+  - シミュレータ(iPhone は Xcode の、Android は Android Studio から呼び出せるやつ)だと残念ながらカメラがやっぱりちゃんと出ない。
   - 結局 localhost で動いている Django を使っている場合には、PWA の構成要件である https が成立しないのでアプリとしてはインストールはできない模様。もちろん Web サイトとして実行することはできる。
 - 実機でデバッグする場合、PWA は OS から見れば Web ブラウザが動いているだけなので、通常のデバッガはあんまり使えない（使いこなせていないだけという噂もある）
   - モバイル Safari は USB ケーブルで繋げた母艦(Mac)の Safari からアタッチできるので、これは結構便利。
+- 実際の Deploy の前に python3 manage.py correctstatic; python3 manage.py check --deploy をしてみるといいかも。HSTS とかはまださすがに対応できないけど...
 
 ## アプリのアップデートについて
 

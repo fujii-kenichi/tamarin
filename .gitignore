@@ -140,5 +140,8 @@ media/
 # django database file.
 db.sqlite3
 
+# django static files.
+staticfiles/
+
 # Mac ?
 .DS_Store

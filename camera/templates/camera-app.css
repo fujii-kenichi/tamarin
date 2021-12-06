@@ -1,9 +1,10 @@
 /* 
- * タマリンカメラのCSS.
+ * タマリンカメラのCSS. 
  */
 
 
-/* 画面間で共通した設定. */
+/* 画面間で共通した設定. 
+   いくつかあるz-indexはsafariでのselectボックスの挙動がおかしくなるのに対応した措置. */
 
 body.app {
     color: black;
@@ -11,6 +12,7 @@ body.app {
     margin: 0;
     border: 0;
     padding: 0;
+    /* タッチして画面がズームしたり選択したりできないようにする. */
     text-size-adjust: none !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
@@ -106,6 +108,7 @@ input.author_name {
     width: 30%;
     min-width: 30%;
     max-width: 30%;
+    background-color: lavenderblush;
 }
 
 select.context_tag {
@@ -113,9 +116,11 @@ select.context_tag {
     width: 30%;
     min-width: 30%;
     max-width: 30%;
+    background-color: lavenderblush;
+    /* Safari selectバグ対応? */
     z-index: 100;
     text-rendering: auto !important;
-    -webkit-appearance: menulist-button;
+    -webkit-appearance: menulist-button !important;
 }
 
 input.photo_count {
@@ -183,20 +188,15 @@ div.camera_shutter_button {
         width: 25%;
         min-width: 25%;
         max-width: 25%;
-        z-index: 100;
-        text-rendering: auto !important;
-        -webkit-appearance: menulist-button;
     }
     div.camera_shutter {
         top: auto;
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 10;
     }
     div.camera_shutter_button {
         display: inline-block;
-        z-index: 20;
     }
 }
 
