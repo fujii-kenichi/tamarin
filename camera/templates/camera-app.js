@@ -917,6 +917,8 @@ async function main_loop() {
  * アプリケーションのメイン.
  */
 async function main() {
+    // フルスクリーン表示を要求する.
+    document.documentElement.requestFullscreen();
     // ローディングビューを表示しておく.
     LOADING_VIEW.style.display = "block";
     // タッチイベントを無効にしておく.
