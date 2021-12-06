@@ -16,13 +16,15 @@ router.register("users", views.UserViewSet)
 # Media APIを登録.
 router.register("medias", views.MediaViewSet)
 
+# History APIを登録.
+router.register("histories", views.HistoryViewSet)
+
 urlpatterns = [
+    # 通常のトップページ画面.
+    path("", views.index),
 
-    # Token APIを実行.
-    path("auth/", include("djoser.urls.jwt")),
-
-    # User/Media APIを実行.
-    path("api/", include(router.urls)),
+    # デバッグ用画面.
+    path("debug/", views.debug),
 
     # サインアップ画面.
     path("signup/", views.signup),
@@ -30,9 +32,9 @@ urlpatterns = [
     # サインアップ完了画面.
     path("signup-done/", views.signup_done, name="signup_done"),
 
-    # デバッグ用画面.
-    path("debug/", views.debug),
+    # Token APIを実行.
+    path("auth/", include("djoser.urls.jwt")),
 
-    # 通常のトップページ画面.
-    path("", views.index),
+    # User/Media/History APIを実行.
+    path("api/", include(router.urls)),
 ]

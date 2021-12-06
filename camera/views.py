@@ -13,7 +13,6 @@ from django.templatetags.static import static
 
 # タマリンカメラ固有で書き換えたいシステム的な情報を定義する.
 CAMERA_CONTEXT = {
-
     # アイコン類のパス.
     "FAVICON": static("image/camera-favicon.ico"),
     "ICON_180": static("image/camera-icon-180x180.png"),
@@ -62,7 +61,6 @@ CAMERA_CONTEXT = {
 
 # タマリンカメラ固有で書き換えたいユーザに見せる各種メッセージを定義する.
 CAMERA_CONTEXT_MESSAGE = {
-
     # PWAとしてマニフェストに書くための情報.
     "NAME": "タマリンカメラ",
     "SHORT_NAME": "タマリンカメラ",
@@ -157,6 +155,5 @@ def camera_app_css(request):
 
 
 def camera_app_html(request):
-
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.html", CONTEXT, content_type="text/html; charset=utf-8")

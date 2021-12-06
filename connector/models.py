@@ -12,7 +12,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    """ Userクラス.
+    """[Userクラス]
     タマリンサービスにおけるひとつのテナントを表現する.
     標準のUserクラスを拡張しているが、使わない属性とかはもそのままにしてある.
     """
@@ -39,14 +39,14 @@ def generate_data_path(instance, filename):
 
 
 class Media(models.Model):
-    """ Mediaクラス.
+    """[Mediaクラス]
     タマリンサービスにおけるひとつのメディアデータ(写真)を表現する.
     """
     # IDはUUIDとする.
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
 
     # 所有者：Userを参照する.
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="medias", on_delete=models.CASCADE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     # 生成(撮影)された日時.
     date_taken = models.DateTimeField(blank=False)
@@ -71,3 +71,28 @@ class Media(models.Model):
 
     # 実際のファイルデータ：暗号化キーで暗号化されているので復号する必要がある.
     encrypted_data = models.FileField(blank=False, upload_to=generate_data_path)
+
+    class Meta:
+        verbose_name = "メディア"
+        verbose_name_plural = "メディア"
+
+
+class History(models.Model):
+    """[Historyクラス]
+    タマリンサービスにおけるひとつのヒストリーデータ(何らかの行動)を表現する.
+    """
+    # 発生した日時.
+    date_occurred = models.DateTimeField(auto_now_add=True)
+
+    # タイプ.
+    type = models.CharField(blank=False, max_length=32)
+
+    # 発生させたユーザ：Userのidを参照する.
+    user = models.UUIDField()
+
+    # 対象となるメディア：Mediaのidを参照する.
+    media = models.UUIDField()
+
+    class Meta:
+        verbose_name = "ヒストリー"
+        verbose_name_plural = "ヒストリー"

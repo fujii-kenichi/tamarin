@@ -29,7 +29,7 @@ from django.views.static import serve
 
 @never_cache
 def heartbeat(request):
-    """ ハートビート用の処理：キャッシュを抑制した上でシンプルな文字列だけを返す. """
+    """[ハートビート用の処理：キャッシュを抑制した上でシンプルな文字列だけを返す]"""
     return HttpResponse("VERSION:" + settings.APP_CONTEXT["VERSION"] + ", DEBUG:" + str(settings.DEBUG) + ", APP_DEBUG:" + settings.APP_CONTEXT["DEBUG"], content_type="text/plain")
 
 

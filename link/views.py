@@ -9,7 +9,6 @@ from django.templatetags.static import static
 
 # タマリンク固有で書き換えたいシステム的な情報を定義する.
 LINK_CONTEXT = {
-
     # アイコン類のパス.
     "FAVICON": static("image/link-favicon.ico"),
     "ICON_192": static("image/link-icon-192x192.png"),
@@ -41,13 +40,12 @@ LINK_CONTEXT = {
     "DATABASE_USER_DUMMY_ID": "current_user",
 
     # アプリとしてのふるまいを決める値.
-    "MAIN_LOOP_INTERVAL": 200, # この時間だけ毎回メインループでスリープ(ミリ秒).
-    "MAX_TAG_LENGTH": 250, # シーンや状況といったタグの入力フィールドにおける最大文字長.
+    "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
+    "MAX_TAG_LENGTH": 250,  # シーンや状況といったタグの入力フィールドにおける最大文字長.
 }
 
 # タマリンク固有で書き換えたいユーザに見せる各種メッセージを定義する.
 LINK_CONTEXT_MESSAGE = {
-
     # PWAとしてマニフェストに書くための情報.
     "NAME": "タマリンク",
     "SHORT_NAME": "タマリンク",

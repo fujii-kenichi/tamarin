@@ -19,6 +19,7 @@
 - 実機でデバッグする場合、PWA は OS から見れば Web ブラウザが動いているだけなので、通常のデバッガはあんまり使えない（使いこなせていないだけという噂もある）
   - モバイル Safari は USB ケーブルで繋げた母艦(Mac)の Safari からアタッチできるので、これは結構便利。
 - 実際の Deploy の前に python3 manage.py correctstatic; python3 manage.py check --deploy をしてみるといいかも。HSTS とかはまださすがに対応できないけど...
+- そういえば Python / Django 部分のデバッグには、もちろんログをちゃんと出すのが一番いいんだけど、めんどくさい時は print() でメッセージを出すようにして、python3 -u manage.py runserver と -u をつけて起動するとなにげにみることができる模様.
 
 ## アプリのアップデートについて
 

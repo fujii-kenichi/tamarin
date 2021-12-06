@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "storages",
     "rest_framework",
     "djoser",
+    "import_export",
     "connector",
     "camera",
     "link",
