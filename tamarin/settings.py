@@ -172,9 +172,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", r"dummy-key-must-be-overridden",)
 ALLOWED_HOSTS = ["localhost", os.getenv("ALLOWED_HOSTS"), ]
 
 if DEBUG == "True":
-    SECURE_SSL_REDIRECT=False
+    SECURE_SSL_REDIRECT = False
 else:
-    SECURE_SSL_REDIRECT=True
+    SECURE_SSL_REDIRECT = False  # 今回の環境では不要.
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -205,7 +205,7 @@ APP_CONTEXT = {
 
     # タマリンサービスのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない：デバッグ時も注意！
-    "VERSION": "0.0.02Q",
+    "VERSION": "0.0.02R",
 
     # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
