@@ -54,7 +54,7 @@ CAMERA_CONTEXT = {
 
     # アプリとしてのふるまいを決める値.
     "MAIN_LOOP_INTERVAL": 200,  # この時間だけ毎回メインループでスリープ(ミリ秒).
-    
+
     # カメラとしてローカルに写真を保持しておける枚数. あんまり多いとIndexedDBが耐えられないかも...
     "MAX_PHOTO_COUNT": 10
 }
@@ -77,7 +77,7 @@ CAMERA_CONTEXT_MESSAGE = {
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.
-CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | CAMERA_CONTEXT | CAMERA_CONTEXT_MESSAGE
+CONTEXT = dict(**settings.APP_CONTEXT, **settings.APP_CONTEXT_MESSAGE, **CAMERA_CONTEXT, **CAMERA_CONTEXT_MESSAGE)
 
 # user-agent判定用文字列.
 MOBILE_AGENT_RE = re.compile(r".*(iphone|ipod|mobile|android)", re.IGNORECASE)
@@ -124,7 +124,7 @@ def camera_serviceworker_js(request):
 
     # ダミーのコメント文字列を生成して追加する.
     dummy_comment = ''.join(random.choices(string.ascii_letters + string.digits, k=random_length))
-    context |= {"DUMMY_COMMENT": dummy_comment}
+    context.update({"DUMMY_COMMENT": dummy_comment})
 
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-serviceworker.js", context, content_type="text/javascript; charset=utf-8")
@@ -141,9 +141,9 @@ def camera_app_js(request):
 
     # user-agentでリクエストを判定してデバイス初期化パラメータを決定する.
     if MOBILE_AGENT_RE.match(request.META["HTTP_USER_AGENT"]):
-        context |= MOBILE_PARAM
+        context.update(MOBILE_PARAM)
     else:
-        context |= PC_PARAM
+        context.update(PC_PARAM)
 
     # コンテンツ書き換え辞書による書き換えを行ったらあとはそのままレスポンスを返す.
     return render(request, "camera-app.js", context, content_type="text/javascript; charset=utf-8")

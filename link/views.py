@@ -81,7 +81,7 @@ LINK_CONTEXT_MESSAGE = {
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.
-CONTEXT = settings.APP_CONTEXT | settings.APP_CONTEXT_MESSAGE | LINK_CONTEXT | LINK_CONTEXT_MESSAGE
+CONTEXT = dict(**settings.APP_CONTEXT, **settings.APP_CONTEXT_MESSAGE, **LINK_CONTEXT, **LINK_CONTEXT_MESSAGE)
 
 
 def link_serviceworker_js(request):

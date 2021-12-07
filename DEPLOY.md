@@ -100,8 +100,8 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
 - 悪い人が ssh できないように、とりあえず Azure のコンソールから該当するインスタンスの TCP/22(SSH) のIPアドレス制限を、* から自分の開発マシンが使っているアウトバウンドでのパブリックIPアドレスのみに変えておきます。ちなみに自分の開発マシンが出ていっているマシンのIPアドレスが変わったら Azure コンソールから設定し直します。
 - sudo apt updatel sudo apt upgradeでパッケージを最新化したうえで、sudo apt install postgresql で PostgreSQL をインストールします。
 - Django 経由で初期化しないといけないので、とりあえず VM にある PostgreSQL をインターネット経由で繋げるようにします。
-  - postgresql.conf の listen_addresses を '*' に変更します。
-  - pg_hba.conf に host all all 0.0.0.0/0 md5 を追加します。
+  - /etc/postgresql/12/main/postgresql.conf の listen_addresses を '*' に変更します。
+  - /etc/postgresql/12/main/pg_hba.conf に host all all 0.0.0.0/0 md5 を追加します。
   - ファイアウォールを開けてサービスを再起動します。
 
     ```bash
