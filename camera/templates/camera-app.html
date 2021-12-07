@@ -30,11 +30,11 @@
     <!-- カメラビュー：ユーザがカメラ操作をするビュー. -->
     <div id="camera_view" class="camera_view">
         <div class="camera_menu">
-            <input id="camera_author_name" class="button author_name camera_menu" type="button">
-            <select id="camera_context_tag" class="select context_tag camera_menu" size="1"></select>
-            <input id="camera_photo_count" class="button photo_count camera_menu" type="button">
-            <input id="camera_setting" class="button camera_menu" type="button" value="&#128295;">
-            <input id="camera_debug" class="button camera_menu debug" type="button" value="&#128027;">
+            <input id="camera_author_name" class="author_name" type="button">
+            <select id="camera_context_tag" class="context_tag" size="1"></select>
+            <input id="camera_photo_count" class="photo_count" type="button">
+            <input id="camera_setting" class="setting_button" type="button" value="&#128295;">
+            <input id="camera_debug" class="debug_button" type="button" value="&#128027;">
         </div>
         <div class="camera_main">
             <div id="camera_preview"></div>
@@ -51,46 +51,46 @@
             <img class="panel_icon" src="{{ICON_192}}" alt="tamarin">
             <div class="panel_title">{{NAME}}</div>
             <div class="panel_subtitle">{{VERSION}}</div>
-            <div id="auth_error_message" class="auth_error_message">{{AUTH_ERROR_MESSAGE}}</div>
-            <input id="auth_author_name" class="input auth_input separator" type="text" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{AUTHOR_NAME_LABEL}}">
-            <input id="auth_username" class="input auth_input" type="text" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
-            <input id="auth_password" class="input auth_input" type="password" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
-            <input id="auth_ok" class="button auth_button" type="button" value="{{AUTH_OK_LABEL}}">
-            <a class="help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
+            <div id="auth_error_message" class="panel_error_message">{{AUTH_ERROR_MESSAGE}}</div>
+            <input id="auth_author_name" class="panel_input panel_separator" type="text" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{AUTHOR_NAME_LABEL}}">
+            <input id="auth_username" class="panel_input" type="text" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
+            <input id="auth_password" class="panel_input" type="password" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
+            <input id="auth_ok" class="panel_button" type="button" value="{{AUTH_OK_LABEL}}">
+            <a class="panel_help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
         </div>
     </div>
     <!-- 設定ビュー：ユーザが設定値の確認と変更をするビュー. -->
     <div id="setting_view" class="panel_view">
         <div class="panel_content">
-            <div class="setting_title">{{SETTING_LABEL}}</div>
-            <a class="help_link" href="{{CAMERA_HELP_URL}}" target="_blank">{{CAMERA_HELP_LABEL}}</a>
+            <div class="panel_title">{{SETTING_LABEL}}</div>
+            <a class="panel_help_link" href="{{CAMERA_HELP_URL}}" target="_blank">{{CAMERA_HELP_LABEL}}</a>
             <table class="setting">
                 <tr>
-                    <td class="setting">{{SHUTTER_SOUND_LABEL}}</td>
-                    <td class="setting">
-                        <input id="setting_shutter_sound" class="input" type="checkbox">
+                    <td class="setting_label">{{SHUTTER_SOUND_LABEL}}</td>
+                    <td class="setting_value">
+                        <input id="setting_shutter_sound" class="checkbox" type="checkbox">
                     </td>
                 </tr>
                 <tr>
-                    <td class="setting">{{AUTO_RELOAD_LABEL}}</td>
-                    <td class="setting">
-                        <input id="setting_auto_reload" class="input" type="checkbox">
+                    <td class="setting_label">{{AUTO_RELOAD_LABEL}}</td>
+                    <td class="setting_value">
+                        <input id="setting_auto_reload" class="checkbox" type="checkbox">
                     </td>
                 </tr>
                 <tr>
-                    <td class="setting">{{ENCRYPTION_LABEL}}</td>
-                    <td class="setting">
-                        <input id="setting_encryption" class="input" type="checkbox">
+                    <td class="setting_label">{{ENCRYPTION_LABEL}}</td>
+                    <td class="setting_value">
+                        <input id="setting_encryption" class="checkbox" type="checkbox">
                     </td>
                 </tr>
                 <tr>
-                    <td class="setting">{{VERSION_LABEL}}</td>
-                    <td class="setting">
-                        <input id="setting_version" class="input version" type="button" value="{{VERSION}}">
+                    <td class="setting_label">{{VERSION_LABEL}}</td>
+                    <td class="setting_value">
+                        <input id="setting_version" class="button_item" type="button" value="{{VERSION}}">
                     </td>
                 </tr>
             </table>
-            <input id="setting_ok" class="button setting_button" type="button" value="{{SETTING_OK_LABEL}}">
+            <input id="setting_ok" class="panel_button" type="button" value="{{SETTING_OK_LABEL}}">
         </div>
     </div>
     <!-- ローディングビュー：「おまちください」を表示. -->
@@ -107,7 +107,7 @@
             <div class="panel_title">{{NAME}}</div>
             <div class="panel_subtitle">{{VERSION}}</div>
             <div class="panel_message">{{INSTALL_LABEL}}</div>
-            <a class="help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
+            <a class="panel_help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
             <a class="app_open_link" href="{{MODE_APP}}">{{APP_OPEN_LABEL}}</a>
         </div>
     </div>

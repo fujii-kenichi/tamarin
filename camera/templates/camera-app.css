@@ -7,6 +7,7 @@
    いくつかあるz-indexはsafariでのselectボックスの挙動がおかしくなるのに対応した措置. */
 
 body.app {
+    font-family: "Helvetica Neue", "Helvetica", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Arial", "Yu Gothic", "Meiryo", sans-serif;
     color: black;
     background-color: black;
     margin: 0;
@@ -38,7 +39,7 @@ div.panel_content {
     text-align: center;
     background-color: lavenderblush;
     border-radius: 1em;
-    padding: 1em 1.2em 1em 1em;
+    padding: 1em;
     min-width: 15em;
     top: 50%;
     right: 50%;
@@ -47,7 +48,7 @@ div.panel_content {
 
 img.panel_icon {
     height: 4em;
-    margin: 2.5em 2em 0.5em 2em;
+    margin: 0.5em;
 }
 
 div.panel_title {
@@ -55,29 +56,63 @@ div.panel_title {
 }
 
 div.panel_subtitle {
-    font-size: small;
+    font-size: x-small;
     margin-bottom: 1em;
-}
-
-div.panel_header {
-    font-size: larger;
     color: dimgray;
-    margin-bottom: 1em;
 }
 
 div.panel_message {
+    margin-top: 1em;
+    font-size: medium;
     font-weight: bolder;
+}
+
+div.panel_error_message {
+    display: none;
+    font-size: medium;
+    font-weight: bolder;
+    color: coral;
+    margin: 0.25em;
+}
+
+input.panel_input {
+    display: block;
+    font-size: medium;
+    box-sizing: border-box;
+    width: 100%;
+    border: 0;
+    margin-bottom: 0.5em;
+}
+
+input.panel_separator {
     margin-bottom: 1em;
 }
 
-input.input {
-    border-color: white;
+input.panel_button {
+    background-color: aliceblue;
+    font-size: medium;
+    width: 100%;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    border-radius: 0.5em;
     border-style: solid;
     border-width: 0.1em;
+    border-color: lightgray;
 }
 
-input.button {
-    background-color: whitesmoke;
+a.panel_help_link {
+    display: block;
+    font-size: small;
+    color: dimgray;
+    text-decoration: none;
+    margin-top: 0.5em;
+}
+
+a.app_open_link {
+    display: block;
+    font-size: small;
+    color: dimgray;
+    text-decoration: none;
 }
 
 
@@ -89,21 +124,17 @@ div.camera_view {
 
 div.camera_menu {
     text-align: center;
-    padding: 0.3em 0 0.3em 0;
+    padding: 0.25em 0 0.25em 0;
     background-color: pink;
     z-index: 90;
 }
 
-input.camera_menu {
-    font-size: small;
+input.author_name {
+    font-size: medium;
     margin: 0;
     border-style: solid;
     border-width: 0.1em;
     border-color: whitesmoke;
-}
-
-input.author_name {
-    font-size: small;
     text-align: left;
     width: 30%;
     min-width: 30%;
@@ -112,7 +143,11 @@ input.author_name {
 }
 
 select.context_tag {
-    font-size: small;
+    font-size: medium;
+    margin: 0;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: whitesmoke;
     width: 30%;
     min-width: 30%;
     max-width: 30%;
@@ -124,16 +159,33 @@ select.context_tag {
 }
 
 input.photo_count {
-    font-size: small;
+    font-size: medium;
+    margin: 0;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: whitesmoke;
     text-align: center;
-    max-width: 2em;
+    min-width: 2em;
+    max-width: 3em;
+    background-color: lavenderblush;
 }
 
-input.debug {
-    padding-left: 0;
-    padding-right: 0;
-    margin-left: 0;
-    margin-right: 0;
+input.setting_button {
+    font-size: medium;
+    height: 100%;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: whitesmoke;
+    background-color: lavenderblush;
+    border-radius: 1em;
+}
+
+input.debug_button {
+    font-size: medium;
+    background-color: pink;
+    padding: 0;
+    margin: 0;
+    border: 0;
 }
 
 div.camera_main {
@@ -209,84 +261,35 @@ canvas.camera_canvas {
 }
 
 
-/* 認証ビュー用の設定. */
-
-div.auth_error_message {
-    display: none;
-    margin: 0.25em;
-    color: coral;
-    font-weight: bolder;
-}
-
-input.auth_input {
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    margin: 0.25em;
-}
-
-input.separator {
-    margin-bottom: 1em;
-}
-
-input.auth_button {
-    display: block;
-    width: 100%;
-    margin: 1em 0.25em 0 0.25em;
-}
-
-a.help_link {
-    display: block;
-    font-size: small;
-    color: dimgray;
-    text-decoration: none;
-}
-
-a.app_open_link {
-    display: block;
-    font-size: small;
-    color: dimgray;
-    margin: 0.5em;
-    text-decoration: none;
-}
-
-
 /* 設定ビュー用の設定. */
-
-div.setting_title {
-    display: block;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font-size: x-large;
-}
 
 table.setting {
     text-align: left;
-    font-size: small;
+    font-size: medium;
     border-collapse: collapse;
+    margin-top: 1em;
+    margin-bottom: 1em;
 }
 
-td.setting {
+td.setting_label {
     padding: 0.5em;
     min-width: 10em;
     border-bottom: 0.1em solid lightgray;
 }
 
-input.setting {
-    display: block;
-    width: 100%;
-    margin: 1em 0.25em 0 0.25em;
+td.setting_value {
+    padding: 0.5em;
+    min-width: 5em;
+    border-bottom: 0.1em solid lightgray;
 }
 
-input.version {
-    background-color: whitesmoke;
-}
-
-input.setting_button {
-    display: block;
-    width: 100%;
-    margin: 1em 0.25em 0 0.25em;
+input.button_item {
+    text-align: left;
+    font-size: small;
+    color: white;
+    background-color: mediumseagreen;
+    border: 0;
+    border-radius: 0.3em;
 }
 
 

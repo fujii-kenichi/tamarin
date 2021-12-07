@@ -71,7 +71,7 @@ CAMERA_CONTEXT_MESSAGE = {
     "SETTING_LABEL": "タマリンカメラの設定",
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを取得する",
-    "ENCRYPTION_LABEL": "暗号化する",
+    "ENCRYPTION_LABEL": "写真を暗号化する",
     "VERSION_LABEL": "バージョン",
     "SETTING_OK_LABEL": "設定",
 }
