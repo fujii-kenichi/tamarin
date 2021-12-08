@@ -36,7 +36,8 @@ USE_TZ = True
 AUTH_USER_MODEL = "connector.User"
 
 # アップロードできるファイルサイズを指定.
-DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 4 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
 # アプリケーション関連の設定.
 ROOT_URLCONF = "tamarin.urls"
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
 # ミドルウェア関連の設定.
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",    
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -109,7 +111,7 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "NAME":  os.path.join(BASE_DIR, "db.sqlite3")
         }
     }
 
@@ -203,10 +205,9 @@ if DEBUG == "True":
 
 # タマリン固有の設定：タマリンカメラとタマリンクで共通して使用するシステム的な値を定義.
 APP_CONTEXT = {
-
     # タマリンサービスのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない：デバッグ時も注意！
-    "VERSION": "0.0.02S",
+    "VERSION": "0.0.02T",
 
     # デバッグ設定.
     "DEBUG": os.getenv("APP_DEBBUG", "True"),
@@ -221,7 +222,7 @@ APP_CONTEXT = {
     "NO_ENCRYPTION_KEY": "none",
 
     # 認証するときにユーザが入力するユーザ名やパスワードの入力フィールドに渡す最大長.
-    "AUTH_MAX_LENGTH": 150,
+    "MAX_NAME_LENGTH": 150,
 
     # Token APIのエンドポイントとフォーマット.
     "CREATE_TOKEN_URL": "../connector/auth/jwt/create",
@@ -239,31 +240,31 @@ APP_CONTEXT = {
 
 # タマリン固有の設定：タマリンカメラとタマリンクで共通して使用するメッセージを定義.
 APP_CONTEXT_MESSAGE = {
-
     # 言語：Djangoの情報を引き継ぐ.
     # 以下のデータはこの言語でのメッセージ情報.
     # TODO: Djangoの多言語化方法に完全に合わせたやり方に変更する.
     "LANG": LANGUAGE_CODE,
 
     # 作成者情報.
-    "AUTHOR": "タマリバ株式会社",
+    "ORG": "タマリバ株式会社",
 
     # 表示されるメッセージ:インストールビュー.
-    "INSTALL_LABEL": "インストールできます！",
+    "INSTALL_MESSAGE": "インストールできます！",
     "INSTALL_HELP_LABEL": "やりかたはこちら",
     "APP_OPEN_LABEL": "(このまま開く)",
 
     # 表示されるメッセージ:ローディングビュー.
-    "LOADING_LABEL": "お待ちください...",
+    "LOADING_MESSAGE": "お待ちください...",
 
     # 表示されるメッセージ:認証ビュー.
     "AUTHOR_NAME_LABEL": "あなたのお名前",
     "USERNAME_LABEL": "サービスのユーザ名",
     "PASSWORD_LABEL": "サービスのパスワード",
-    "AUTH_OK_LABEL": "サインイン",
-    "AUTH_ERROR_MESSAGE": "サインインに失敗しました...",
+    "SIGNIN_LABEL": "サインイン",
+    "NAME_ERROR": "使用できない文字が含まれています",
+    "SIGNIN_ERROR": "サインインに失敗しました...",
     "CONNECTOR_HELP_LABEL": "うまくいかないときは",
 
     # 表示されるメッセージ:エラービュー.
-    "ERROR_LABEL": "アプリを実行できません",
+    "ERROR_MESSAGE": "アプリを実行できません",
 }

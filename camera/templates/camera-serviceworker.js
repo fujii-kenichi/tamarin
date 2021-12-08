@@ -42,11 +42,18 @@ self.addEventListener("install", (event => {
  * fetch イベントの処理を定義する.
  */
 self.addEventListener("fetch", (event => {
-    // console.log("service worker received fetch event :", event);
+    //console.log("service worker received fetch event :", event);
     // キャッシュからとってこれたらそれを返却する.
-    event.respondWith(caches.match(event.request).then(response => {
-        return response ? response : fetch(event.request);
-    }));
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            if (response) {
+                console.log("service worker returns content from cache :", event.request.url);
+                return response;
+            } else {
+                // console.log("service worker could not find url from cache :", event.request.url);
+                return fetch(event.request);
+            }
+        }));
 }));
 
 /**
@@ -73,19 +80,15 @@ self.addEventListener("activate", (event => {
  */
 self.addEventListener("sync", (event => {
     console.log("service worker received sync event :", event);
-    // TODO: 本当ならここでeventと{{SYNC_TAG}}を比較するべき.
+    // タグを確認する.
+    if (event.tag !== "{{SYNC_TAG}}") {
+        console.warn("ignore unknown sync event :", event.tag);
+        return;
+    }
     // TODO: ちょっとネストが深くなっているのでawaitに変える?
     // 写真を1枚だけアップロードする処理のタスクを定義する.
     const task = new Promise(() => {
         console.log("background sync task started.");
-        // オフライン状態の判定:いちおうcamera-app.jsと同じロジックでやる.
-        const online = navigator.onLine === false ? false : true;
-        // オフラインなら何もしない. 
-        // TODO: そもそもオフラインなら絶対に発行されないのならこれ不要かも.
-        if (!online) {
-            console.log("nothing to do with offline.");
-            return;
-        }
         // データベースを開く.
         const database = new Dexie("{{DATABASE_NAME}}");
         console.assert(database);
@@ -196,8 +199,12 @@ self.addEventListener("sync", (event => {
  */
 self.addEventListener("message", (event => {
     console.log("service worker received message event :", event);
+    // タグを確認する.
+    if (event.data.tag !== "{{FORCE_UPDATE_TAG}}") {
+        console.warn("ignore unknown message event :", event.data.tag);
+        return;
+    }
     // 強制アップデートの処理を行う.
-    // TODO: 本当はここでeventの中身を確認するべき.
     const task = new Promise(() => {
         console.log("force update task started.");
         // すべてのキャッシュを削除する.
@@ -214,7 +221,7 @@ self.addEventListener("message", (event => {
             self.clients.matchAll().then(clients => {
                 for (const c of clients) {
                     console.log("post message to client :", c);
-                    c.postMessage({ type: "{{FORCE_UPDATE_TAG}}" });
+                    c.postMessage({ tag: "{{FORCE_UPDATE_TAG}}" });
                 }
             });
         });

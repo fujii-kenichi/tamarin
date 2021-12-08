@@ -25,11 +25,14 @@ const PREVIEW_CHECK_TRIGGER = (3 * 1000) / MAIN_LOOP_INTERVAL;
 // データベース(IndexedDB)に入れることのできる写真の最大枚数(=オフラインで撮影して溜めておける最大の枚数).
 const MAX_PHOTO_COUNT = Number("{{MAX_PHOTO_COUNT}}");
 
-// デバイス初期化用の文字列.
+// デバイスオブジェクト初期化用の文字列.
 const DEVICE_PARAM = JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'));
 
-// 写真撮影用の文字列.
+// 写真撮影メソッド初期化用の文字列.
 const CAPTURE_PARAM = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
+
+// 名前の検証用正規表現.
+const AUTHOR_NAME_VALIDATOR = /[\s\:\;\&\"\'\`\¥\|\~\%\/\\<\>\?\\\*]/m;
 
 // HTMLの各要素.
 const CAMERA_VIEW = document.getElementById("camera_view");
@@ -46,24 +49,27 @@ const CAMERA_AUTHOR_NAME = document.getElementById("camera_author_name");
 const CAMERA_CONTEXT_TAG = document.getElementById("camera_context_tag");
 const CAMERA_PHOTO_COUNT = document.getElementById("camera_photo_count");
 const CAMERA_SETTING = document.getElementById("camera_setting");
-const CAMERA_DEBUG = document.getElementById("camera_debug");
+
 const CAMERA_SHUTTER_SOUND = document.getElementById("camera_shutter_sound");
 const CAMERA_CANVAS = document.getElementById("camera_canvas");
 const CAMERA_CANVAS_CONTEXT = CAMERA_CANVAS.getContext("2d");
 
-const AUTH_ERROR_MESSAGE = document.getElementById("auth_error_message");
-const AUTH_AUTHOR_NAME = document.getElementById("auth_author_name");
-const AUTH_USERNAME = document.getElementById("auth_username");
-const AUTH_PASSWORD = document.getElementById("auth_password");
-const AUTH_OK = document.getElementById("auth_ok");
+const NAME_ERROR = document.getElementById("name_error");
+const SIGNIN_ERROR = document.getElementById("signin_error");
+const AUTHOR_NAME = document.getElementById("author_name");
+const USERNAME = document.getElementById("username");
+const PASSWORD = document.getElementById("password");
+const SIGNIN = document.getElementById("signin");
 
 const SETTING_SHUTTER_SOUND = document.getElementById("setting_shutter_sound");
 const SETTING_AUTO_RELOAD = document.getElementById("setting_auto_reload");
 const SETTING_ENCRYPTION = document.getElementById("setting_encryption");
 const SETTING_VERSION = document.getElementById("setting_version");
-const SETTING_OK = document.getElementById("setting_ok");
+const SETTING_DEBUG = document.getElementById("setting_debug");
+const SETTING = document.getElementById("setting");
 
 const ERROR_ICON = document.getElementById("error_icon");
+
 const DEBUG_LOG = document.getElementById("debug_log");
 const DEBUG_RELOAD = document.getElementById("debug_reload");
 const DEBUG_CLEAR = document.getElementById("debug_clear");
@@ -154,7 +160,8 @@ async function setup_debug_log() {
             return original_info(...args);
         };
         // デバッグ用UIのイベントを設定する.
-        CAMERA_DEBUG.onclick = (async(event) => {
+        SETTING_DEBUG.onclick = (async(event) => {
+            SETTING_VIEW.style.display = "none";
             DEBUG_VIEW.style.display = "block";
             load_debug_log();
         });
@@ -174,6 +181,7 @@ async function setup_debug_log() {
             await setup_camera();
         });
         DEBUG_CLOSE.onclick = (async(event) => {
+            SETTING_VIEW.style.display = "block";
             DEBUG_VIEW.style.display = "none";
         });
         ERROR_ICON.onclick = (async(event) => {
@@ -190,7 +198,7 @@ async function setup_debug_log() {
         console.log = (...args) => {};
         console.assert = (...args) => {};
         // デバッグ機能の有効化ボタンを消しておく.
-        CAMERA_DEBUG.style.display = "none";
+        SETTING_DEBUG.style.display = "none";
     }
 }
 
@@ -222,14 +230,14 @@ async function init() {
     }
     // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
     if (document.location.search !== "{{MODE_APP}}") {
-        console.log("no {{MODE_APP}} param in url.");
+        console.info("no {{MODE_APP}} param in url.");
         state = "open_install_view";
         return;
     }
     // service workerの登録を行う.
     try {
         navigator.serviceWorker.register("camera-serviceworker.js").then(registration => {
-            console.log("service worker registrated :", registration);
+            console.info("service worker registrated with scope :", registration.scope);
             navigator.serviceWorker.ready.then(registration => {
                 console.log("service worker is ready :", registration);
                 // 登録できたら次のステートをinitへ.
@@ -238,10 +246,13 @@ async function init() {
                 // メッセージのハンドラも登録しておく.
                 navigator.serviceWorker.onmessage = (event => {
                     console.log("receive message event :", event);
-                    // TODO: 本当はここでeventの中身を確認すべき.
                     // service workerからメッセージが来たら強制アップデートのため自分自身を読み直す.
                     // すでにキャッシュはservice workerが削除しているのでこれでアップデートされるはず.
-                    window.location = "camera-app.html{{MODE_APP}}";
+                    if (event.data.tag === "{{FORCE_UPDATE_TAG}}") {
+                        window.location = "camera-app.html{{MODE_APP}}";
+                    } else {
+                        console.warn("ignore unknown message :", event.data.tag);
+                    }
                 });
             });
         });
@@ -308,7 +319,7 @@ async function setup_camera() {
         console.assert(camera_preview_video);
         // メタデータロードのイベントを設定しておく.
         camera_preview_video.onloadedmetadata = (async() => {
-            console.info("loaded preview vidfeo metadata.");
+            console.log("loaded preview vidfeo metadata.");
             // 再生を開始する.
             camera_preview_video.play().then(() => {
                 console.info("started preview video.");
@@ -316,7 +327,7 @@ async function setup_camera() {
                 console.error("could not start preview video :", error.toString());
             });
         });
-        //  再生開始のイベントを設定しておく.        
+        // 再生開始のイベントを設定しておく.
         camera_preview_video.onplay = (async() => {
             // シャッターを出現させる.
             CAMERA_SHUTTER.style.display = "block";
@@ -337,7 +348,7 @@ async function setup_camera() {
             console.info("no ImageCapture - using own imprementation.");
         } else {
             image_capture = new ImageCapture(stream.getVideoTracks()[0]);
-            console.log("using browser provided image capture :", image_capture);
+            console.info("using browser provided image capture :", image_capture);
         }
         console.assert(image_capture);
         // ストリームをプレビューにつなげる.
@@ -357,7 +368,6 @@ async function get_token() {
     token = null;
     // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
     const raw_password = CryptoJS.AES.decrypt(current_user.encrypted_password, SECRET_KEY).toString(CryptoJS.enc.Utf8);
-    console.assert(raw_password);
     // Tokenサービスを呼び出す.
     console.log("calling token service : {{CREATE_TOKEN_URL}}");
     const token_response = await fetch("{{CREATE_TOKEN_URL}}", {
@@ -393,7 +403,7 @@ async function load_user(new_state) {
     const user = await database.user.get("{{DATABASE_USER_DUMMY_ID}}");
     if (!user) {
         // データベースにユーザーが存在しない場合は、初回起動とみなして認証ビューを開くようにステートを変えて抜ける.
-        console.warn("could not find current user in database - may be the first run.");
+        console.info("could not find current user in database - may be the first run.");
         state = "open_auth_view";
         return;
     }
@@ -404,7 +414,7 @@ async function load_user(new_state) {
         // Userサービスからすでにidが取れているのであれば、大丈夫そうだと判断してオフラインでの動作を続行する.
         // そうでない場合はまあオフラインなんで意味ないんだけど(とはいってもこのまま続行もできないので)認証パネルを出すようにして抜ける.
         if (current_user.user_id) {
-            console.warn("assuming current user would be valid in offline :", current_user.user_id);
+            console.info("assuming current user would be valid in offline :", current_user.user_id);
             state = new_state;
         } else {
             console.warn("current user may be insufficient in offline :", current_user.username);
@@ -477,8 +487,7 @@ async function update_camera_view() {
     await update_photo_counter();
     // "撮影者"の情報が前と違っていたら更新する.
     if (last_author_name !== current_user.author_name) {
-        last_author_name = current_user.author_name;
-        CAMERA_AUTHOR_NAME.value = last_author_name;
+        CAMERA_AUTHOR_NAME.value = last_author_name = current_user.author_name;
     }
     // "シーン"の情報が前と違っていたら更新する.
     if (last_scene_tag !== current_user.scene_tag || last_scene_color !== current_user.scene_color) {
@@ -491,7 +500,7 @@ async function update_camera_view() {
             const scene_color = last_scene_color.split(/,/);
             console.assert(scene_color);
             // CSVのタグを分解してループを回してボタンを生成してセットする.
-            // TODO: ここでは最大の個数とか適切な色名だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
+            // ここでは最大の個数とか適切な色名だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
             for (let i = 0; i < scene_tag.length; i++) {
                 const v = scene_tag[i].trim();
                 console.assert(v);
@@ -512,7 +521,7 @@ async function update_camera_view() {
         let inner_html = "";
         if (current_user.context_tag) {
             // CSVのタグを分解してループを回してオプションタグ(選択肢)を生成してセットする.
-            // TODO: ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
+            // ここでは最大の個数とか適切な文字列だとかは一歳チェックしていない：入っていたデータは正しいという前提なので注意!
             for (const t of last_context_tag.split(/,/)) {
                 const v = t.trim();
                 console.assert(v);
@@ -532,8 +541,6 @@ async function update_camera_view() {
  */
 async function take_photo(scene_tag) {
     console.assert(scene_tag);
-    // Safariでセレクトできなくなる問題への対応.
-    CAMERA_CONTEXT_TAG.blur();
     // もう規定枚数いっぱいいならこれ以上撮影できない.
     if (photo_count >= MAX_PHOTO_COUNT) {
         console.warn("photo database is full :", photo_count);
@@ -598,11 +605,11 @@ async function take_photo(scene_tag) {
                     // 画像をBASE64に変換する.
                     const base64_raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
                     console.assert(base64_raw);
-                    console.log("base64 raw data size :", base64_raw.length);
+                    console.info("base64 raw data size :", base64_raw.length);
                     // BASE64を作成したキーで暗号化する.
                     const base64_encrypted = CryptoJS.AES.encrypt(base64_raw, key).toString();
                     console.assert(base64_encrypted);
-                    console.log("base64 encrypted data size :", base64_encrypted.length);
+                    console.info("base64 encrypted data size :", base64_encrypted.length);
                     // 処理結果を撮影データにすり替える.
                     data = base64_encrypted;
                 }
@@ -614,7 +621,7 @@ async function take_photo(scene_tag) {
                 // ここまでの処理にかかった時間をログに書いておく.
                 console.info("photo processing time in ms :", new Date() - start_time);
                 // データベースに保管する.
-                // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.                
+                // TODO: 本当はここでアップロードサイズを確認し、もしそれを超えていたら何らかのエラーにしてしまうべき.
                 console.log("adding photo to database.");
                 database.photo.add({
                     owner: current_user.user_id,
@@ -764,8 +771,8 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "block";
                 SETTING_VIEW.style.display = "none";
                 // UI要素の情報を更新しておく.
-                AUTH_AUTHOR_NAME.value = current_user.author_name;
-                AUTH_USERNAME.value = current_user.username;
+                AUTHOR_NAME.value = current_user.author_name;
+                USERNAME.value = current_user.username;
                 break;
 
             case "in_auth_view":
@@ -775,7 +782,15 @@ async function main_loop() {
             case "authentication_failed":
                 // 認証失敗：エラーメッセージを有効化したうえで認証ビューを開く.
                 state = "open_auth_view";
-                AUTH_ERROR_MESSAGE.style.display = "block";
+                NAME_ERROR.style.display = "none";
+                SIGNIN_ERROR.style.display = "block";
+                break;
+
+            case "invalid_author_name":
+                // 認証失敗：利用者名の検証でエラーが起きた.
+                state = "open_auth_view";
+                NAME_ERROR.style.display = "block";
+                SIGNIN_ERROR.style.display = "none";
                 break;
 
             case "open_camera_view":
@@ -797,7 +812,7 @@ async function main_loop() {
                 // カメラ操作ビューを表示中：写真のアップロードとユーザの自動リロードを処理する.
                 if (online) {
                     if (photo_count > 0) {
-                        // もし今がオンラインで写真がたまっていれば、1枚だけアップロードをする.                                            
+                        // もし今がオンラインで写真がたまっていれば、1枚だけアップロードをする.
                         await upload_photo();
                     } else if (current_user.auto_reload && (idle_count % AUTO_RELOAD_TRIGGER === 0)) {
                         // もしこのステートが十分な回数繰り返されているようであり、かつ自動リロード設定が有効な場合は、ユーザ情報のリロードをする.
@@ -844,7 +859,8 @@ async function main_loop() {
                 CAMERA_VIEW.style.display = "none";
                 AUTH_VIEW.style.display = "none";
                 SETTING_VIEW.style.display = "none";
-                AUTH_ERROR_MESSAGE.style.display = "none";
+                NAME_ERROR.style.display = "none";
+                SIGNIN_ERROR.style.display = "none";
                 break;
 
             case "open_install_view":
@@ -869,9 +885,9 @@ async function main_loop() {
             case "force_update":
                 // アプリの強制アップデートが指示された.
                 // まずservice workerにメッセージをポストする.
-                if ("postMessage" in navigator.serviceWorker.controller) {
+                if (navigator.serviceWorker.controller && ("postMessage" in navigator.serviceWorker.controller)) {
                     navigator.serviceWorker.controller.postMessage({
-                        type: "{{FORCE_UPDATE_TAG}}"
+                        tag: "{{FORCE_UPDATE_TAG}}"
                     });
                     // 表示をローディングビューにしてメインループを終了しておく.
                     // 実際の処理はservice workerからくるメッセージに反応するところで行う.
@@ -948,19 +964,26 @@ async function main() {
         state = "open_setting_view";
     });
     // UIのイベントをセットアップする：認証実行ボタン.
-    AUTH_OK.onclick = (async(event) => {
+    SIGNIN.onclick = (async(event) => {
         // 画面から情報をとってくる.
-        current_user.author_name = AUTH_AUTHOR_NAME.value.trim();
-        current_user.username = AUTH_USERNAME.value.trim();
-        current_user.encrypted_password = CryptoJS.AES.encrypt(AUTH_PASSWORD.value, SECRET_KEY).toString();
+        current_user.author_name = AUTHOR_NAME.value.trim();
+        current_user.username = USERNAME.value.trim();
+        // 利用者の名前が正当かどうかを確認してだめならエラーとする.
+        if (AUTHOR_NAME_VALIDATOR.exec(current_user.author_name)) {
+            console.warn("invalid author name.");
+            state = "invalid_author_name";
+            return;
+        }
         // 入力は全て必須要素なのでひとつでも入っていなかったらエラーとする.
-        if (!current_user.author_name || !current_user.username || !current_user.encrypted_password) {
+        if (!current_user.author_name || !current_user.username || !PASSWORD.value) {
             console.warn("insufficient input data.");
             state = "authentication_failed";
             return;
         }
+        // 入力されたパスワードを暗号化して保存する.
+        current_user.encrypted_password = CryptoJS.AES.encrypt(PASSWORD.value, SECRET_KEY).toString();
         // データベースを更新してからリロードに移るようにする.
-        // 認証エラーなどの場合にはさらに適切なステートに遷移することが期待できる.
+        // 認証エラーなどの場合にはさらに適切なステートに遷移する.
         console.log("updating user database :", current_user);
         await database.user.put(current_user);
         state = "open_reload_view";
@@ -976,7 +999,7 @@ async function main() {
         }
     });
     // UIのイベントをセットアップする：設定更新ボタン.
-    SETTING_OK.onclick = (async(event) => {
+    SETTING.onclick = (async(event) => {
         // 現在のユーザを示す変数に設定値を適用する.
         current_user.shutter_sound = SETTING_SHUTTER_SOUND.checked;
         current_user.auto_reload = SETTING_AUTO_RELOAD.checked;

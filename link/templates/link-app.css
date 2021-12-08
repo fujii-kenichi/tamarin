@@ -6,11 +6,13 @@
 /* 画面間で共通した設定. */
 
 body.app {
+    font-family: "Helvetica Neue", "Helvetica", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Arial", "Yu Gothic", "Meiryo", sans-serif;
     color: black;
     background-color: pink;
     margin: 0;
     border: 0;
     padding: 0;
+    /* タッチして画面がズームしたり選択したりできないようにする. */
     text-size-adjust: none !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
@@ -25,6 +27,7 @@ body.app {
 }
 
 div.panel_view {
+    background-color: pink;
     display: none;
     position: relative;
     height: 100vh;
@@ -35,7 +38,7 @@ div.panel_content {
     text-align: center;
     background-color: lavenderblush;
     border-radius: 1em;
-    padding: 1em 1.2em 1em 1em;
+    padding: 1em;
     min-width: 15em;
     top: 50%;
     right: 50%;
@@ -44,7 +47,7 @@ div.panel_content {
 
 img.panel_icon {
     height: 4em;
-    margin: 2.5em 2em 0.5em 2em;
+    margin: 0.5em;
 }
 
 div.panel_title {
@@ -52,36 +55,63 @@ div.panel_title {
 }
 
 div.panel_subtitle {
-    font-size: small;
+    font-size: x-small;
     margin-bottom: 1em;
-}
-
-div.panel_header {
-    font-size: larger;
     color: dimgray;
-    margin-bottom: 1em;
 }
 
 div.panel_message {
+    margin-top: 1em;
+    font-size: medium;
     font-weight: bolder;
+}
+
+div.panel_error_message {
+    display: none;
+    font-size: medium;
+    font-weight: bolder;
+    color: coral;
+    margin: 0.25em;
+}
+
+input.panel_input {
+    display: block;
+    font-size: medium;
+    box-sizing: border-box;
+    width: 100%;
+    border: 0;
+    margin-bottom: 0.5em;
+}
+
+input.panel_separator {
     margin-bottom: 1em;
 }
 
-input.readonly {
-    background-color: lavenderblush;
-    border-color: white;
+input.panel_button {
+    background-color: aliceblue;
+    font-size: medium;
+    width: 100%;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    border-radius: 0.5em;
     border-style: solid;
     border-width: 0.1em;
+    border-color: lightgray;
 }
 
-input.input {
-    border-color: white;
-    border-style: solid;
-    border-width: 0.1em;
+a.panel_help_link {
+    display: block;
+    font-size: small;
+    color: dimgray;
+    text-decoration: none;
+    margin-top: 0.5em;
 }
 
-input.button {
-    background-color: whitesmoke;
+a.app_open_link {
+    display: block;
+    font-size: small;
+    color: dimgray;
+    text-decoration: none;
 }
 
 
@@ -89,14 +119,12 @@ input.button {
 
 div.main_view {
     display: none;
-    line-height: 2;
 }
 
 div.header {
     position: relative;
-    background-color: lavenderblush;
+    background-color: pink;
     padding: 1em;
-    height: 2em;
 }
 
 div.title {
@@ -133,8 +161,15 @@ div.menu {
 }
 
 input.user {
-    padding: 0.5em;
     color: dimgray;
+    background-color: lavenderblush;
+    font-size: medium;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    border-radius: 0.5em;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: lightgray;
 }
 
 a.header {
@@ -143,10 +178,18 @@ a.header {
     margin: 0.5em;
 }
 
+div.body {
+    background-color: lavenderblush;
+    height: 100vh;
+    min-width: 800px;
+    min-height: 500px;
+}
+
 table.section {
     margin: 2em;
     width: calc(100% - 3em);
-    border-top: 0.2em solid lavenderblush;
+    line-height: 2;
+    border-top: 0.2em solid pink;
 }
 
 caption.section {
@@ -157,74 +200,20 @@ td.label {
     width: 16em;
     min-width: 8em;
     font-size: small;
-    border-bottom: 0.1em solid lavenderblush;
+    border-bottom: 0.1em solid lightgray;
 }
 
-td.input {
+td.value {
     min-width: 32em;
-    border-bottom: 0.1em solid lavenderblush;
+    border-bottom: 0.1em solid lightgray;
 }
 
 input.text {
-    width: 100%;
+    width: 95%;
 }
 
 div.buttons {
     margin: 2em;
-}
-
-
-/* 認証ビュー用の設定. */
-
-div.auth_error_message {
-    display: none;
-    margin: 0.25em;
-    color: coral;
-    font-weight: bolder;
-}
-
-input.auth_input {
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    margin: 0.25em;
-}
-
-input.separator {
-    margin-bottom: 1em;
-}
-
-input.auth_button {
-    display: block;
-    width: 100%;
-    margin: 1em 0.25em 0 0.25em;
-}
-
-a.help_link {
-    display: block;
-    font-size: small;
-    color: dimgray;
-    text-decoration: none;
-}
-
-a.signup_link {
-    display: block;
-    color: black;
-    text-decoration: none;
-    font-size: small;
-    width: 20em;
-    background-color: skyblue;
-    padding: 0.2em 2em 0.2em 2em;
-    border: 0;
-    margin-top: 1em;
-}
-
-a.app_open_link {
-    display: block;
-    font-size: small;
-    color: dimgray;
-    margin: 0.5em;
-    text-decoration: none;
 }
 
 
@@ -244,4 +233,22 @@ input.download_file {
     color: dimgray;
     text-align: center;
     margin: 1em;
+}
+
+
+/* 認証ビュー用の設定 */
+
+a.signup_link {
+    display: block;
+    color: black;
+    background-color: honeydew;
+    font-size: medium;
+    width: 100%;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    border-radius: 0.5em;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: lightgray;
+    text-decoration: none;
 }

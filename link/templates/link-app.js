@@ -32,17 +32,17 @@ const CONTEXT_TAG = document.getElementById("context_tag");
 const DOWNLOAD_RULE = document.getElementById("download_rule");
 const DOWNLOAD_ONLY = document.getElementById("download_only");
 
-const UPDATE = document.getElementById("update");
+const SETTING = document.getElementById("setting");
 const DOWNLOAD = document.getElementById("download");
 const DOWNLOAD_CANCEL = document.getElementById("download_cancel");
 
 const DOWNLOAD_COUNT = document.getElementById("download_count");
 const DOWNLOAD_FILE = document.getElementById("download_file");
 
-const AUTH_ERROR_MESSAGE = document.getElementById("auth_error_message");
-const AUTH_USERNAME = document.getElementById("auth_username");
-const AUTH_PASSWORD = document.getElementById("auth_password");
-const AUTH_OK = document.getElementById("auth_ok");
+const SIGNIN_ERROR = document.getElementById("signin_error");
+const USERNAME = document.getElementById("username");
+const PASSWORD = document.getElementById("password");
+const SIGNIN = document.getElementById("signin");
 
 // データベース(IndexedDBを使うためのDexie)のインスタンス.
 let database = null;
@@ -108,12 +108,6 @@ async function init() {
         state = "open_install_view";
         return;
     }
-    // ファイルシステムAPIのサポートをチェックする.
-    if (!("showDirectoryPicker" in window)) {
-        console.error("no showDirectoryPicker feature.");
-        state = "open_error_view";
-        return;
-    }
     // service workerの登録を行う.
     try {
         await navigator.serviceWorker.register("link-serviceworker.js");
@@ -122,6 +116,11 @@ async function init() {
     } catch (error) {
         console.error("service worker registration error :", error);
         state = "open_error_view";
+    }
+    // ファイルシステムAPIのサポートをチェックする.
+    if (!("showDirectoryPicker" in window)) {
+        console.warn("no showDirectoryPicker feature.");
+        DOWNLOAD.style.display = "none";
     }
 }
 
@@ -133,7 +132,6 @@ async function get_token() {
     token = null;
     // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
     const raw_password = CryptoJS.AES.decrypt(current_user.encrypted_password, SECRET_KEY).toString(CryptoJS.enc.Utf8);
-    console.assert(raw_password);
     // Tokenサービスを呼び出す.
     console.log("calling token service : {{CREATE_TOKEN_URL}}");
     const token_response = await fetch("{{CREATE_TOKEN_URL}}", {
@@ -363,9 +361,9 @@ async function download_file() {
     console.assert(date_taken);
     // 日付と時刻を人間可読なフォーマットの文字列にする.
     // TODO: これは本当はLOCALE的な処理に任せたほうがいいような気がする.
-    const date = date_taken.getFullYear() + "{{DOWNLOAD_Y}}" + (date_taken.getMonth() + 1).toString().padStart(2.0) + "{{DOWNLOAD_M}}" + date_taken.getDate().toString().padStart(2, 0) + "{{DOWNLOAD_D}}";
+    const date = date_taken.getFullYear() + "{{DATETIME_Y}}" + (date_taken.getMonth() + 1).toString().padStart(2.0) + "{{DATETIME_M}}" + date_taken.getDate().toString().padStart(2, 0) + "{{DATETIME_D}}";
     console.assert(date);
-    const time = date_taken.getHours().toString().padStart(2, 0) + "{{DOWNLOAD_H}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DOWNLOAD_M}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DOWNLOAD_S}}";
+    const time = date_taken.getHours().toString().padStart(2, 0) + "{{DATETIME_H}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DATETIME_M}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DATETIME_S}}";
     console.assert(time);
     // ファイルの拡張子をコンテントタイプから生成する.
     const ext = file.content_type.match(/[^¥/]+$/);
@@ -500,7 +498,7 @@ async function main_loop() {
                 AUTH_VIEW.style.display = "block";
                 DOWNLOAD_VIEW.style.display = "none";
                 // UI要素の情報を更新しておく.
-                AUTH_USERNAME.value = current_user.username;
+                USERNAME.value = current_user.username;
                 break;
 
             case "in_auth_view":
@@ -510,7 +508,7 @@ async function main_loop() {
             case "authentication_failed":
                 // 認証失敗：エラーメッセージを有効化したうえで認証ビューを開く.
                 state = "open_auth_view";
-                AUTH_ERROR_MESSAGE.style.display = "block";
+                SIGNIN_ERROR.style.display = "block";
                 break;
 
             case "open_main_view":
@@ -616,17 +614,17 @@ async function main() {
     LOADING_VIEW.style.display = "block";
     // UIのイベントをセットアップする：再認証ボタン.
     USER.onclick = (async(event) => {
-        AUTH_ERROR_MESSAGE.style.display = "none";
+        SIGNIN_ERROR.style.display = "none";
         state = "open_auth_view";
     });
     // UIのイベントをセットアップする：更新ボタン.
-    UPDATE.onclick = (async(event) => {
+    SETTING.onclick = (async(event) => {
         state = "save_setting";
     });
     // UIのイベントをセットアップする：認証ボタン.
-    AUTH_OK.onclick = (async(event) => {
-        current_user.username = AUTH_USERNAME.value.trim();
-        current_user.encrypted_password = CryptoJS.AES.encrypt(AUTH_PASSWORD.value, SECRET_KEY).toString();
+    SIGNIN.onclick = (async(event) => {
+        current_user.username = USERNAME.value.trim();
+        current_user.encrypted_password = CryptoJS.AES.encrypt(PASSWORD.value, SECRET_KEY).toString();
         // 入力は全て必須要素なのでひとつでも入っていなかったらエラーとする.
         if (!current_user.username || !current_user.encrypted_password) {
             console.warn("insufficient input data.");

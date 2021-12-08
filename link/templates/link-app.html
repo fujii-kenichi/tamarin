@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
     <meta name="description" content="{{DESCRIPTION}}">
-    <meta name="author" content="{{AUTHOR}}">
+    <meta name="author" content="{{ORG}}">
     <meta name="theme-color" content="{{THEME_COLOR}}">
     <meta name="google" content="notranslate">
     <link rel="shortcut icon" href="{{FAVICON}}">
@@ -31,53 +31,55 @@
                 <div class="main_version">{{VERSION}}</div>
             </div>
             <div class="menu">
-                <input id="user" class="input user" type="button">
+                <input id="user" class="user" type="button">
             </div>
         </div>
-        <a class="help_link header" href="{{LINK_HELP_URL}}" target="_blank">{{LINK_HELP_LABEL}}</a>
         <!-- 中身のコンテンツ部分. -->
-        <table class="section">
-            <caption class="section">{{USER_SECTION_LABEL}}</caption>
-            <tr class="input">
-                <td class="label">{{SCENE_TAG_LABEL}}</td>
-                <td class="input">
-                    <input id="scene_tag" class="input text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
-                </td>
-            </tr>
-            <tr class="input">
-                <td class="label">{{SCENE_COLOR_LABEL}}</td>
-                <td class="input">
-                    <input id="scene_color" class="input text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
-                </td>
-            </tr>
-            <tr class="input">
-                <td class="label">{{CONTEXT_TAG_LABEL}}</td>
-                <td class="input">
-                    <input id="context_tag" class="input text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
-                </td>
-            </tr>
-        </table>
-        <table class="section">
-            <caption class="section">{{MEDIA_SECTION_LABEL}}</caption>
-            <tr class="input">
-                <td class="label">{{DOWNLOAD_RULE_LABEL}}</td>
-                <td class="input">
-                    <select id="download_rule" class="input">
+        <div class="body">
+            <a class="panel_help_link header" href="{{LINK_HELP_URL}}" target="_blank">{{LINK_HELP_LABEL}}</a>
+            <table class="section">
+                <caption class="section">{{USER_SECTION_LABEL}}</caption>
+                <tr class="section">
+                    <td class="label">{{SCENE_TAG_LABEL}}</td>
+                    <td class="value">
+                        <input id="scene_tag" class="text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
+                    </td>
+                </tr>
+                <tr class="section">
+                    <td class="label">{{SCENE_COLOR_LABEL}}</td>
+                    <td class="value">
+                        <input id="scene_color" class="text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
+                    </td>
+                </tr>
+                <tr class="section">
+                    <td class="label">{{CONTEXT_TAG_LABEL}}</td>
+                    <td class="value">
+                        <input id="context_tag" class="text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
+                    </td>
+                </tr>
+            </table>
+            <table class="section">
+                <caption class="section">{{MEDIA_SECTION_LABEL}}</caption>
+                <tr class="section">
+                    <td class="label">{{DOWNLOAD_RULE_LABEL}}</td>
+                    <td class="value">
+                        <select id="download_rule" class="download_rule">
                         <option value="1">{{DOWNLOAD_RULE_1}}</option>
                         <option value="2">{{DOWNLOAD_RULE_2}}</option>
                     </select>
-                </td>
-            </tr>
-            <tr class="input">
-                <td class="label">{{DOWNLOAD_ONLY_LABEL}}</td>
-                <td class="input">
-                    <input id="download_only" class="input" type="checkbox">
-                </td>
-            </tr>
-        </table>
-        <div class="buttons">
-            <input id="update" class="button" type="button" value="{{UPDATE_LABEL}}">
-            <input id="download" class="button" type="button" value="{{DOWNLOAD_LABEL}}">
+                    </td>
+                </tr>
+                <tr class="section">
+                    <td class="label">{{DOWNLOAD_ONLY_LABEL}}</td>
+                    <td class="value">
+                        <input id="download_only" class="checkbox" type="checkbox">
+                    </td>
+                </tr>
+            </table>
+            <div class="buttons">
+                <input id="setting" class="button" type="button" value="{{SETTING_LABEL}}">
+                <input id="download" class="button" type="button" value="{{DOWNLOAD_LABEL}}">
+            </div>
         </div>
     </div>
     <!-- 認証ビュー：ユーザがサインインをするビュー. -->
@@ -86,11 +88,12 @@
             <img class="panel_icon" src="{{ICON_192}}" alt="tamarin">
             <div class="panel_title">{{NAME}}</div>
             <div class="panel_subtitle">{{VERSION}}</div>
-            <div id="auth_error_message" class="auth_error_message">{{AUTH_ERROR_MESSAGE}}</div>
-            <input id="auth_username" class="input auth_input" type="text" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
-            <input id="auth_password" class="input auth_input" type="password" required minlength="1" maxlength="{{AUTH_MAX_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
-            <input id="auth_ok" class="button auth_button" type="button" value="{{AUTH_OK_LABEL}}">
-            <a class="help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
+            <div id="signin_error" class="panel_error_message">{{SIGNIN_ERROR}}</div>
+            <input id="username" class="panel_input" type="text" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
+            <input id="password" class="panel_input" type="password" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
+            <input id="signin" class="panel_button" type="button" value="{{SIGNIN_LABEL}}">
+            <a class="panel_help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
+            <hr>
             <a class="signup_link" href="{{SIGNUP_URL}}" target="_blank">{{SIGNUP_LABEL}}</a>
         </div>
     </div>
@@ -99,8 +102,8 @@
         <div class="panel_content">
             <img class="panel_icon" src="{{LOADING_ICON}}" alt="download">
             <div class="panel_title">{{LOADING_LABEL}}</div>
-            <input id="download_count" class="readonly download_count" type="text" readonly>
-            <input id="download_file" class="readonly download_file" type="text" readonly>
+            <input id="download_count" class="download_count" type="text" readonly>
+            <input id="download_file" class="download_file" type="text" readonly>
             <input id="download_cancel" class="button" type="button" value="{{DOWNLOAD_CANCEL_LABEL}}">
         </div>
     </div>
@@ -108,7 +111,7 @@
     <div id="loading_view" class="panel_view">
         <div class="panel_content">
             <img class="panel_icon" src="{{LOADING_ICON}}" alt="loading">
-            <div class="panel_message">{{LOADING_LABEL}}</div>
+            <div class="panel_message">{{LOADING_MESSAGE}}</div>
         </div>
     </div>
     <!-- インストールビュー：「インストールの準備ができました」を表示. -->
@@ -117,8 +120,8 @@
             <img class="panel_icon" src="{{ICON_192}}" alt="install">
             <div class="panel_title">{{NAME}}</div>
             <div class="panel_subtitle">{{VERSION}}</div>
-            <div class="panel_message">{{INSTALL_LABEL}}</div>
-            <a class="help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
+            <div class="panel_message">{{INSTALL_MESSAGE}}</div>
+            <a class="panel_help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
             <a class="app_open_link" href="{{MODE_APP}}">{{APP_OPEN_LABEL}}</a>
         </div>
     </div>
@@ -126,7 +129,7 @@
     <div id="error_view" class="panel_view">
         <div class="panel_content">
             <img class="panel_icon" src="{{ERROR_ICON}}" alt="error">
-            <div class="panel_message">{{ERROR_LABEL}}</div>
+            <div class="panel_message">{{ERROR_MESSAGE}}</div>
         </div>
     </div>
 </body>

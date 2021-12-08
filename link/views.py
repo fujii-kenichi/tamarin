@@ -67,17 +67,17 @@ LINK_CONTEXT_MESSAGE = {
 
     "DOWNLOAD_ONLY_LABEL": "ダウンロード後も保持する",
 
-    "UPDATE_LABEL": "設定を保存する",
+    "SETTING_LABEL": "設定を保存する",
     "DOWNLOAD_LABEL": "ダウンロードを開始する",
     "DOWNLOAD_CANCEL_LABEL": "ダウンロードを停止する",
 
     # ファイル名を生成するときに使う日時の補完用文字列.
-    "DOWNLOAD_Y": "年",
-    "DOWNLOAD_M": "月",
-    "DOWNLOAD_D": "日",
-    "DOWNLOAD_H": "時",
-    "DOWNLOAD_M": "分",
-    "DOWNLOAD_S": "秒",
+    "DATETIME_Y": "年",
+    "DATETIME_M": "月",
+    "DATETIME_D": "日",
+    "DATETIME_H": "時",
+    "DATETIME_M": "分",
+    "DATETIME_S": "秒",
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.

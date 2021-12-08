@@ -6,7 +6,7 @@ Python 3.9 を準備してから、ソースコード一式を Github から取�
 
 ### 1-1. SQLite を使う場合
 
-localhost で普通に Django のプロジェクトとして実行できます。
+localhost で普通に Django 3.2 のプロジェクトとして実行できます。
 ちなみにアップロードした写真は直下の media フォルダに [ユーザのUUID/メディアのUUID.bin」という感じで格納されます。
 
 ```bash
@@ -19,7 +19,7 @@ python3 manage.py runserver
 
 ### 1-2. PostgreSQL を使う場合
 
-PostgreSQL 12/13 をインストールして sudo passwd postgres でアカウントを作ったら、以下のように PostgreSQL を使用するための環境変数を設定します。
+PostgreSQL 12 をインストールして sudo passwd postgres でアカウントを作ったら、以下のように PostgreSQL を使用するための環境変数を設定します。
 
 ```bash
 export DATABASE=POSTGRESQL

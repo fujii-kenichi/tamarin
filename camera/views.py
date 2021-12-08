@@ -68,12 +68,12 @@ CAMERA_CONTEXT_MESSAGE = {
 
     # 各UI要素に対応した文字列.
     "CAMERA_HELP_LABEL": "詳しい使い方をみる",
-    "SETTING_LABEL": "タマリンカメラの設定",
+    "SETTING_TITLE_LABEL": "タマリンカメラの設定",
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを取得する",
     "ENCRYPTION_LABEL": "写真を暗号化する",
     "VERSION_LABEL": "バージョン",
-    "SETTING_OK_LABEL": "設定",
+    "SETTING_LABEL": "設定",
 }
 
 # 最終的にコンテンツ書き換えに使用される辞書を定義する.

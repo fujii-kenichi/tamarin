@@ -180,14 +180,6 @@ input.setting_button {
     border-radius: 1em;
 }
 
-input.debug_button {
-    font-size: medium;
-    background-color: pink;
-    padding: 0;
-    margin: 0;
-    border: 0;
-}
-
 div.camera_main {
     display: flex;
 }
@@ -227,20 +219,18 @@ div.camera_shutter_button {
     z-index: 20;
 }
 
+audio.camera_shutter_sound {
+    display: none;
+}
+
+canvas.camera_canvas {
+    display: none;
+}
+
 
 /* カメラビュー：レスポンシブ対応 */
 
 @media screen and (orientation: portrait) {
-    input.author_name {
-        width: 25%;
-        min-width: 25%;
-        max-width: 25%;
-    }
-    select.context_tag {
-        width: 25%;
-        min-width: 25%;
-        max-width: 25%;
-    }
     div.camera_shutter {
         top: auto;
         bottom: 0;
@@ -250,14 +240,6 @@ div.camera_shutter_button {
     div.camera_shutter_button {
         display: inline-block;
     }
-}
-
-audio.camera_shutter_sound {
-    display: none;
-}
-
-canvas.camera_canvas {
-    display: none;
 }
 
 
@@ -279,7 +261,7 @@ td.setting_label {
 
 td.setting_value {
     padding: 0.5em;
-    min-width: 5em;
+    min-width: 7em;
     border-bottom: 0.1em solid lightgray;
 }
 
