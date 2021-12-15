@@ -12,12 +12,16 @@ body::-webkit-scrollbar {
     background-color: lightpink;
     font-size: large;
     text-align: center;
-    padding: 0.5em;
-    height: 6ex;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0.5ex;
+    padding-bottom: 0;
+    height: 5ex;
 }
 
 .tama-author-name {
-    width: 35%;
+    width: 30%;
     margin: 0;
     padding: 0.2em;
     border: 0.1em;
@@ -29,7 +33,7 @@ body::-webkit-scrollbar {
 }
 
 .tama-context-tags {
-    width: 35%;
+    width: 30%;
     margin: 0;
     padding: 0;
     border: 0.1em;
@@ -42,7 +46,7 @@ body::-webkit-scrollbar {
 }
 
 .tama-photo-count {
-    width: 3em;
+    width: 2em;
     margin: 0;
     padding: 0.2em;
     border: 0.1em;

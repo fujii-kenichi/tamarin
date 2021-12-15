@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="description" content="{{LINK_APP_DESCRIPTION}}">
     <meta name="theme-color" content="{{APP_THEME_COLOR}}">
     <meta name="mobile-web-app-capable" content="yes">
@@ -45,9 +45,9 @@
         </nav>
         <main class="section py-0">
             <div class="columns">
-                <div class="column">
+                <div class="column px-1">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header tama-card-header">
                             <p class="card-header-title is-centered has-background-primary">{{CONTEXT_TAG_SECTION_LABEL}}</p>
                         </div>
                         <div class="card-content tama-card-content has-background-light">
@@ -58,14 +58,14 @@
                             <input id="context_tag_4" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
                             <input id="context_tag_5" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
                         </div>
-                        <footer class="card-footer">
+                        <footer class="card-footer tama-card-footer">
                             <button id="save_context" class="card-footer-item button is-success">{{SAVE_LABEL}}</button>
                         </footer>
                     </div>
                 </div>
-                <div class="column">
+                <div class="column px-1">
                     <div class="card">
-                        <header class="card-header">
+                        <header class="card-header tama-card-header">
                             <p class="card-header-title is-centered has-background-primary">{{SCENE_TAG_SECTION_LABEL}}</p>
                         </header>
                         <div class="card-content tama-card-content has-background-light">
@@ -107,32 +107,32 @@
                                 <option value="black" label="{{SHUTTER_COLOR_NOT_USED}}">{{SHUTTER_COLOR_NOT_USED}}</option>
                             </select>
                         </div>
-                        <footer class="card-footer">
+                        <footer class="card-footer tama-card-footer">
                             <button id="save_scene" class="card-footer-item button is-success">{{SAVE_LABEL}}</button>
                         </footer>
                     </div>
                 </div>
             </div>
             <div class="columns">
-                <div class="column">
+                <div class="column px-1">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header tama-card-header">
                             <p class="card-header-title is-centered has-background-primary">{{STATUS_SECTION_LABEL}}</p>
                         </div>
                         <div class="card-content tama-card-content has-background-light tama-status">
                             <div id="status_title" class="tama-status-label"></div>
                             <div id="status_content" class="ct-chart"></div>
                         </div>
-                        <footer class="card-footer">
+                        <footer class="card-footer tama-card-footer">
                             <button id="show_context_status" class="card-footer-item button is-success">{{RULE_CONTEXT}}</button>
                             <button id="show_scene_status" class="card-footer-item button is-success">{{RULE_SCENE}}</button>
                             <button id="show_author_status" class="card-footer-item button is-success">{{RULE_AUTHOR}}</button>
                         </footer>
                     </div>
                 </div>
-                <div class="column">
+                <div class="column px-1">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header tama-card-header">
                             <p class="card-header-title is-centered has-background-primary">{{DOWNLOAD_SECTION_LABEL}}</p>
                         </div>
                         <div class="card-content tama-card-content has-background-light">
@@ -204,7 +204,7 @@
                                 </select>
                             </div>
                         </div>
-                        <footer class="card-footer">
+                        <footer class="card-footer tama-card-footer">
                             <button id="download_start" class="card-footer-item button is-success">{{DOWNLOAD_START_LABEL}}</button>
                         </footer>
                     </div>

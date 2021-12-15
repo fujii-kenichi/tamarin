@@ -1,3 +1,11 @@
+body::-webkit-scrollbar {
+    display: none;
+}
+
+.tama-card-header {
+    min-width: 18em;
+}
+
 .tama-card-content {
     min-width: 18em;
     height: 25ex;
@@ -6,6 +14,10 @@
     text-align: center;
     padding-left: 0;
     padding-right: 0;
+}
+
+.tama-card-footer {
+    min-width: 18em;
 }
 
 .tama-shutter {
