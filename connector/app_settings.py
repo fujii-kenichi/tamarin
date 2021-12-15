@@ -11,7 +11,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンサービスのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.03A",
+    "VERSION": "0.0.03B",
 
     # シークレットキー情報:Djangoの設定を引き継ぐ.
     "SECRET_KEY": settings.SECRET_KEY,
@@ -228,7 +228,7 @@ APP_MESSAGES = {
     "DATETIME_SS": "秒",
 
     # 表示されるメッセージ:サインインビュー.
-    "AUTHOR_NAME_LABEL": "あなたのお名前",
+    "AUTHOR_NAME_LABEL": "あなたの名前",
     "SIGNIN_LABEL": "サインイン",
     "SIGNIN_ERROR_MESSAGE": "入力に間違いがあります",
 
