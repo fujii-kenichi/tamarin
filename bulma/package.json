@@ -1,0 +1,9 @@
+{
+    "scripts": {
+        "build": "node-sass my-bulma.scss ../static/css/bulma.css"
+    },
+    "dependencies": {
+        "bulma": "^0.9.3",
+        "node-sass": "^7.0.0"
+    }
+}

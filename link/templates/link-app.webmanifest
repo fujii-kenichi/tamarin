@@ -1,20 +1,20 @@
 {
-    "name": "{{NAME}}",
-    "short_name": "{{SHORT_NAME}}",
-    "description": "{{DESCRIPTION}}",
-    "start_url": "/link/link-app.html{{MODE_APP}}",
-    "id": "/link/link-app.html{{MODE_APP}}",
-    "scope": "/link/",
-    "display": "{{DISPLAY}}",
-    "orientation": "any",
-    "theme_color": "{{THEME_COLOR}}",
-    "background_color": "{{THEME_COLOR}}",
+    "name": "{{LINK_APP_NAME}}",
+    "short_name": "{{LINK_APP_SHORT_NAME}}",
+    "description": "{{LINK_APP_DESCRIPTION}}",
+    "start_url": "{{LINK_APP_START_URL}}{{APP_MODE_URL_PARAM}}",
+    "id": "{{LINK_APP_START_URL}}{{APP_MODE_URL_PARAM}}",
+    "scope": "{{LINK_APP_SCOPE}}",
+    "display": "{{LINK_APP_DISPLAY}}",
+    "orientation": "{{LINK_APP_ORIENTATION}}",
+    "theme_color": "{{APP_THEME_COLOR}}",
+    "background_color": "{{APP_THEME_COLOR}}",
     "icons": [{
-        "src": "{{ICON_192}}",
+        "src": "{{LINK_APP_ICON192}}",
         "sizes": "192x192",
         "type": "image/png"
     }, {
-        "src": "{{ICON_512}}",
+        "src": "{{LINK_APP_ICON512}}",
         "sizes": "512x512",
         "type": "image/png"
     }]

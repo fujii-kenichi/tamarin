@@ -17,6 +17,8 @@ Including another URLconf
 
 @author: fujii.kenichi@tamariva.co.jp
 """
+import sys
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -26,11 +28,15 @@ from django.urls.conf import re_path
 from django.views.decorators.cache import never_cache
 from django.views.static import serve
 
+from tamarin.app_settings import APP_SETTINGS
+
+sys.path.append("../")
+
 
 @never_cache
 def heartbeat(request):
-    """[ハートビート用の処理：キャッシュを抑制した上でシンプルな文字列だけを返す]"""
-    return HttpResponse("VERSION:" + settings.APP_CONTEXT["VERSION"] + ", DEBUG:" + str(settings.DEBUG) + ", APP_DEBUG:" + settings.APP_CONTEXT["DEBUG"], content_type="text/plain")
+    """[ハートビート用の処理:キャッシュを抑制した上でシンプルな文字列だけを返す]"""
+    return HttpResponse("VERSION:" + APP_SETTINGS["VERSION"], content_type="text/plain")
 
 
 urlpatterns = [

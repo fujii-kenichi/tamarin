@@ -25,14 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # デバッグ指定.
 DEBUG = environ.Env().bool("DEBUG", default=True)
 
-# 言語・地域関連の指定.
+# 言語/地域関連の指定.
 LANGUAGE_CODE = "ja"
 TIME_ZONE = "Asia/Tokyo"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# カスタマイズされたユーザモデルを使用.
+# カスタマイズされたユーザーモデルを使用.
 AUTH_USER_MODEL = "connector.User"
 
 # アップロードできるファイルサイズを指定.
@@ -63,7 +63,7 @@ INSTALLED_APPS = [
 # ミドルウェア関連の設定.
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",    
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -146,7 +146,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Tokenの設定：DEBUG時には意図的に短くしていることに注意.
+# Tokenの設定:DEBUG時には意図的に短くしていることに注意.
 if DEBUG == "True":
     SIMPLE_JWT = {
         "AUTH_HEADER_TYPES": ("JWT",),
@@ -168,7 +168,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
 ]
 
-# シークレットキー：本番環境では必ず上書きすること!
+# シークレットキー:本番環境では必ず上書きすること!
 SECRET_KEY = os.getenv("SECRET_KEY", r"dummy-key-must-be-overridden",)
 
 # セキュリティ関連の設定.
@@ -184,87 +184,21 @@ CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_REFERRER_POLICY = "same-origin"
 
-# デバッグ用のログ出力の設定：DEBUG時にはリクエストとレスポンスを毎回表示する.
+# デバッグ用のログ出力の設定:DEBUG時にはリクエストとレスポンスを毎回表示する.
 if DEBUG == "True":
     LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
             },
         },
-        'loggers': {
-            'django.request': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-                'propagate': False,
+        "loggers": {
+            "django.request": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
             },
         },
     }
-
-# タマリン固有の設定：タマリンカメラとタマリンクで共通して使用するシステム的な値を定義.
-APP_CONTEXT = {
-    # タマリンサービスのバージョンを定義.
-    # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない：デバッグ時も注意！
-    "VERSION": "0.0.02T",
-
-    # デバッグ設定.
-    "DEBUG": os.getenv("APP_DEBBUG", "True"),
-
-    # シークレットキー情報：Djangoの設定を引き継ぐ.
-    "SECRET_KEY": SECRET_KEY,
-
-    # メディアを暗号化する時に自動生成するキーの長さ.
-    "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
-
-    # 暗号化をしていないことを示す特別なキーの値.
-    "NO_ENCRYPTION_KEY": "none",
-
-    # 認証するときにユーザが入力するユーザ名やパスワードの入力フィールドに渡す最大長.
-    "MAX_NAME_LENGTH": 150,
-
-    # Token APIのエンドポイントとフォーマット.
-    "CREATE_TOKEN_URL": "../connector/auth/jwt/create",
-    "TOKEN_FORMAT": "JWT",
-
-    # User APIのエンドポイント.
-    "USER_API_URL": "../connector/api/users/",
-
-    # Media APIのエンドポイント.
-    "MEDIA_API_URL": "../connector/api/medias/",
-
-    # PWAとしての起動かどうかを判定するためのURLパラメータ.
-    "MODE_APP": "?mode=app",
-}
-
-# タマリン固有の設定：タマリンカメラとタマリンクで共通して使用するメッセージを定義.
-APP_CONTEXT_MESSAGE = {
-    # 言語：Djangoの情報を引き継ぐ.
-    # 以下のデータはこの言語でのメッセージ情報.
-    # TODO: Djangoの多言語化方法に完全に合わせたやり方に変更する.
-    "LANG": LANGUAGE_CODE,
-
-    # 作成者情報.
-    "ORG": "タマリバ株式会社",
-
-    # 表示されるメッセージ:インストールビュー.
-    "INSTALL_MESSAGE": "インストールできます！",
-    "INSTALL_HELP_LABEL": "やりかたはこちら",
-    "APP_OPEN_LABEL": "(このまま開く)",
-
-    # 表示されるメッセージ:ローディングビュー.
-    "LOADING_MESSAGE": "お待ちください...",
-
-    # 表示されるメッセージ:認証ビュー.
-    "AUTHOR_NAME_LABEL": "あなたのお名前",
-    "USERNAME_LABEL": "サービスのユーザ名",
-    "PASSWORD_LABEL": "サービスのパスワード",
-    "SIGNIN_LABEL": "サインイン",
-    "NAME_ERROR": "使用できない文字が含まれています",
-    "SIGNIN_ERROR": "サインインに失敗しました...",
-    "CONNECTOR_HELP_LABEL": "うまくいかないときは",
-
-    # 表示されるメッセージ:エラービュー.
-    "ERROR_MESSAGE": "アプリを実行できません",
-}

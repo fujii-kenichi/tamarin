@@ -7,7 +7,7 @@ Python 3.9 を準備してから、ソースコード一式を Github から取�
 ### 1-1. SQLite を使う場合
 
 localhost で普通に Django 3.2 のプロジェクトとして実行できます。
-ちなみにアップロードした写真は直下の media フォルダに [ユーザのUUID/メディアのUUID.bin」という感じで格納されます。
+ちなみにアップロードした写真は直下の media フォルダに [ユーザーのUUID/メディアのUUID.bin」という感じで格納されます。
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -30,7 +30,7 @@ export DATABASE_HOST=localhost
 export DATABASE_PORT=5432
 ```
 
-sudo -u postgres psql でユーザとデータベースとテーブルを作ります。
+sudo -u postgres psql でユーザーとデータベースとテーブルを作ります。
 
 ```sql
 CREATE DATABASE tamarin_db;
@@ -71,7 +71,6 @@ gunicorn を使ってデバッグ機能なしで起動します。ほぼ本番�
 
 ```bash
 export DEBUG=False
-export APP_DEBUG=False
 export SECRET_KEY="内緒の文字列"
 export ALLOWED_HOSTS="公開しているエンドポイントのDNS名"
 python3 manage.py collectstatic
@@ -110,7 +109,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
     ```
 
 - この段階でこの PostgreSQL はインターネット上に全公開ですので、とっとと以下のことをやります。
-  - ローカルマシンでの開発と同じように sudo -u postgres psql でユーザとデータベースとテーブルを作ります。ちなみに以下にようにするとローカルから VM 上の PostgreSQL に(この段階では)つなげることができます。
+  - ローカルマシンでの開発と同じように sudo -u postgres psql でユーザーとデータベースとテーブルを作ります。ちなみに以下にようにするとローカルから VM 上の PostgreSQL に(この段階では)つなげることができます。
 
     ```bash
     psql -h "VMのパブリックIPアドレス" -U tamarin_db_admin postgres
@@ -166,13 +165,12 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
    | 名前 | 値 | 備考 |
    | ---- | ---- | ---- |
    | DEBUG | False | Django の設定なので基本的に本番では False |
-   | APP_DEBUG | False | PWA 向けの設定でデバッグ中は True にする |
    | SECRET_KEY | 任意の文字列 | シークレットキー文字列 |
    | ALLOWED_HOSTS | App Service が待ち受ける FQDN | 例) hoge.azurewebsites.net |
    | DB_ENGINE | POSTGRESQL | データベースとして PostgreSQL を使用することを指示 |
-   | DB_HOST | PostgreSQL が稼働している VM のIPアドレス | パブリックIPアドレスで動作確認 |
+   | DB_HOST | PostgreSQL が稼働している VM の IP アドレス | パブリック IP アドレスで動作確認 |
    | DB_NAME | PostgreSQL で設定したデータベース名 | 前述の DB_NAME 環境変数と同じ |
-   | DB_USER | PostgreSQL の管理ユーザ名 | 前述の DB_USER 環境変数と同じ |
+   | DB_USER | PostgreSQL の管理ユーザー名 | 前述の DB_USER 環境変数と同じ |
    | DB_PASSWORD | DB_USER のパスワード | 前述の DB_PASSWORD 環境変数と同じ |
    | DB_PORT | 5432 | 前述の DB_PORT 環境変数と同じ |
    | MEDIA_STORAGE | AZURE_BLOB | 写真の保管に Azure ストレージを使用することを指示 |

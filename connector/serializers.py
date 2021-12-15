@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     """[Userモデルのシリアライザ]"""
     class Meta:
         model = models.User
-        fields = ["id", "username", "scene_tag", "scene_color", "context_tag"]
+        fields = ["id", "username", "date_updated", "scene_tag", "scene_color", "context_tag", "download_rule"]
 
 
 class MediaSerializer(serializers.ModelSerializer):
@@ -27,3 +27,10 @@ class HistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.History
         fields = ["id", "date_occurred", "type", "user", "media"]
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    """[Feedbackモデルのシリアライザ]"""
+    class Meta:
+        model = models.Feedback
+        fields = ["id", "date_occurred", "author_name", "comment"]

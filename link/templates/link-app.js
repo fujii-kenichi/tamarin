@@ -4,657 +4,744 @@
  */
 "use strict";
 
-// デバッグフラグ.
-const DEBUG = Boolean("{{DEBUG}}");
+// バックグラウンドタスクを繰り返すときの待ち時間(ミリ秒).
+const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 
-// IndexedDBにパスワードを保存する際の暗号化に使うキー.
-const SECRET_KEY = String("{{SECRET_KEY}}");
+// シーンタグの数.
+const SCENE_TAG_COUNT = 4;
 
-// 写真の暗号化のために自動生成するキーの長さ.
-const MEDIA_ENCRYPTION_KEY_LENGTH = Number("{{MEDIA_ENCRYPTION_KEY_LENGTH}}");
+// コンテキストタグの数.
+const CONTEXT_TAG_COUNT = 6;
 
-// メインループを繰り返すときの待ち時間(ミリ秒).
-const MAIN_LOOP_INTERVAL = Number("{{MAIN_LOOP_INTERVAL}}");
+// ダウンロードルールの数.
+const DOWNLOAD_RULE_COUNT = 6;
 
-// HTMLの各要素.
-const MAIN_VIEW = document.getElementById("main_view");
-const AUTH_VIEW = document.getElementById("auth_view");
-const DOWNLOAD_VIEW = document.getElementById("download_view");
-const LOADING_VIEW = document.getElementById("loading_view");
-const INSTALL_VIEW = document.getElementById("install_view");
-const ERROR_VIEW = document.getElementById("error_view");
+// シーンで未使用とみなす色の名前.
+const SCENE_NOT_USED_COLOR = "black";
 
-const USER = document.getElementById("user");
+// ダウンロードルールで未使用とみなすタグの名前.
+const RULE_NOT_USED_VALUE = "NOT_USED";
 
-const SCENE_TAG = document.getElementById("scene_tag");
-const SCENE_COLOR = document.getElementById("scene_color");
-const CONTEXT_TAG = document.getElementById("context_tag");
-const DOWNLOAD_RULE = document.getElementById("download_rule");
-const DOWNLOAD_ONLY = document.getElementById("download_only");
+// タグの値として入力された文字列の検証用正規表現.
+const TAG_NAME_VALIDATOR = /[\s\,\:\;\&\"\'\`\¥\|\~\%\/\\<\>\?\\\*]/m;
 
-const SETTING = document.getElementById("setting");
-const DOWNLOAD = document.getElementById("download");
-const DOWNLOAD_CANCEL = document.getElementById("download_cancel");
-
-const DOWNLOAD_COUNT = document.getElementById("download_count");
-const DOWNLOAD_FILE = document.getElementById("download_file");
-
-const SIGNIN_ERROR = document.getElementById("signin_error");
-const USERNAME = document.getElementById("username");
-const PASSWORD = document.getElementById("password");
-const SIGNIN = document.getElementById("signin");
+// 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
+let current_user = {
+    dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
+    user_id: null,
+    username: null,
+    encrypted_password: null,
+    delete_after_download: true, // ダウンロード後にファイルを削除するかどうか.
+    chart: "context"
+};
 
 // データベース(IndexedDBを使うためのDexie)のインスタンス.
 let database = null;
 
-// 現在アプリでサインインしているユーザを示す変数(新規作成時の初期値を含む).
-let current_user = {
-    dummy_id: "{{DATABASE_USER_DUMMY_ID}}",
-    user_id: null,
-    username: null,
-    encrypted_password: null,
-    scene_tag: null,
-    scene_color: null,
-    context_tag: null,
-    download_rule: 1, // ダウンロードルールのデフォルトは1番.
-    download_only: false // ダウンロード後でもファイルを維持するかどうかのデフォルトはオフ(=つまりファイルを削除する)
-};
+// Service workerの登録情報.
+let service_worker = null;
 
-// ダウンロードフォルダへのハンドル.
-let download_folder = null;
-
-// ダウンロードするファイル(写真)のリスト.
-let download_file_list = null;
-
-// メインループのステートマシンにおけるステートを示す変数.
-let state = "init";
-
-// Tokenサービスが返してきたアクセストークン(無い場合はnull).
+// Tokenサービスが返してきたトークン.
 let token = null;
 
-// 不要なUI(DOM)の更新を避けるために前の状態を記憶するための変数たち.
-let last_state = null;
+// Userサービスの最終更新日時.
+let date_updated = null;
 
-// メインループで使うタイマー.
-let timeout_id = null;
+// バックグラウンドループで使うタイマー.
+let background_task_timer = null;
 
-/**
- * データベース(IndexedDB)をセットアップする.
- */
-async function setup_database() {
-    console.assert(!database);
-    // Dexieのインスタンスを作る.
-    database = new Dexie("{{DATABASE_NAME}}");
-    console.assert(database);
-    // インデックスを設定する.
-    database.version("{{DATABASE_VERSION}}").stores({
-        user: "dummy_id, user_id"
-    });
-}
+// ダウンロード中かどうかを示すフラグ.
+let in_downloading = false;
 
-/**
- * アプリの動作に必要となるプラットフォーム関連の初期化を行う.
- */
-async function init() {
-    // service worker が使える環境かどうかをチェックする.
-    if (!("serviceWorker" in navigator)) {
-        console.error("no service worker in navigator.");
-        state = "open_error_view";
-        return;
-    }
-    // 起動時のURLを確認し、もしPWAとしての起動でなければインストールビューを表示するようにしておいて抜ける.
-    if (document.location.search !== "{{MODE_APP}}") {
-        console.log("no {{MODE_APP}} param in url.");
-        state = "open_install_view";
-        return;
-    }
-    // service workerの登録を行う.
-    try {
-        await navigator.serviceWorker.register("link-serviceworker.js");
-        console.info("serviceworker registrated.");
-        state = "start";
-    } catch (error) {
-        console.error("service worker registration error :", error);
-        state = "open_error_view";
-    }
-    // ファイルシステムAPIのサポートをチェックする.
-    if (!("showDirectoryPicker" in window)) {
-        console.warn("no showDirectoryPicker feature.");
-        DOWNLOAD.style.display = "none";
-    }
-}
+// チャート描画用のダウンロード待ち写真ファイルの枚数.
+let file_count = 0;
+
+// チャート描画用のコンテキストの配列.
+let context_list = [];
+
+// チャート描画用のシーンの配列.
+let scene_list = [];
+
+// チャート描画用の撮影者の配列.
+let author_list = [];
 
 /**
- * Tokenサービスから現在のユーザにもとづいた有効なトークンを生成する.
+ * Tokenサービスから現在のユーザーにもとづいたトークンをもってくる.
+ * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
 async function get_token() {
-    // これを呼んだら以前のトークンはもう忘れておく.
-    token = null;
-    // Tokenサービスを呼び出すために現在のユーザに紐づいたパスワードを復号する.
-    const raw_password = CryptoJS.AES.decrypt(current_user.encrypted_password, SECRET_KEY).toString(CryptoJS.enc.Utf8);
-    // Tokenサービスを呼び出す.
-    console.log("calling token service : {{CREATE_TOKEN_URL}}");
-    const token_response = await fetch("{{CREATE_TOKEN_URL}}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            "username": current_user.username,
-            "password": raw_password
-        })
-    });
-    console.assert(token_response);
-    console.log("token service respond :", token_response);
-    // レスポンスが200のときだけトークンを更新する.
-    if (token_response.status == 200) {
-        const result = await token_response.json();
-        console.assert(result);
-        token = result.access;
-        console.assert(token);
-    }
-}
-
-/**
- * Userサービスから対応するユーザの情報をもってくる.
- * 
- * @param {*} new_state 成功した際に次に移るべきステート
- */
-async function load_user(new_state) {
-    console.assert(new_state);
-    // データベースにユーザーが保存されているかどうかを確認する.
-    console.log("loading current user from database.");
-    const user = await database.user.get("{{DATABASE_USER_DUMMY_ID}}");
-    if (!user) {
-        // データベースにユーザーが存在しない場合は、初回起動とみなして認証ビューを開くようにステートを変えて抜ける.
-        console.warn("could not find current user in database - may be the first run.");
-        state = "open_auth_view";
-        return;
-    }
-    // データベースに格納されていた情報を変数に移す.
-    current_user = user;
-    // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
-    await get_token();
     if (!token) {
-        console.error("no token :", current_user);
-        state = "authentication_failed";
-        return;
-    }
-    // 現在のユーザに対応するデータをUserサービスから持ってくる.
-    console.log("calling user service : {{USER_API_URL}}");
-    const user_response = await fetch("{{USER_API_URL}}" + "?username=" + current_user.username, {
-        headers: {
-            "Authorization": "{{TOKEN_FORMAT}} " + token
+        const response = await fetch("{{CREATE_TOKEN_URL}}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "username": current_user.username,
+                "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+            })
+        });
+        if (response.status === 200) {
+            const result = await response.json();
+            if (result) {
+                token = result.access;
+                return token ? token : false;
+            }
         }
-    });
-    console.assert(user_response);
-    // レスポンスのステータスが200じゃなかったら、不明なエラーということでステートを変えて抜ける.
-    if (user_response.status !== 200) {
-        console.error("could not get user :", user_response);
-        state = "service_error";
-        return;
+        return false;
     }
-    // UserサービスからとってきたデータをJSONにする.
-    const result_user = await user_response.json();
-    console.assert(result_user);
-    console.assert(result_user.length === 1);
-    // そのJSONから現在のユーザを示す変数を更新する.
-    console.info("update current user :", current_user.username);
-    current_user.user_id = result_user[0].id;
-    console.assert(current_user.user_id);
-    current_user.scene_tag = result_user[0].scene_tag;
-    console.assert(current_user.scene_tag);
-    SCENE_TAG.value = current_user.scene_tag;
-    current_user.scene_color = result_user[0].scene_color;
-    console.assert(current_user.scene_color);
-    SCENE_COLOR.value = current_user.scene_color;
-    current_user.context_tag = result_user[0].context_tag;
-    console.assert(current_user.context_tag);
-    CONTEXT_TAG.value = current_user.context_tag;
-    // 更新されたユーザを示す変数をデータベースに保存する.
-    console.log("save current user to database :", current_user);
-    await database.user.put(current_user);
-    // 呼び出し元が期待する次のステートに遷移するようにして処理を終了する.
-    state = new_state;
+    // とりあえずトークンはある...
+    return true;
 }
 
 /**
- * Userサービスへ対応するユーザの情報を保存する.
+ * Userサービスから対応するユーザーの情報をもってくる.
+ * @return {Promise<boolean>} true:もってこれた(もしくはそうみなしてOK). / false:もってこれなかった.
+ */
+async function load_user() {
+    const user = await database.user.get("{{APP_DATABASE_CURRENT_USER}}");
+    // データベースにユーザーが(まだ)存在しない場合.
+    if (!user) {
+        return false;
+    }
+    // データベースにあった情報で表示を更新する.
+    current_user = user;
+    document.getElementById("current_username").value = document.getElementById("username").value = current_user.username;
+    while (true) {
+        // トークンがとれなければおしまい.
+        if (!await get_token()) {
+            return false;
+        }
+        // 現在のユーザーに対応するデータをUserサービスから持ってくる.
+        const response = await fetch("{{USER_API_URL}}" + "?username=" + current_user.username, {
+            headers: {
+                "Authorization": "{{TOKEN_FORMAT}} " + token
+            }
+        });
+        if (response.status === 200) {
+            // 200ならとってきた情報をデータベースに格納する.
+            const result = await response.json();
+            current_user.user_id = result[0].id;
+            await database.user.put(current_user);
+            // 更新時刻が覚えているものと違えばUIを更新する.
+            if (date_updated !== result[0].date_updated) {
+                date_updated = result[0].date_updated;
+                context_tag_csv2ui(result[0].context_tag);
+                scene_tag_csv2ui(result[0].scene_tag);
+                scene_color_csv2ui(result[0].scene_color);
+                download_rule_csv2ui(result[0].download_rule);
+            }
+            // 成功で戻る.
+            return true;
+        } else if (response.status === 401 || response.status === 403) {
+            // エラーなら今のトークンがダメということでリトライ. 
+            token = null;
+        }
+    }
+}
+
+/**
+ * Userサービスへ対応するユーザーの情報を保存する.
+ * @return {Promise<boolean>} true:保存できた. / false:保存できなかった.
  */
 async function save_user() {
-    // ユーザを示す変数の内容をUIで設定された値で更新する.
-    current_user.scene_tag = SCENE_TAG.value.trim();
-    current_user.scene_color = SCENE_COLOR.value.trim();
-    current_user.context_tag = CONTEXT_TAG.value.trim();
-    current_user.download_rule = DOWNLOAD_RULE.value;
-    current_user.download_only = DOWNLOAD_ONLY.checked;
-    // データベースに保存する.
-    await database.user.put(current_user);
-    // Userサービスにも保存する (PATCHで部分的な更新をしていることに注意!)
-    console.log("calling user service : {{USER_API_URL}}");
-    const user_response = await fetch("{{USER_API_URL}}" + current_user.user_id + "/", {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "{{TOKEN_FORMAT}} " + token
-        },
-        body: JSON.stringify({
-            "scene_tag": current_user.scene_tag,
-            "scene_color": current_user.scene_color,
-            "context_tag": current_user.context_tag
-        })
-    });
-    console.assert(user_response);
-    console.log("user service respond :", user_response);
-    // レスポンスが200以外だったらエラーなのでとりあえず再認証を要求するようにしておく.
-    if (user_response.status !== 200) {
-        state = "authentication_failed";
+    // UIから値をもってくる.
+    const context_tag = context_tag_ui2csv();
+    const scene_color = scene_color_ui2csv(); // 色で操作しているからここだけscene_tagより先にする:
+    const scene_tag = scene_tag_ui2csv();
+    const download_rule = download_rule_ui2csv();
+    // どれかに問題があったらエラーで戻る.
+    if (!context_tag || !scene_color || !scene_tag || !download_rule) {
+        return false;
     }
+    while (true) {
+        // トークンがとれなければおしまい.
+        if (!await get_token()) {
+            return false;
+        }
+        // Userサービスにも保存する(PATCHで部分的な更新をしていることに注意!)
+        const response = await fetch("{{USER_API_URL}}" + current_user.user_id + "/", {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "{{TOKEN_FORMAT}} " + token
+            },
+            body: JSON.stringify({
+                "context_tag": context_tag,
+                "scene_tag": scene_tag,
+                "scene_color": scene_color,
+                "download_rule": download_rule
+            })
+        });
+        if (response.status === 200) {
+            // 保存に成功したら再度ユーザーの読み直しをしてその結果を戻す.
+            return load_user();
+        } else if (response.status === 401 || response.status === 403) {
+            // エラーなら今のトークンがダメということでリトライ. 
+            token = null;
+        }
+    }
+}
+
+/**
+ * CSVテキストからコンテキストタグのUIを作る.
+ * @param {string} tags タグがCSVで羅列されているテキスト.
+ */
+function context_tag_csv2ui(tags) {
+    let i = 0;
+    for (const tag of tags.split(/,/)) {
+        if (tag) {
+            document.getElementById("context_tag_" + i++).value = tag;
+        }
+    }
+    for (; i < CONTEXT_TAG_COUNT; i++) {
+        document.getElementById("context_tag_" + i).value = "";
+    }
+}
+
+/**
+ * コンテキストタグのUIからCSVテキストを作る.
+ * @return {string} タグをCSVで羅列したテキスト.
+ */
+function context_tag_ui2csv() {
+    let result = "";
+    for (let i = 0; i < CONTEXT_TAG_COUNT; i++) {
+        const value = document.getElementById("context_tag_" + i).value.trim();
+        if (value) {
+            if (TAG_NAME_VALIDATOR.exec(value) || value.length > Number("{{MAX_CONTEXT_TAG_LENGTH}}")) {
+                return null;
+            }
+            if (value.length > 0) {
+                result += value;
+                result += ",";
+            }
+        }
+    }
+    return result;
+}
+
+/**
+ * CSVテキストからシーンタグのUIを作る.
+ * @param {string} tags タグがCSVで羅列されているテキスト.
+ */
+function scene_tag_csv2ui(tags) {
+    let i = 0;
+    for (const tag of tags.split(/,/)) {
+        if (tag) {
+            document.getElementById("scene_tag_" + i++).value = tag;
+        }
+    }
+    for (; i < SCENE_TAG_COUNT; i++) {
+        document.getElementById("scene_tag_" + i).value = "";
+    }
+}
+
+/**
+ * シーンタグのUIからCSVテキストを作る.
+ * @return {string} タグをCSVで羅列したテキスト.
+ */
+function scene_tag_ui2csv() {
+    let result = "";
+    for (let i = 0; i < SCENE_TAG_COUNT; i++) {
+        const value = document.getElementById("scene_tag_" + i).value.trim();
+        if (value) {
+            if (TAG_NAME_VALIDATOR.exec(value) || value.length > Number("{{MAX_SCENE_TAG_LENGTH}}")) {
+                return null;
+            }
+            if (value.length > 0) {
+                result += value;
+                result += ",";
+            }
+        }
+    }
+    return result;
+}
+
+/**
+ * CSVテキストからシーンカラーのUIを作る.
+ * @param {string} tags タグがCSVで羅列されているテキスト.
+ */
+function scene_color_csv2ui(tags) {
+    let i = 0;
+    for (const tag of tags.split(/,/)) {
+        if (tag) {
+            for (const option of document.getElementById("scene_color_" + i).childNodes) {
+                option.selected = option.value === tag ? true : false;
+            }
+            document.getElementById("scene_tag_" + i).style.backgroundColor = tag;
+            i++;
+        }
+    }
+    for (; i < SCENE_TAG_COUNT; i++) {
+        for (const option of document.getElementById("scene_color_" + i).childNodes) {
+            option.selected = option.value === SCENE_NOT_USED_COLOR ? true : false;
+        }
+        document.getElementById("scene_tag_" + i).style.backgroundColor = SCENE_NOT_USED_COLOR;
+    }
+}
+
+/**
+ * シーンカラーのUIからCSVテキストを作る.
+ * @return {string} タグをCSVで羅列したテキスト.
+ */
+function scene_color_ui2csv() {
+    let result = "";
+    for (let i = 0; i < SCENE_TAG_COUNT; i++) {
+        const scene_tag = document.getElementById("scene_tag_" + i);
+        if (scene_tag.value) {
+            for (const option of document.getElementById("scene_color_" + i).childNodes) {
+                if (option.selected) {
+                    if (option.value === SCENE_NOT_USED_COLOR) {
+                        scene_tag.value = "";
+                    } else {
+                        result += option.value;
+                        result += ",";
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+/**
+ * シーンカラーが選択された時のイベントハンドラ.
+ * @param {number} index 着目しているシーンの番号.
+ */
+function update_scene_color(index) {
+    for (const option of document.getElementById("scene_color_" + index).childNodes) {
+        const scene = document.getElementById("scene_tag_" + index);
+        if (option.selected) {
+            scene.style.backgroundColor = option.value;
+            if (option.value === SCENE_NOT_USED_COLOR) {
+                scene.value = "";
+            }
+        }
+    }
+}
+
+/**
+ * CSVテキストからダウンロードルールのUIを作る.
+ * @param {string} tags タグがCSVで羅列されているテキスト.
+ */
+function download_rule_csv2ui(tags) {
+    let i = 0;
+    for (const tag of tags.split(/,/)) {
+        if (tag) {
+            for (const option of document.getElementById("download_rule_" + i).childNodes) {
+                option.selected = option.value === tag ? true : false;
+            }
+            i++;
+        }
+    }
+    for (; i < DOWNLOAD_RULE_COUNT; i++) {
+        for (const option of document.getElementById("download_rule_" + i).childNodes) {
+            option.selected = option.value === RULE_NOT_USED_VALUE ? true : false;
+        }
+    }
+}
+
+/**
+ * ダウンロードルールのUIからCSVテキストを作る.
+ * @return {string} タグをCSVで羅列したテキスト.
+ */
+function download_rule_ui2csv() {
+    let result = "";
+    for (let i = 0; i < DOWNLOAD_RULE_COUNT; i++) {
+        for (const option of document.getElementById("download_rule_" + i).childNodes) {
+            if (option.selected && option.value !== RULE_NOT_USED_VALUE) {
+                result += option.value;
+                result += ",";
+            }
+        }
+    }
+    return result;
 }
 
 /**
  * ダウンロードを待っているファイルのリストをMediaサービスから取得する.
+ * @return {Promise<*>} ファイルの情報を示した配列. とれなかったらnull.
  */
-async function setup_download_file_list() {
-    // 最初にリストを空にしておく.
-    download_file_list = null;
-    // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
-    await get_token();
-    if (!token) {
-        state = "authentication_failed";
-        return;
-    }
-    // ユーザがOwnerのMediaのリストをMediaサービスから取得する.
-    console.log("calling media service to get media list : {{MEDIA_API_URL}}");
-    const media_response = await fetch("{{MEDIA_API_URL}}" + "?owner=" + current_user.user_id, {
-        headers: {
-            "Authorization": "{{TOKEN_FORMAT}} " + token
+async function get_download_file_list() {
+    while (true) {
+        // トークンがとれなければおしまい.
+        if (!await get_token()) {
+            return null;
         }
-    });
-    console.assert(media_response);
-    console.log("media service returns response :", media_response);
-    // 成功するはずなので200以外だったら予期しないエラーとする.
-    if (media_response.status != 200) {
-        state = "service_error";
-        return;
-    }
-    // 返却された結果をリストにJSONにする.
-    const result = await media_response.json();
-    console.assert(result);
-    // それをさらに配列にいれる.
-    download_file_list = result;
-    console.log("download file list :", download_file_list);
-    // 次のステートはダウンロードビューとする.
-    state = "in_download_view";
-}
-
-/**
- * ファイルをMediaサービスから１つダウンロードする.
- */
-async function download_file() {
-    // リストが空の場合はなにもしないで抜ける.
-    if (!download_file_list || download_file_list.length == 0) {
-        console.log("download file list is empty.");
-        state = "open_main_view";
-        return;
-    }
-    console.log("remaining download file list :", download_file_list);
-    // 対象となるファイルをリストの先頭から取得する.
-    const file = download_file_list[0];
-    console.assert(file);
-    console.log("target file :", file);
-    // 現在のダウンロード状況をUIに反映する.
-    DOWNLOAD_COUNT.value = download_file_list.length;
-    DOWNLOAD_FILE.value = file.id;
-    // アクセストークンをとってきて、失敗したら認証パネルを出すようにステートを変えて終了する.
-    await get_token();
-    if (!token) {
-        state = "authentication_failed";
-        return;
-    }
-    // Mediaサービスからファイルを取得する.
-    console.log("calling media service to get media content: ", file.encrypted_data);
-    const media_response = await fetch(file.encrypted_data);
-    console.assert(media_response);
-    console.log("media service respond :", media_response);
-    // 200以外だったら予期しないエラーとして抜ける.
-    // たぶん別のタマリンクがダウンロードして削除したとか?そういう状況.
-    // TODO: 本当はこのあたりもう少し親切なエラー処理をしたい...
-    if (media_response.status !== 200) {
-        console.error("could not get media :", media_response);
-        state = "service_error";
-        return;
-    }
-    // ここからはファイル内容の復号化処理をする.
-    let data = null;
-    // 暗号化キーが指定されているかをチェックする.
-    if (file.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
-        // 暗号化されている場合にはデータ場BASE64なのでテキストとして取得する.
-        const base64_raw = await media_response.text();
-        console.assert(base64_raw);
-        console.log("base64 raw data length :", base64_raw.length);
-        // それをキーを用いて復号化する.
-        const base64_decrypted = CryptoJS.AES.decrypt(base64_raw, file.encryption_key).toString(CryptoJS.enc.Utf8);
-        console.assert(base64_decrypted);
-        console.log("decrypted raw data length :", base64_decrypted.length);
-        // 復号化した文字列をバイナリに変える.
-        const tmp = window.atob(base64_decrypted);
-        console.assert(tmp.length > 0);
-        console.log("result binary length :", tmp.length);
-        const buffer = new Uint8Array(tmp.length);
-        console.assert(buffer);
-        for (let i = 0; i < tmp.length; i++) {
-            buffer[i] = tmp.charCodeAt(i);
-        }
-        // 保存するデータをすり替える.
-        data = buffer;
-    } else {
-        // 暗号化されていない場合は普通にバッファで受ける.
-        data = await media_response.arrayBuffer();
-        console.assert(data);
-        console.log("loading file data :", data);
-    }
-    console.assert(data);
-    // ここからは保存するパス名とファイル名を生成する処理をする.
-    // まずは撮影日時を取得する.
-    const date_taken = new Date(file.date_taken);
-    console.assert(date_taken);
-    // 日付と時刻を人間可読なフォーマットの文字列にする.
-    // TODO: これは本当はLOCALE的な処理に任せたほうがいいような気がする.
-    const date = date_taken.getFullYear() + "{{DATETIME_Y}}" + (date_taken.getMonth() + 1).toString().padStart(2.0) + "{{DATETIME_M}}" + date_taken.getDate().toString().padStart(2, 0) + "{{DATETIME_D}}";
-    console.assert(date);
-    const time = date_taken.getHours().toString().padStart(2, 0) + "{{DATETIME_H}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DATETIME_M}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DATETIME_S}}";
-    console.assert(time);
-    // ファイルの拡張子をコンテントタイプから生成する.
-    const ext = file.content_type.match(/[^¥/]+$/);
-    console.assert(ext);
-    // 撮影者情報とシーンと状況のそれぞれのタグを取得する.
-    // TODO: 本来はここでファイルシステムに適切な値になっているか確認して正規化する処理が必要.
-    const author_name = file.author_name;
-    const scene_tag = file.scene_tag;
-    const context_tag = file.context_tag;
-    // ここからはダウンロードルールに基づいてパスとファイルを作成する.
-    let path = [];
-    let body = "";
-    switch (current_user.download_rule) {
-        case "1":
-            path.push(date);
-            path.push(author_name);
-            path.push(context_tag);
-            path.push(scene_tag);
-            body = time;
-            break;
-
-        case "2":
-            path.push(date);
-            path.push(context_tag);
-            path.push(scene_tag);
-            path.push(author_name);
-            body = time;
-            break;
-
-        default:
-            console.error("unsupported download rule :", current_user.download_rule);
-            state = "open_error_view";
-            return;
-    }
-    console.assert(path.length > 0);
-    console.log("generated file path :", path);
-    console.assert(body);
-    console.log("generated file name body :", body);
-    // パスを順番にフォルダとして開いてハンドルを再帰的に取得する.
-    let folder_handle = download_folder;
-    console.assert(folder_handle);
-    for (let i = 0; i < path.length; i++) {
-        console.log("open path :", path[i]);
-        folder_handle = await folder_handle.getDirectoryHandle(path[i], { create: true });
-        console.assert(folder_handle);
-    }
-    // 既存のファイルとファイル名がぶつかっている間はループする.
-    let file_handle = null;
-    let number = 0;
-    let actual_file_name = null;
-    do {
-        actual_file_name = body + (number > 0 ? "(" + number + ")" : "") + "." + ext;
-        console.log("open file :", actual_file_name);
-        number++;
-        // ファイル名がぶつかっている間はずっとfile(1),(2)...と数字を上げ続ける.
-        // TODO: これは微妙に危険な(終わらない可能性のある)アルゴリズムのような気がする...
-        try {
-            file_handle = await folder_handle.getFileHandle(actual_file_name);
-        } catch (error) {
-            file_handle = null;
-        }
-    } while (file_handle);
-    // 最後のハンドルでファイルをオープンする.
-    file_handle = await folder_handle.getFileHandle(actual_file_name, { create: true });
-    console.assert(file_handle);
-    // ダウンロードした中身を書き込んでクローズする.
-    const write_handle = await file_handle.createWritable();
-    console.assert(write_handle);
-    await write_handle.write(data);
-    await write_handle.close();
-    // ここまででファイルのダウンロードが無事に終了した.
-    // リストから当該ファイルを削除して詰める.
-    download_file_list.shift();
-    // Mediaサービスからもファイルを削除する.
-    if (!current_user.download_only) {
-        console.log("calling media service to delete media : {{MEDIA_API_URL}}");
-        await fetch("{{MEDIA_API_URL}}" + file.id, {
-            method: "DELETE",
+        // ユーザーがOwnerのMediaのリストをMediaサービスから取得する.
+        const response = await fetch("{{MEDIA_API_URL}}" + "?owner=" + current_user.user_id, {
             headers: {
                 "Authorization": "{{TOKEN_FORMAT}} " + token
             }
-        }).catch(error => {
-            console.error("media delete error :", error);
-            // TODO: 本当はここに削除時のエラー処理をする必要がある.
         });
+        if (response.status === 200) {
+            const file_list = await response.json();
+            if (!file_list || file_list.length == 0) {
+                return null;
+            }
+            return file_list;
+        } else if (response.status === 401 || response.status === 403) {
+            // エラーなら今のトークンがダメということでリトライ. 
+            token = null;
+        } else {
+            return null;
+        }
     }
 }
 
 /**
- * ステートを変えながらひたすらぐるぐる回るアプリケーションのメインループ.
+ * ファイルをMediaサービスからダウンロードする.
  */
-async function main_loop() {
-    // ぐるぐるを維持するかどうかを示す変数.
-    let keep_main_loop = true;
+async function download_files() {
+    // リストを取ってきて空の場合はなにもしないで抜ける.
+    let file_list = await get_download_file_list();
+    if (!file_list) {
+        return;
+    }
+    document.getElementById("download_count").innerHTML = file_list.length;
+    document.getElementById("download_file").innerHTML = "--------";
+    document.getElementById("downloading_dialog").classList.add("is-active");
     try {
-        // 前のタイマーを破棄する.
-        if (timeout_id) {
-            clearTimeout(timeout_id);
-        }
-        // ステートとオンラインの状況を最新化する.
-        if (state !== last_state) {
-            last_state = state;
-            console.log("current state :", state);
-        }
-        const online = navigator.onLine == false ? false : true;
-        // オフラインだったら問答無用でエラーにしておしまい.
-        if (!online) {
-            state = "open_error_view";
-        }
-        // 対応するステートによって処理を分岐させる.
-        switch (state) {
-            case "init":
-                // 初期化：初期化処理をする.次のステートはinit()の中で設定される.
-                await init();
+        // フォルダを選択する.
+        const selected_folder_handle = await window.showDirectoryPicker();
+        const download_rules = download_rule_ui2csv().split(/,/);
+        in_downloading = true;
+        while (selected_folder_handle && file_list.length && in_downloading) {
+            // 対象となるファイルをリストの先頭から取得する.
+            const file = file_list[0];
+            // 現在のダウンロード状況をUIに反映する.
+            document.getElementById("download_count").innerHTML = file_list.length;
+            document.getElementById("download_file").innerHTML = file.id;
+            // トークンがとれなければおしまい.
+            if (!await get_token()) {
+                change_view("signin_view");
                 break;
+            }
+            // Mediaサービスからファイルを取得する.
+            const response = await fetch(file.encrypted_data);
+            if (response.status === 200) {
+                let data = null;
+                if (file.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
+                    // 暗号化されていた場合の処理.                
+                    const base64_raw = await response.text();
+                    const base64_decrypted = CryptoJS.AES.decrypt(base64_raw, file.encryption_key).toString(CryptoJS.enc.Utf8);
+                    const tmp = window.atob(base64_decrypted);
+                    const buffer = new Uint8Array(tmp.length);
+                    for (let i = 0; i < tmp.length; i++) {
+                        buffer[i] = tmp.charCodeAt(i);
+                    }
+                    data = buffer;
+                } else {
+                    data = await response.arrayBuffer();
+                }
+                // ここからは保存するパス名とファイル名の要素を生成する.
+                const date_taken = new Date(file.date_taken);
+                const year = date_taken.getFullYear() + "{{DATETIME_YY}}";
+                const month = (date_taken.getMonth() + 1).toString().padStart(2.0) + "{{DATETIME_MM}}";
+                const day = date_taken.getDate().toString().padStart(2, 0) + "{{DATETIME_DD}}";
+                const time = date_taken.getHours().toString().padStart(2, 0) + "{{DATETIME_HH}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DATETIME_MN}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DATETIME_SS}}";
+                const ext = file.content_type.match(/[^¥/]+$/);
+                const author_name = file.author_name;
+                const context_tag = file.context_tag;
+                const scene_tag = file.scene_tag;
+                // ここからはダウンロードルールに基づいてパスとファイルを作成する.
+                let path = [];
+                let body = time;
+                for (const rule of download_rules) {
+                    switch (rule) {
+                        case "YYMM":
+                            path.push(year + month);
+                            break;
 
-            case "start":
-                // スタート；ステートをユーザの更新に変更する.
-                state = "load_user";
-                break;
+                        case "YY":
+                            path.push(year);
+                            break;
 
-            case "load_user":
-                // ユーザの更新：データベースからユーザを更新し成功したらメインビューを開く.
-                await load_user("open_main_view");
-                break;
+                        case "MM":
+                            path.push(month);
+                            break;
 
-            case "open_auth_view":
-                //  認証ビューを開く：認証ビューだけを有効化する.
-                state = "in_auth_view";
-                LOADING_VIEW.style.display = "none";
-                MAIN_VIEW.style.display = "none";
-                AUTH_VIEW.style.display = "block";
-                DOWNLOAD_VIEW.style.display = "none";
-                // UI要素の情報を更新しておく.
-                USERNAME.value = current_user.username;
-                break;
+                        case "DD":
+                            path.push(day);
+                            break;
 
-            case "in_auth_view":
-                // 認証ビューを表示中：このステートのときはなにもしない.
-                break;
+                        case "AUTHOR":
+                            path.push(author_name);
+                            break;
 
-            case "authentication_failed":
-                // 認証失敗：エラーメッセージを有効化したうえで認証ビューを開く.
-                state = "open_auth_view";
-                SIGNIN_ERROR.style.display = "block";
-                break;
+                        case "CONTEXT":
+                            path.push(context_tag);
+                            break;
 
-            case "open_main_view":
-                // メインビューを開く：メインビューだけを有効化する.
-                state = "in_main_view";
-                LOADING_VIEW.style.display = "none";
-                MAIN_VIEW.style.display = "block";
-                AUTH_VIEW.style.display = "none";
-                DOWNLOAD_VIEW.style.display = "none";
-                // UI要素の情報を更新しておく.
-                USER.value = current_user.username;
-                DOWNLOAD_RULE.value = current_user.download_rule;
-                DOWNLOAD_ONLY.checked = current_user.download_only;
-                break;
+                        case "SCENE":
+                            path.push(scene_tag);
+                            break;
 
-            case "in_main_view":
-                // メインビューを表示中：このステートのときはなにもしない.
-                break;
-
-            case "save_setting":
-                // 設定ビューを開く：設定ビューだけを有効化する.
-                state = "open_main_view";
-                LOADING_VIEW.style.display = "block";
-                MAIN_VIEW.style.display = "none";
-                AUTH_VIEW.style.display = "none";
-                DOWNLOAD_VIEW.style.display = "none";
-                // ユーザの情報をデータベースとUserサービスに保存する.
-                await save_user();
-                break;
-
-            case "open_download_view":
-                // ダウンロードビューを開く：ダウンロードを開始する.
-                state = "in_download_view";
-                LOADING_VIEW.style.display = "none";
-                MAIN_VIEW.style.display = "none";
-                AUTH_VIEW.style.display = "none";
-                DOWNLOAD_VIEW.style.display = "block";
-                DOWNLOAD_COUNT.value = "";
-                DOWNLOAD_FILE.value = "";
-                // ユーザの情報をデータベースとUserサービスに保存する.
-                await save_user();
-                // 次にダウンロード可能なファイルのリストを作成する.
-                // setup_download_file_list() の中で次のステートが決定される.
-                await setup_download_file_list();
-                break;
-
-            case "in_download_view":
-                // ダウンロードビューを表示中：毎回１ファイルづつのダウンロードを行う.
-                await download_file();
-                break;
-
-            case "open_install_view":
-                // インストールビューを開く：インストールを促すメッセージを表示してメインループを終了する.
-                keep_main_loop = false;
-                INSTALL_VIEW.style.display = "block";
-                LOADING_VIEW.style.display = "none";
-                console.error("open install view - teminate main loop.");
-                break;
-
-            case "open_error_view":
-                // エラービューを開く：エラーを示すメッセージを表示してメインループを終了する.
-                keep_main_loop = false;
-                LOADING_VIEW.style.display = "none";
-                MAIN_VIEW.style.display = "none";
-                AUTH_VIEW.style.display = "none";
-                DOWNLOAD_VIEW.style.display = "none";
-                ERROR_VIEW.style.display = "block";
-                console.error("fatal error - teminate main loop.");
-                break;
-
-            case "service_error":
-                // サービスエラーが発生した：エラービューに遷移する.
-                console.warn("something wrong in network service - try to reload.");
-                // TODO: いきなり終わるんじゃなくて、もっとエラー内容に応じたリカバリ処理をすること！
-                state = "open_auth_view";
-                break;
-
-            default:
-                // 未定義のステート：実装エラーとみなしてエラービューを表示して終了する.
-                console.error("internal error - unknown state :", state);
-                state = "open_error_view";
-                break;
+                        case RULE_NOT_USED_VALUE:
+                            break;
+                    }
+                }
+                // パスを順番にフォルダとして開いてハンドルを再帰的に取得する.
+                let folder_handle = selected_folder_handle;
+                for (const p of path) {
+                    folder_handle = await folder_handle.getDirectoryHandle(p, { create: true });
+                }
+                // 既存のファイルとファイル名がぶつかっている間はループする.
+                let file_handle = null;
+                let number = 0;
+                let actual_file_name = null;
+                do {
+                    actual_file_name = body + (number > 0 ? "(" + number + ")" : "") + "." + ext;
+                    number++;
+                    // ファイル名がぶつかっている間はずっとfile(1),(2)...と数字を上げ続ける.
+                    // これは微妙に危険な(終わらない可能性のある)アルゴリズムのような気がする...
+                    try {
+                        file_handle = await folder_handle.getFileHandle(actual_file_name);
+                    } catch (error) {
+                        file_handle = null;
+                    }
+                } while (file_handle);
+                // 最後のハンドルでファイルをオープンする.
+                file_handle = await folder_handle.getFileHandle(actual_file_name, { create: true });
+                // ダウンロードした中身を書き込んでクローズする.
+                const write_handle = await file_handle.createWritable();
+                await write_handle.write(data);
+                await write_handle.close();
+                // リストから当該ファイルを削除して詰める.
+                file_list.shift();
+                // Mediaサービスからもファイルを削除する.
+                if (current_user.delete_after_download) {
+                    fetch("{{MEDIA_API_URL}}" + file.id, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": "{{TOKEN_FORMAT}} " + token
+                        }
+                    }); // TODO: 削除失敗時の処理を追加すべし!
+                }
+            }
         }
     } catch (error) {
-        // 何かしらの例外処理が発生した.
-        console.error("internal error - unhandled exception in main loop :", error);
-        // メインビューに強制的に戻す.
-        // TODO: これももう少し丁寧なエラーハンドリングをしたほうがいいかも...
-        state = "open_main_view";
+        console.warn("exception in download_files() :", error);
     }
-    // ループ脱出が指示されていなければタイマーをセットして一定時間後にもう一回自分が呼ばれるようにして終了する.
-    if (keep_main_loop) {
-        timeout_id = setTimeout(main_loop, MAIN_LOOP_INTERVAL);
-        console.assert(timeout_id);
+    in_downloading = false;
+    // 強制的にバックグラウンドタスクを起動してチャートを再描画する.
+    background_task();
+    document.getElementById("downloading_dialog").classList.remove("is-active");
+}
+
+/**
+ * チャートを描画する.
+ */
+function draw_chart() {
+    let list = [];
+    switch (current_user.chart) {
+        case "context":
+            list = context_list;
+            break;
+
+        case "scene":
+            list = scene_list;
+            break;
+
+        case "author":
+            list = author_list;
+            break;
     }
+    let labels = [];
+    let series = [];
+    for (const key in list) {
+        labels.push(key);
+        series.push(list[key]);
+    }
+    new Chartist.Pie(".ct-chart", { labels, series }, {
+        donut: true,
+        labelInterpolationFnc: function(value) {
+            return value;
+        },
+        labelPosition: "outside"
+    });
+    const status_title = document.getElementById("status_title");
+    status_title.innerHTML = file_count;
+    // ここではさぼって直接HTMLエレメントを操作しているので注意!
+    if (file_count == 0) {
+        // 写真がない場合はチャートの代わりに円を書く.
+        status_title.style.backgroundColor = "white";
+        status_title.style.marginTop = "0";
+    } else if (labels.length == 1) {
+        // 種類が1つしかない場合は見えやすいようにちょっと個数の表示をずらす.
+        status_title.style.backgroundColor = "transparent";
+        status_title.style.marginTop = "4ex";
+    } else {
+        // それ以外は普通にチャートを描く.
+        status_title.style.backgroundColor = "transparent";
+        status_title.style.marginTop = "0";
+    }
+}
+
+/**
+ * 指定したビューだけを表示する.
+ * @param {string} name ビューの名前.
+ */
+function change_view(name) {
+    for (const view of document.getElementById("app").children) {
+        view.style.display = view.id === name ? "block" : "none";
+    }
+}
+
+/**
+ * バックグラウンドタスク.
+ */
+function background_task() {
+    // 前のタイマーがあれば破棄しておく.
+    if (background_task_timer) {
+        clearTimeout(background_task_timer);
+        background_task_timer = null;
+    }
+    // オンラインでダウンロード中でなければ...
+    if (navigator.onLine && !in_downloading) {
+        // ユーザーの情報をもってくる.
+        load_user().then(() => {
+            // 最新のダウンロードファイルの状況を取得する.
+            get_download_file_list().then(file_list => {
+                if (file_list) {
+                    file_count = file_list.length;
+                    // チャートのデータを作成する.
+                    for (const file of file_list) {
+                        const context_count = context_list[file.context_tag];
+                        context_list[file.context_tag] = context_count ? context_count + 1 : 1;
+                        const scene_count = scene_list[file.scene_tag];
+                        scene_list[file.scene_tag] = scene_count ? scene_count + 1 : 1;
+                        const author_count = author_list[file.author_name];
+                        author_list[file.author_name] = author_count ? author_count + 1 : 1;
+                    }
+                } else {
+                    file_count = 0;
+                    context_list = [];
+                    scene_list = [];
+                    author_list = [];
+                }
+                // チャートを描画する.
+                draw_chart();
+            });
+        });
+    }
+    // 終わったらもう一回自分を登録.
+    background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
 }
 
 /**
  * アプリケーションのメイン.
  */
-async function main() {
-    // ローディングビューを表示する.
-    LOADING_VIEW.style.display = "block";
-    // UIのイベントをセットアップする：再認証ボタン.
-    USER.onclick = (async(event) => {
-        SIGNIN_ERROR.style.display = "none";
-        state = "open_auth_view";
+function main() {
+    // 起動時のURLを確認する.
+    if (document.location.search !== "{{APP_MODE_URL_PARAM}}") {
+        change_view("install_view");
+        return;
+    }
+    // service workerが使える環境かどうかをチェックする.
+    if (!("serviceWorker" in navigator)) {
+        change_view("error_view");
+        return;
+    }
+    // service workerの登録を行う.
+    navigator.serviceWorker.register("link-serviceworker.js").then(registration => {
+        navigator.serviceWorker.ready.then(registration => {
+            service_worker = registration;
+        });
     });
-    // UIのイベントをセットアップする：更新ボタン.
-    SETTING.onclick = (async(event) => {
-        state = "save_setting";
+    // UIのイベントをセットする:保存.
+    document.getElementById("save_context").onclick = document.getElementById("save_scene").onclick = (() => {
+        save_user().then(result => {
+            document.getElementById(result ? "save_succeeded_dialog" : "save_failed_dialog").classList.add("is-active");
+        });
     });
-    // UIのイベントをセットアップする：認証ボタン.
-    SIGNIN.onclick = (async(event) => {
-        current_user.username = USERNAME.value.trim();
-        current_user.encrypted_password = CryptoJS.AES.encrypt(PASSWORD.value, SECRET_KEY).toString();
-        // 入力は全て必須要素なのでひとつでも入っていなかったらエラーとする.
-        if (!current_user.username || !current_user.encrypted_password) {
-            console.warn("insufficient input data.");
-            state = "authentication_failed";
-            return;
+    // UIのイベントをセットする:保存成功表示.
+    document.getElementById("save_succeeded_ok").onclick = (() => {
+        document.getElementById("save_succeeded_dialog").classList.remove("is-active");
+    });
+    // UIのイベントをセットする:保存失敗表示.
+    document.getElementById("save_failed_ok").onclick = (() => {
+        document.getElementById("save_failed_dialog").classList.remove("is-active");
+    });
+    // UIのイベントをセットする:再サインイン.
+    document.getElementById("current_username").onclick = (() => {
+        change_view("signin_view");
+    });
+    // UIのイベントをセットする:サインイン.
+    document.getElementById("signin").onclick = (() => {
+        const signin_error = document.getElementById("signin_error");
+        signin_error.style.display = "none";
+        // 画面から情報をとってくる.
+        const username = document.getElementById("username").value.trim();
+        const raw_password = document.getElementById("password").value;
+        // 入力情報を保存する.
+        current_user.username = username;
+        current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{SECRET_KEY}}")).toString();
+        database.user.put(current_user).then(() => {
+            // 既存のトークンを無効化してユーザーをロードする.
+            token = null;
+            load_user().then(success => {
+                if (!success) {
+                    signin_error.style.display = "block";
+                } else {
+                    change_view("main_view");
+                }
+            });
+        });
+    });
+    // UIのイベントをセットする:サインインキャンセル.
+    document.getElementById("signin-cancel").onclick = (() => {
+        if (token) {
+            change_view("main_view");
         }
-        // データベースを更新してからスタートに移るようにする.
-        // 認証エラーなどの場合にはさらに適切なステートに遷移することが期待できる.
-        console.log("updating user database :", current_user);
-        await database.user.put(current_user);
-        state = "start";
     });
-    // UIのイベントをセットアップする：ダウンロードボタン.
-    DOWNLOAD.onclick = (async(event) => {
-        // フォルダ選択ダイアログをだす.
-        download_folder = await window.showDirectoryPicker();
-        console.assert(download_folder);
-        // 無事に返ってきたらダウンロードビューに遷移する.
-        console.log("showDirectoryPicker() returns :", download_folder);
-        state = "open_download_view";
+    // UIのイベントをセットする:ステータスのチャートをコンテキストに.
+    document.getElementById("show_context_status").onclick = (() => {
+        current_user.chart = "context";
+        database.user.put(current_user).then(() => {
+            draw_chart();
+        });
     });
-    // UIのイベントをセットアップする：ダウンロードキャンセルボタン.
-    DOWNLOAD_CANCEL.onclick = (async(event) => {
-        // ステートをメインビューに戻す.
-        // ボタンの押下自体は非同期だが、メインループのステート処理に戻ってきたときは、
-        // １ファイルのダウンロードが終わったということだから、これでキャンセルになる.
-        state = "open_main_view";
+    // UIのイベントをセットする:ステータスのチャートをシーンに.
+    document.getElementById("show_scene_status").onclick = (() => {
+        current_user.chart = "scene";
+        database.user.put(current_user).then(() => {
+            draw_chart();
+        });
     });
-    // データベースをセットアップする.
-    await setup_database();
-    // メインループの１回目を開始する.
-    await main_loop();
+    // UIのイベントをセットする:ステータスのチャートを撮影者に.
+    document.getElementById("show_author_status").onclick = (() => {
+        current_user.chart = "author";
+        database.user.put(current_user).then(() => {
+            draw_chart();
+        });
+    });
+    // UIのイベントをセットする:ダウンロード開始.
+    document.getElementById("download_start").onclick = (() => {
+        save_user().then(result => {
+            if (!result) {
+                document.getElementById("save_failed_dialog").classList.add("is-active");
+            } else if (!("showDirectoryPicker" in window)) {
+                alert("{{NO_FILESYSTEM_API_ERROR_MESSAGE}}");
+            } else {
+                download_files();
+            }
+        });
+    });
+    // UIのイベントをセットする:ダウンロード停止.
+    document.getElementById("download_stop").onclick = (() => {
+        in_downloading = false;
+        document.getElementById("downloading_dialog").classList.remove("is-active");
+    });
+    // Dexieのインスタンスを作る.
+    database = new Dexie("{{LINK_APP_DATABASE_NAME}}");
+    database.version("{{LINK_APP_DATABASE_VERSION}}").stores({
+        user: "dummy_id, user_id"
+    });
+    // ユーザーをロードして処理開始.
+    load_user().then(success => {
+        draw_chart();
+        background_task();
+        change_view(success ? "main_view" : "signin_view");
+    });
 }

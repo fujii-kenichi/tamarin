@@ -1,0 +1,8 @@
+@charset "utf-8";
+$lightpink: #FFB6C1;
+$lavenderblush: #FFF0F5;
+$lightcyan: #E0FFFF;
+$primary: $lightpink;
+$light: $lavenderblush;
+$success: $lightcyan;
+@import "node_modules/bulma/bulma.sass";

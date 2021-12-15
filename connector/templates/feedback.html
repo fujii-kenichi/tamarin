@@ -8,16 +8,10 @@
     <link rel="shortcut icon" href="{% static 'image/connector-app-favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
-    <title>{{SIGNUP_MESSAGE}}</title>
-    <script>
-        function onload() {
-            const terms = "{{TERMS_MESSAGE}}".replaceAll(" ", "");
-            document.getElementById("terms").value = terms.replaceAll("$", "\n");
-        }
-    </script>
+    <title>{{FEEDBACK_MESSAGE}}</title>
 </head>
 
-<body class="app" onload="onload()">
+<body class="app">
     <div class="hero is-primary is-fullheight">
         <div class="hero-body">
             <div class="container">
@@ -29,22 +23,16 @@
                                 <figure class="image is-96x96 is-inline-block">
                                     <img src="{% static 'image/connector-app-icon192x192.png' %}" alt="">
                                 </figure>
-                                <p><strong>{{SIGNUP_LONG_MESSAGE}}</strong></p>
+                                <p><strong>{{FEEDBACK_MESSAGE}}</strong></p>
                                 <p><small>{{VERSION}}</small></p>
                             </div>
                             <form method="POST">
                                 {% csrf_token %}
                                 <div class="field">
-                                    <input id="id_username" name="username" class="input" type="text" minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" required placeholder="{{USERNAME_LABEL}}" autofocus>
+                                    <input id="id_author_name" name="author_name" class="input" type="text" minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" required placeholder="{{USERNAME_LABEL}}" autofocus>
                                 </div>
                                 <div class="field">
-                                    <input id="id_password1" name="password1" class="input" type="password" minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" required placeholder="{{PASSWORD_LABEL}}">
-                                </div>
-                                <div class="field">
-                                    <input id="id_password2" name="password2" class="input" type="password" minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" required placeholder="{{PASSWORD2_LABEL}}">
-                                </div>
-                                <div class="field">
-                                    <textarea id="terms" class="textarea is-small" rows="6" readonly></textarea>
+                                    <textarea id="id_comment" name="comment" class="textarea" type="textarea" rows="3" minlength="{{MIN_FEEDBACKLENGTH}}" maxlength="{{MAX_FEEDBACK_LENGTH}}" required placeholder="{{FEEDBACK_LONG_MESSAGE}}"></textarea>
                                 </div>
                                 {% if form.errors %}
                                 <div class="notification is-warning my-2">
@@ -53,7 +41,7 @@
                                     {% endfor %} {% endfor %}
                                 </div>
                                 {% endif %}
-                                <button class="button is-success is-rounded is-fullwidth" type="submit">{{SIGNUP_MESSAGE}}</button>
+                                <button class="button is-success is-rounded is-fullwidth" type="submit">{{SEND_LABEL}}</button>
                             </form>
                         </div>
                     </div>

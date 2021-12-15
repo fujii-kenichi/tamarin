@@ -1,135 +1,334 @@
 <!DOCTYPE html>
 <html lang="{{LANG}}">
-<!-- タマリンクの画面. -->
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
-    <meta name="description" content="{{DESCRIPTION}}">
-    <meta name="author" content="{{ORG}}">
-    <meta name="theme-color" content="{{THEME_COLOR}}">
+    <meta name="description" content="{{LINK_APP_DESCRIPTION}}">
+    <meta name="theme-color" content="{{APP_THEME_COLOR}}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{LINK_APP_NAME}}">
     <meta name="google" content="notranslate">
-    <link rel="shortcut icon" href="{{FAVICON}}">
+    <link rel="shortcut icon" href="{{LINK_APP_FAVICON}}">
+    <link rel="apple-touch-icon" href="{{LINK_APP_ICON180}}">
+    <link rel="apple-touch-startup-image" href="{{LINK_APP_ICON512}}">
     <link rel="manifest" href="link-app.webmanifest">
+    <link rel="stylesheet" href="{{BULMA_CSS}}">
+    <link rel="stylesheet" href="{{CHARTIST_CSS}}">
+    <link rel="stylesheet" href="{{COMMON_CSS}}">
     <link rel="stylesheet" href="link-app.css">
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
+    <script src="{{CHARTIST_JS}}" defer></script>
     <script src="link-app.js" defer></script>
-    <title>{{NAME}}</title>
+    <title>{{LINK_APP_NAME}}</title>
 </head>
 
-<body class="app" onload="main()">
-    <!-- 以下のいずれかのビューのみをユーザに見せる. -->
-
-    <!-- メインビュー：ユーザがタグの編集操作などをするビュ. -->
-    <div id="main_view" class="main_view">
-        <!-- ヘッダ部分. -->
-        <div class="header">
-            <div class="title">
-                <img class="main_logo" src="{{ICON_192}}" alt="tamarin">
-                <div class="main_name">{{NAME}}</div>
-                <div class="main_version">{{VERSION}}</div>
+<body id="app" class="app has-background-grey-light" onload="main()">
+    <div id="main_view" class="hero is-fullheight" style="display:none">
+        <nav class="level has-background-primary p-3">
+            <div class="level-left">
+                <div class="level-item">
+                    <figure class="image is-32x32">
+                        <img src="{{LINK_APP_ICON192}}" alt="">
+                    </figure>
+                    <p class="subtitle m-3">{{LINK_APP_NAME}}</p>
+                </div>
             </div>
-            <div class="menu">
-                <input id="user" class="user" type="button">
+            <div class="level-right">
+                <div class="level-item">
+                    <input id="current_username" class="button has-background-light" type="button">
+                </div>
+            </div>
+        </nav>
+        <main class="section py-0">
+            <div class="columns">
+                <div class="column">
+                    <div class="card">
+                        <div class="card-header">
+                            <p class="card-header-title is-centered has-background-primary">{{CONTEXT_TAG_SECTION_LABEL}}</p>
+                        </div>
+                        <div class="card-content tama-card-content has-background-light">
+                            <input id="context_tag_0" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
+                            <input id="context_tag_1" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
+                            <input id="context_tag_2" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
+                            <input id="context_tag_3" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
+                            <input id="context_tag_4" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
+                            <input id="context_tag_5" class="section_tag" type="text" minlength="0" maxlength="{{MAX_CONTEXT_TAG_LENGTH}}" placeholder="{{CONTEXT_TAG_NOT_USED}}"><br>
+                        </div>
+                        <footer class="card-footer">
+                            <button id="save_context" class="card-footer-item button is-success">{{SAVE_LABEL}}</button>
+                        </footer>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="card">
+                        <header class="card-header">
+                            <p class="card-header-title is-centered has-background-primary">{{SCENE_TAG_SECTION_LABEL}}</p>
+                        </header>
+                        <div class="card-content tama-card-content has-background-light">
+                            <input id="scene_tag_0" class="tama-shutter" type="text" minlength="0" maxlength="{{MAX_SCENE_TAG_LENGTH}}">
+                            <input id="scene_tag_1" class="tama-shutter" type="text" minlength="0" maxlength="{{MAX_SCENE_TAG_LENGTH}}">
+                            <input id="scene_tag_2" class="tama-shutter" type="text" minlength="0" maxlength="{{MAX_SCENE_TAG_LENGTH}}">
+                            <input id="scene_tag_3" class="tama-shutter" type="text" minlength="0" maxlength="{{MAX_SCENE_TAG_LENGTH}}">
+                            <br>
+                            <select id="scene_color_0" class="tama-shutter-colors" size="4" onchange="update_scene_color(0);">
+                                <option value="tomato" label="{{SHUTTER_COLOR_RED}}">{{SHUTTER_COLOR_RED}}</option>
+                                <option value="royalblue" label="{{SHUTTER_COLOR_BLUE}}">{{SHUTTER_COLOR_BLUE}}</option>
+                                <option value="lightgreen" label="{{SHUTTER_COLOR_GREEN}}">{{SHUTTER_COLOR_GREEN}}</option>
+                                <option value="yellow" label="{{SHUTTER_COLOR_YELLOW}}">{{SHUTTER_COLOR_YELLOW}}</option>
+                                <option value="pink" label="{{SHUTTER_COLOR_PINK}}">{{SHUTTER_COLOR_PINK}}</option>
+                                <option value="black" label="{{SHUTTER_COLOR_NOT_USED}}">{{SHUTTER_COLOR_NOT_USED}}</option>                                                        
+                            </select>
+                            <select id="scene_color_1" class="tama-shutter-colors" size="4" onchange="update_scene_color(1);">
+                                <option value="tomato" label="{{SHUTTER_COLOR_RED}}">{{SHUTTER_COLOR_RED}}</option>
+                                <option value="royalblue" label="{{SHUTTER_COLOR_BLUE}}">{{SHUTTER_COLOR_BLUE}}</option>
+                                <option value="lightgreen" label="{{SHUTTER_COLOR_GREEN}}">{{SHUTTER_COLOR_GREEN}}</option>
+                                <option value="khaki" label="{{SHUTTER_COLOR_YELLOW}}">{{SHUTTER_COLOR_YELLOW}}</option>
+                                <option value="pink" label="{{SHUTTER_COLOR_PINK}}">{{SHUTTER_COLOR_PINK}}</option>
+                                <option value="black" label="{{SHUTTER_COLOR_NOT_USED}}">{{SHUTTER_COLOR_NOT_USED}}</option>                                                        
+                            </select>
+                            <select id="scene_color_2" class="tama-shutter-colors" size="4" onchange="update_scene_color(2);">
+                                <option value="tomato" label="{{SHUTTER_COLOR_RED}}">{{SHUTTER_COLOR_RED}}</option>
+                                <option value="royalblue" label="{{SHUTTER_COLOR_BLUE}}">{{SHUTTER_COLOR_BLUE}}</option>
+                                <option value="lightgreen" label="{{SHUTTER_COLOR_GREEN}}">{{SHUTTER_COLOR_GREEN}}</option>
+                                <option value="khaki" label="{{SHUTTER_COLOR_YELLOW}}">{{SHUTTER_COLOR_YELLOW}}</option>
+                                <option value="pink" label="{{SHUTTER_COLOR_PINK}}">{{SHUTTER_COLOR_PINK}}</option>
+                                <option value="black" label="{{SHUTTER_COLOR_NOT_USED}}">{{SHUTTER_COLOR_NOT_USED}}</option>                                                        
+                            </select>
+                            <select id="scene_color_3" class="tama-shutter-colors" size="4" onchange="update_scene_color(3);">
+                                <option value="tomato" label="{{SHUTTER_COLOR_RED}}">{{SHUTTER_COLOR_RED}}</option>
+                                <option value="royalblue" label="{{SHUTTER_COLOR_BLUE}}">{{SHUTTER_COLOR_BLUE}}</option>
+                                <option value="lightgreen" label="{{SHUTTER_COLOR_GREEN}}">{{SHUTTER_COLOR_GREEN}}</option>
+                                <option value="khaki" label="{{SHUTTER_COLOR_YELLOW}}">{{SHUTTER_COLOR_YELLOW}}</option>
+                                <option value="pink" label="{{SHUTTER_COLOR_PINK}}">{{SHUTTER_COLOR_PINK}}</option>
+                                <option value="black" label="{{SHUTTER_COLOR_NOT_USED}}">{{SHUTTER_COLOR_NOT_USED}}</option>
+                            </select>
+                        </div>
+                        <footer class="card-footer">
+                            <button id="save_scene" class="card-footer-item button is-success">{{SAVE_LABEL}}</button>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column">
+                    <div class="card">
+                        <div class="card-header">
+                            <p class="card-header-title is-centered has-background-primary">{{STATUS_SECTION_LABEL}}</p>
+                        </div>
+                        <div class="card-content tama-card-content has-background-light tama-status">
+                            <div id="status_title" class="tama-status-label"></div>
+                            <div id="status_content" class="ct-chart"></div>
+                        </div>
+                        <footer class="card-footer">
+                            <button id="show_context_status" class="card-footer-item button is-success">{{RULE_CONTEXT}}</button>
+                            <button id="show_scene_status" class="card-footer-item button is-success">{{RULE_SCENE}}</button>
+                            <button id="show_author_status" class="card-footer-item button is-success">{{RULE_AUTHOR}}</button>
+                        </footer>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="card">
+                        <div class="card-header">
+                            <p class="card-header-title is-centered has-background-primary">{{DOWNLOAD_SECTION_LABEL}}</p>
+                        </div>
+                        <div class="card-content tama-card-content has-background-light">
+                            <div class="tama-download-rule">
+                                <select id="download_rule_0" size="1">
+                                    <option value="YYMM" label="{{RULE_YYMM}}">{{RULE_YYMM}}</option>
+                                    <option value="YY" label="{{RULE_YY}}">{{RULE_YY}}</option>
+                                    <option value="MM" label="{{RULE_MM}}">{{RULE_MM}}</option>
+                                    <option value="DD" label="{{RULE_DD}}">{{RULE_DD}}</option>
+                                    <option value="CONTEXT" label="{{RULE_CONTEXT}}">{{RULE_CONTEXT}}</option>
+                                    <option value="SCENE" label="{{RULE_SCENE}}">{{RULE_SCENE}}</option>
+                                    <option value="AUTHOR" label="{{RULE_AUTHOR}}">{{RULE_AUTHOR}}</option>                                    
+                                    <option value="NOT_USED" label="{{RULE_NOT_USED}}">{{RULE_NOT_USED}}</option>                        
+                                </select><br>
+                                <span>&emsp;∟</span>
+                                <select id="download_rule_1" size="1">
+                                    <option value="YYMM" label="{{RULE_YYMM}}">{{RULE_YYMM}}</option>
+                                    <option value="YY" label="{{RULE_YY}}">{{RULE_YY}}</option>
+                                    <option value="MM" label="{{RULE_MM}}">{{RULE_MM}}</option>
+                                    <option value="DD" label="{{RULE_DD}}">{{RULE_DD}}</option>
+                                    <option value="CONTEXT" label="{{RULE_CONTEXT}}">{{RULE_CONTEXT}}</option>
+                                    <option value="SCENE" label="{{RULE_SCENE}}">{{RULE_SCENE}}</option>
+                                    <option value="AUTHOR" label="{{RULE_AUTHOR}}">{{RULE_AUTHOR}}</option>                                    
+                                    <option value="NOT_USED" label="{{RULE_NOT_USED}}">{{RULE_NOT_USED}}</option>
+                                </select><br>
+                                <span>&emsp;&emsp;&emsp;∟</span>
+                                <select id="download_rule_2" size="1">
+                                    <option value="YYMM" label="{{RULE_YYMM}}">{{RULE_YYMM}}</option>
+                                    <option value="YY" label="{{RULE_YY}}">{{RULE_YY}}</option>
+                                    <option value="MM" label="{{RULE_MM}}">{{RULE_MM}}</option>
+                                    <option value="DD" label="{{RULE_DD}}">{{RULE_DD}}</option>
+                                    <option value="CONTEXT" label="{{RULE_CONTEXT}}">{{RULE_CONTEXT}}</option>
+                                    <option value="SCENE" label="{{RULE_SCENE}}">{{RULE_SCENE}}</option>
+                                    <option value="AUTHOR" label="{{RULE_AUTHOR}}">{{RULE_AUTHOR}}</option>                                    
+                                    <option value="NOT_USED" label="{{RULE_NOT_USED}}">{{RULE_NOT_USED}}</option>                        
+                                </select><br>
+                                <span>&emsp;&emsp;&emsp;&emsp;&emsp;∟</span>
+                                <select id="download_rule_3" size="1">
+                                    <option value="YYMM" label="{{RULE_YYMM}}">{{RULE_YYMM}}</option>
+                                    <option value="YY" label="{{RULE_YY}}">{{RULE_YY}}</option>
+                                    <option value="MM" label="{{RULE_MM}}">{{RULE_MM}}</option>
+                                    <option value="DD" label="{{RULE_DD}}">{{RULE_DD}}</option>
+                                    <option value="CONTEXT" label="{{RULE_CONTEXT}}">{{RULE_CONTEXT}}</option>
+                                    <option value="SCENE" label="{{RULE_SCENE}}">{{RULE_SCENE}}</option>
+                                    <option value="AUTHOR" label="{{RULE_AUTHOR}}">{{RULE_AUTHOR}}</option>                                    
+                                    <option value="NOT_USED" label="{{RULE_NOT_USED}}">{{RULE_NOT_USED}}</option>                        
+                                </select><br>
+                                <span>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;∟</span>
+                                <select id="download_rule_4" size="1">
+                                    <option value="YYMM" label="{{RULE_YYMM}}">{{RULE_YYMM}}</option>
+                                    <option value="YY" label="{{RULE_YY}}">{{RULE_YY}}</option>
+                                    <option value="MM" label="{{RULE_MM}}">{{RULE_MM}}</option>
+                                    <option value="DD" label="{{RULE_DD}}">{{RULE_DD}}</option>
+                                    <option value="CONTEXT" label="{{RULE_CONTEXT}}">{{RULE_CONTEXT}}</option>
+                                    <option value="SCENE" label="{{RULE_SCENE}}">{{RULE_SCENE}}</option>
+                                    <option value="AUTHOR" label="{{RULE_AUTHOR}}">{{RULE_AUTHOR}}</option>                                    
+                                    <option value="NOT_USED" label="{{RULE_NOT_USED}}">{{RULE_NOT_USED}}</option>                        
+                                </select><br>
+                                <span>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;∟</span>
+                                <select id="download_rule_5" size="1">
+                                    <option value="YYMM" label="{{RULE_YYMM}}">{{RULE_YYMM}}</option>
+                                    <option value="YY" label="{{RULE_YY}}">{{RULE_YY}}</option>
+                                    <option value="MM" label="{{RULE_MM}}">{{RULE_MM}}</option>
+                                    <option value="DD" label="{{RULE_DD}}">{{RULE_DD}}</option>
+                                    <option value="CONTEXT" label="{{RULE_CONTEXT}}">{{RULE_CONTEXT}}</option>
+                                    <option value="SCENE" label="{{RULE_SCENE}}">{{RULE_SCENE}}</option>
+                                    <option value="AUTHOR" label="{{RULE_AUTHOR}}">{{RULE_AUTHOR}}</option>                                    
+                                    <option value="NOT_USED" label="{{RULE_NOT_USED}}">{{RULE_NOT_USED}}</option>                        
+                                </select>
+                            </div>
+                        </div>
+                        <footer class="card-footer">
+                            <button id="download_start" class="card-footer-item button is-success">{{DOWNLOAD_START_LABEL}}</button>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div id="save_succeeded_dialog" class="modal px-5">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <article class="message has-background-light">
+                    <div class="message-body">
+                        <div class="has-text-centered">
+                            <figure class="image is-96x96 is-inline-block">
+                                <img src="{{OK_ICON192}}" alt="">
+                            </figure>
+                            <p class="p-3">{{SAVE_SUCCEEDED_MESSAGE}}</p>
+                        </div>
+                        <button id="save_succeeded_ok" class="button is-success is-rounded is-fullwidth">{{OK_LABEL}}</button>
+                    </div>
+                </article>
             </div>
         </div>
-        <!-- 中身のコンテンツ部分. -->
-        <div class="body">
-            <a class="panel_help_link header" href="{{LINK_HELP_URL}}" target="_blank">{{LINK_HELP_LABEL}}</a>
-            <table class="section">
-                <caption class="section">{{USER_SECTION_LABEL}}</caption>
-                <tr class="section">
-                    <td class="label">{{SCENE_TAG_LABEL}}</td>
-                    <td class="value">
-                        <input id="scene_tag" class="text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
-                    </td>
-                </tr>
-                <tr class="section">
-                    <td class="label">{{SCENE_COLOR_LABEL}}</td>
-                    <td class="value">
-                        <input id="scene_color" class="text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
-                    </td>
-                </tr>
-                <tr class="section">
-                    <td class="label">{{CONTEXT_TAG_LABEL}}</td>
-                    <td class="value">
-                        <input id="context_tag" class="text" required minlength="1" maxlength="{{MAX_TAG_LENGTH}}">
-                    </td>
-                </tr>
-            </table>
-            <table class="section">
-                <caption class="section">{{MEDIA_SECTION_LABEL}}</caption>
-                <tr class="section">
-                    <td class="label">{{DOWNLOAD_RULE_LABEL}}</td>
-                    <td class="value">
-                        <select id="download_rule" class="download_rule">
-                        <option value="1">{{DOWNLOAD_RULE_1}}</option>
-                        <option value="2">{{DOWNLOAD_RULE_2}}</option>
-                    </select>
-                    </td>
-                </tr>
-                <tr class="section">
-                    <td class="label">{{DOWNLOAD_ONLY_LABEL}}</td>
-                    <td class="value">
-                        <input id="download_only" class="checkbox" type="checkbox">
-                    </td>
-                </tr>
-            </table>
-            <div class="buttons">
-                <input id="setting" class="button" type="button" value="{{SETTING_LABEL}}">
-                <input id="download" class="button" type="button" value="{{DOWNLOAD_LABEL}}">
+        <div id="save_failed_dialog" class="modal px-5">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <article class="message has-background-warning">
+                    <div class="message-body">
+                        <div class="has-text-centered">
+                            <figure class="image is-96x96 is-inline-block">
+                                <img src="{{NG_ICON192}}" alt="">
+                            </figure>
+                            <p class="p-3">{{SAVE_FAILED_MESSAGE}}</p>
+                        </div>
+                        <button id="save_failed_ok" class="button is-success is-rounded is-fullwidth">{{OK_LABEL}}</button>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <div id="downloading_dialog" class="modal px-5">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <article class="message is-info">
+                    <div class="message-body">
+                        <div class="has-text-centered">
+                            <figure class="image is-96x96 is-inline-block">
+                                <img src="{{LINK_APP_ICON192}}" alt="">
+                            </figure>
+                            <p class="p-3">{{DOWNLOADING_LABEL}}</p>
+                            <p id="download_count" class="is-size-3"></p>
+                            <p id="download_file" class="is-size-6"></p>
+                            <button id="download_stop" class="button is-warning is-rounded is-fullwidth">{{DOWNLOAD_STOP_LABEL}}</button>
+                        </div>
+                    </div>
+                </article>
             </div>
         </div>
     </div>
-    <!-- 認証ビュー：ユーザがサインインをするビュー. -->
-    <div id="auth_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{ICON_192}}" alt="tamarin">
-            <div class="panel_title">{{NAME}}</div>
-            <div class="panel_subtitle">{{VERSION}}</div>
-            <div id="signin_error" class="panel_error_message">{{SIGNIN_ERROR}}</div>
-            <input id="username" class="panel_input" type="text" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
-            <input id="password" class="panel_input" type="password" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
-            <input id="signin" class="panel_button" type="button" value="{{SIGNIN_LABEL}}">
-            <a class="panel_help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
-            <hr>
-            <a class="signup_link" href="{{SIGNUP_URL}}" target="_blank">{{SIGNUP_LABEL}}</a>
+    <div id="signin_view" class="hero is-primary is-fullheight" style="display:none">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half-tablet is-half-desktop is-half-widescreen is-5-fullhd">
+                        <button id="signin-cancel" class="delete is-pulled-right m-1"></button>
+                        <div class="box">
+                            <div class="has-text-centered">
+                                <figure class="image is-96x96 is-inline-block">
+                                    <img src="{{LINK_APP_ICON192}}" alt="">
+                                </figure>
+                                <p><strong>{{LINK_APP_NAME}}</strong></p>
+                                <p><small>{{VERSION}}</small></p>
+                            </div>
+                            <div class="field">
+                                <input id="username" class="input" type="text" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none" autofocus>
+                            </div>
+                            <div class="field">
+                                <input id="password" class="input" type="password" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
+                            </div>
+                            <p id="signin_error" class="notification is-warning my-2" style="display:none">{{SIGNIN_ERROR_MESSAGE}}</p>
+                            <button id="signin" class="button is-success is-rounded is-fullwidth">{{SIGNIN_LABEL}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- ダウンロードビュー：ファイルをダウンロードしている時のビュー. -->
-    <div id="download_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{LOADING_ICON}}" alt="download">
-            <div class="panel_title">{{LOADING_LABEL}}</div>
-            <input id="download_count" class="download_count" type="text" readonly>
-            <input id="download_file" class="download_file" type="text" readonly>
-            <input id="download_cancel" class="button" type="button" value="{{DOWNLOAD_CANCEL_LABEL}}">
+    <div id="install_view" class="hero is-primary is-fullheight" style="display:none">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half-tablet is-half-desktop is-half-widescreen is-5-fullhd">
+                        <div class="box">
+                            <div class="has-text-centered">
+                                <figure class="image is-96x96 is-inline-block">
+                                    <img src="{{LINK_APP_ICON192}}" alt="">
+                                </figure>
+                                <p><strong>{{LINK_APP_NAME}}</strong></p>
+                                <p><small>{{VERSION}}</small></p>
+                                <p class="is-size-4 my-3">{{INSTALL_MESSAGE}}</p>
+                                <a class="button is-warning is-rouded is-fullwidth" href="{{APP_MODE_URL_PARAM}}">{{OPEN_APP_LABEL}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- ローディングビュー：「おまちください」を表示. -->
-    <div id="loading_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{LOADING_ICON}}" alt="loading">
-            <div class="panel_message">{{LOADING_MESSAGE}}</div>
-        </div>
-    </div>
-    <!-- インストールビュー：「インストールの準備ができました」を表示. -->
-    <div id="install_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{ICON_192}}" alt="install">
-            <div class="panel_title">{{NAME}}</div>
-            <div class="panel_subtitle">{{VERSION}}</div>
-            <div class="panel_message">{{INSTALL_MESSAGE}}</div>
-            <a class="panel_help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
-            <a class="app_open_link" href="{{MODE_APP}}">{{APP_OPEN_LABEL}}</a>
-        </div>
-    </div>
-    <!-- エラービュー：エラーを表示. -->
-    <div id="error_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{ERROR_ICON}}" alt="error">
-            <div class="panel_message">{{ERROR_MESSAGE}}</div>
+    <div id="error_view" class="hero is-primary is-fullheight" style="display:none">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half-tablet is-half-desktop is-half-widescreen is-5-fullhd">
+                        <div class="box">
+                            <div class="has-text-centered">
+                                <figure class="image is-96x96 is-inline-block">
+                                    <img src="{{ERROR_ICON192}}" alt="">
+                                </figure>
+                                <p><strong>{{LINK_APP_NAME}}</strong></p>
+                                <p><small>{{VERSION}}</small></p>
+                                <p class="notification is-danger">{{FATA_ERROR_MESSAGE}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

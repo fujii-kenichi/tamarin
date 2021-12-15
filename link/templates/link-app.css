@@ -1,254 +1,67 @@
-/* 
- * タマリンクのCSS.
- */
-
-
-/* 画面間で共通した設定. */
-
-body.app {
-    font-family: "Helvetica Neue", "Helvetica", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Arial", "Yu Gothic", "Meiryo", sans-serif;
-    color: black;
-    background-color: pink;
-    margin: 0;
-    border: 0;
-    padding: 0;
-    /* タッチして画面がズームしたり選択したりできないようにする. */
-    text-size-adjust: none !important;
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-    touch-action: none !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -khtml-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    -webkit-touch-callout: none !important;
-    -webkit-tap-highlight-color: transparent !important;
-}
-
-div.panel_view {
-    background-color: pink;
-    display: none;
-    position: relative;
-    height: 100vh;
-}
-
-div.panel_content {
-    position: absolute;
+.tama-card-content {
+    min-width: 18em;
+    height: 25ex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    background-color: lavenderblush;
-    border-radius: 1em;
-    padding: 1em;
-    min-width: 15em;
-    top: 50%;
-    right: 50%;
-    transform: translate(50%, -50%);
+    padding-left: 0;
+    padding-right: 0;
 }
 
-img.panel_icon {
-    height: 4em;
-    margin: 0.5em;
-}
-
-div.panel_title {
-    font-size: x-large;
-}
-
-div.panel_subtitle {
-    font-size: x-small;
-    margin-bottom: 1em;
-    color: dimgray;
-}
-
-div.panel_message {
-    margin-top: 1em;
-    font-size: medium;
-    font-weight: bolder;
-}
-
-div.panel_error_message {
-    display: none;
-    font-size: medium;
-    font-weight: bolder;
-    color: coral;
-    margin: 0.25em;
-}
-
-input.panel_input {
-    display: block;
-    font-size: medium;
+.tama-shutter {
     box-sizing: border-box;
-    width: 100%;
-    border: 0;
-    margin-bottom: 0.5em;
-}
-
-input.panel_separator {
-    margin-bottom: 1em;
-}
-
-input.panel_button {
-    background-color: aliceblue;
-    font-size: medium;
-    width: 100%;
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
-    border-radius: 0.5em;
+    font-size: small;
+    margin: 0.1em;
+    padding: 0.1em;
+    width: 5em;
+    height: 5em;
+    border-radius: 5em;
     border-style: solid;
     border-width: 0.1em;
-    border-color: lightgray;
+    border-color: dimgray;
+    background-color: black;
+    text-align: center;
 }
 
-a.panel_help_link {
-    display: block;
+.tama-shutter-colors {
+    box-sizing: border-box;
     font-size: small;
-    color: dimgray;
-    text-decoration: none;
-    margin-top: 0.5em;
+    margin: 0.1em;
+    padding: 0.1em;
+    width: 5em;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: dimgray;
+    text-align: center;
 }
 
-a.app_open_link {
-    display: block;
-    font-size: small;
-    color: dimgray;
-    text-decoration: none;
-}
-
-
-/* メインビュー用の設定. */
-
-div.main_view {
-    display: none;
-}
-
-div.header {
+.tama-status {
     position: relative;
-    background-color: pink;
-    padding: 1em;
+    padding: 0;
 }
 
-div.title {
-    display: inline;
+.tama-status-label {
+    background-color: white;
     position: absolute;
-    vertical-align: middle;
-    left: 1em;
-}
-
-img.main_logo {
-    display: inline;
-    vertical-align: middle;
-    height: 2em;
-}
-
-div.main_name {
-    display: inline;
-    vertical-align: middle;
-    font-size: large;
-}
-
-div.main_version {
-    display: inline;
-    vertical-align: middle;
-    font-size: small;
-    color: dimgray;
-}
-
-div.menu {
-    position: absolute;
-    right: 1em;
-    display: inline;
-    vertical-align: middle;
-}
-
-input.user {
-    color: dimgray;
-    background-color: lavenderblush;
-    font-size: medium;
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
-    border-radius: 0.5em;
-    border-style: solid;
-    border-width: 0.1em;
-    border-color: lightgray;
-}
-
-a.header {
-    position: absolute;
-    right: 1em;
-    margin: 0.5em;
-}
-
-div.body {
-    background-color: lavenderblush;
-    height: 100vh;
-    min-width: 800px;
-    min-height: 500px;
-}
-
-table.section {
-    margin: 2em;
-    width: calc(100% - 3em);
-    line-height: 2;
-    border-top: 0.2em solid pink;
-}
-
-caption.section {
-    text-align: left;
-}
-
-td.label {
-    width: 16em;
-    min-width: 8em;
-    font-size: small;
-    border-bottom: 0.1em solid lightgray;
-}
-
-td.value {
-    min-width: 32em;
-    border-bottom: 0.1em solid lightgray;
-}
-
-input.text {
-    width: 95%;
-}
-
-div.buttons {
-    margin: 2em;
-}
-
-
-/* ダウンロードビュー用の設定. */
-
-input.download_count {
-    display: block;
-    width: 20em;
-    color: orange;
+    font-size: xx-large;
     text-align: center;
-    margin: 1em;
+    line-height: 10ex;
+    width: 10ex;
+    border-radius: 10ex;
+    border: 0;
+    top: calc(50% - 5ex);
+    left: calc(50% - 5ex);
 }
 
-input.download_file {
-    display: block;
-    width: 20em;
-    color: dimgray;
-    text-align: center;
-    margin: 1em;
+.tama-download-rule {
+    position: relative;
+    left: -3em;
 }
 
+.ct-chart {
+    height: 100%;
+}
 
-/* 認証ビュー用の設定 */
-
-a.signup_link {
-    display: block;
-    color: black;
-    background-color: honeydew;
-    font-size: medium;
-    width: 100%;
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
-    border-radius: 0.5em;
-    border-style: solid;
-    border-width: 0.1em;
-    border-color: lightgray;
-    text-decoration: none;
+.ct-series-e .ct-slice-donut {
+    stroke: lightpink !important;
 }

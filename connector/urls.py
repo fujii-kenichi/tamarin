@@ -20,6 +20,12 @@ router.register("medias", views.MediaViewSet)
 router.register("histories", views.HistoryViewSet)
 
 urlpatterns = [
+    # Token APIを実行.
+    path("auth/", include("djoser.urls.jwt")),
+
+    # User/Media/History APIを実行.
+    path("api/", include(router.urls)),
+
     # 通常のトップページ画面.
     path("", views.index),
 
@@ -32,9 +38,15 @@ urlpatterns = [
     # サインアップ完了画面.
     path("signup-done/", views.signup_done, name="signup_done"),
 
-    # Token APIを実行.
-    path("auth/", include("djoser.urls.jwt")),
+    # パスワード変更画面.
+    path("password-change/", views.password_change),
 
-    # User/Media/History APIを実行.
-    path("api/", include(router.urls)),
+    # パスワード変更完了画面.
+    path("password-change-done/", views.password_change_done, name="password_change_done"),
+
+    # フィードバック画面.
+    path("feedback/", views.feedback),
+
+    # フィードバック完了画面.
+    path("feedback-done/", views.feedback_done, name="feedback_done"),
 ]

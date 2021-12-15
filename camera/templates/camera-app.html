@@ -1,132 +1,148 @@
 <!DOCTYPE html>
 <html lang="{{LANG}}">
-<!-- タマリンカメラの画面. -->
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
-    <meta name="description" content="{{DESCRIPTION}}">
-    <meta name="author" content="{{ORG}}">
-    <meta name="theme-color" content="{{THEME_COLOR}}">
+    <meta name="description" content="{{CAMERA_APP_DESCRIPTION}}">
+    <meta name="theme-color" content="{{APP_THEME_COLOR}}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{NAME}}">
+    <meta name="apple-mobile-web-app-title" content="{{CAMEWRA_APP_NAME}}">
     <meta name="google" content="notranslate">
-    <link rel="shortcut icon" href="{{FAVICON}}">
-    <link rel="apple-touch-icon" href="{{ICON_180}}">
-    <link rel="apple-touch-startup-image" href="{{ICON_512}}">
+    <link rel="shortcut icon" href="{{CAMERA_APP_FAVICON}}">
+    <link rel="apple-touch-icon" href="{{CAMERA_APP_ICON180}}">
+    <link rel="apple-touch-startup-image" href="{{CAMERA_APP_ICON512}}">
     <link rel="manifest" href="camera-app.webmanifest">
+    <link rel="stylesheet" href="{{BULMA_CSS}}">
+    <link rel="stylesheet" href="{{COMMON_CSS}}">
     <link rel="stylesheet" href="camera-app.css">
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
     <script src="camera-app.js" defer></script>
-    <title>{{NAME}}</title>
+    <title>{{CAMERA_APP_NAME}}</title>
 </head>
 
-<body class="app" onload="main()">
-    <!-- 以下のいずれかのビューのみをユーザに見せる. -->
-
-    <!-- カメラビュー：ユーザがカメラ操作をするビュー. -->
-    <div id="camera_view" class="camera_view">
-        <div class="camera_menu">
-            <input id="camera_author_name" class="author_name" type="button">
-            <select id="camera_context_tag" class="context_tag" size="1"></select>
-            <input id="camera_photo_count" class="photo_count" type="button">
-            <input id="camera_setting" class="setting_button" type="button" value="&#128295;">
+<body id="app" class="app" onload="main()">
+    <div id="main_view" class="tama-main" style="display:none">
+        <div class="tama-menu">
+            <input id="current_author_name" class="tama-author-name" type="button">
+            <select id="context_tags" class="tama-context-tags" size="1"></select>
+            <input id="photo_count" class="tama-photo-count" type="button">
+            <input id="setting" class="tama-setting" type="button" value="&#128295;">
         </div>
-        <div class="camera_main">
-            <div id="camera_preview"></div>
-            <div id="camera_shutter" class="camera_shutter">
-                <div class="camera_shutter_button"></div>
+        <video id="preview" class="tama-preview" preload="metadata" playsinline muted></video>
+        <div id="shutters" class="tama-shutters"></div>
+        <audio id="shutter_audio" src="{{CAMERA_APP_SHUTTER_WAV}}" style="display:none"></audio>
+        <canvas id="canvas" style="display:none"></canvas>
+        <div id="setting_dialog" class="modal px-5">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head has-background-primary">
+                    <p class="modal-card-title">{{CAMERA_APP_NAME}}</p>
+                    <button id="version" class="button is-small has-background-light">{{VERSION}}</button>
+                </header>
+                <section class="modal-card-body has-background-light">
+                    <div class="field">
+                        <div class="control">
+                            <label class="checkbox">
+                                <input id="shutter_sound" type="checkbox">{{SHUTTER_SOUND_LABEL}}                            
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label classs="checkbox">
+                                <input id="auto_reload" type="checkbox">{{AUTO_RELOAD_LABEL}}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label classs="checkbox">
+                                <input id="encryption" type="checkbox">{{ENCRYPTION_LABEL}}
+                            </label>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button id="save_setting" class="button is-success is-fullwidth is-rounded">{{SAVE_LABEL}}</button>
+                </footer>
             </div>
         </div>
-        <audio id="camera_shutter_sound" class="camera_shutter_sound" src="{{CAMERA_SHUTTER_SOUND}}" preload="auto"></audio>
-        <canvas id="camera_canvas" class="camera_canvas"></canvas>
     </div>
-    <!-- 認証ビュー：ユーザがサインインをするビュー. -->
-    <div id="auth_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{ICON_192}}" alt="tamarin">
-            <div class="panel_title">{{NAME}}</div>
-            <div class="panel_subtitle">{{VERSION}}</div>
-            <div id="name_error" class="panel_error_message">{{NAME_ERROR}}</div>
-            <div id="signin_error" class="panel_error_message">{{SIGNIN_ERROR}}</div>
-            <input id="author_name" class="panel_input panel_separator" type="text" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{AUTHOR_NAME_LABEL}}">
-            <input id="username" class="panel_input" type="text" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
-            <input id="password" class="panel_input" type="password" required minlength="1" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
-            <input id="signin" class="panel_button" type="button" value="{{SIGNIN_LABEL}}">
-            <a class="panel_help_link" href="{{CONNECTOR_HELP_URL}}" target="_blank">{{CONNECTOR_HELP_LABEL}}</a>
+    <div id="signin_view" class="hero is-primary is-fullheight" style="display:none">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half-tablet is-half-desktop is-half-widescreen is-5-fullhd">
+                        <button id="signin-cancel" class="delete is-pulled-right m-1"></button>
+                        <div class="box">
+                            <div class="has-text-centered">
+                                <figure class="image is-96x96 is-inline-block">
+                                    <img src="{{CAMERA_APP_ICON192}}" alt="">
+                                </figure>
+                                <p><strong>{{CAMERA_APP_NAME}}</strong></p>
+                                <p><small>{{VERSION}}</small></p>
+                            </div>
+                            <div class="field">
+                                <input id="author_name" class="input" type="text" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{AUTHOR_NAME_LABEL}}" autocorrect="off" autocapitalize="none" autofocus>
+                            </div>
+                            <div class="field">
+                                <input id="username" class="input" type="text" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
+                            </div>
+                            <div class="field">
+                                <input id="password" class="input" type="password" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
+                            </div>
+                            <p id="signin_error" class="notification is-warning my-2" style="display:none">{{SIGNIN_ERROR_MESSAGE}}</p>
+                            <button id="signin" class="button is-success is-rounded is-fullwidth">{{SIGNIN_LABEL}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- 設定ビュー：ユーザが設定値の確認と変更をするビュー. -->
-    <div id="setting_view" class="panel_view">
-        <div class="panel_content">
-            <div class="panel_title">{{SETTING_TITLE_LABEL}}</div>
-            <a class="panel_help_link" href="{{CAMERA_HELP_URL}}" target="_blank">{{CAMERA_HELP_LABEL}}</a>
-            <table class="setting">
-                <tr>
-                    <td class="setting_label">{{SHUTTER_SOUND_LABEL}}</td>
-                    <td class="setting_value">
-                        <input id="setting_shutter_sound" class="checkbox" type="checkbox">
-                    </td>
-                </tr>
-                <tr>
-                    <td class="setting_label">{{AUTO_RELOAD_LABEL}}</td>
-                    <td class="setting_value">
-                        <input id="setting_auto_reload" class="checkbox" type="checkbox">
-                    </td>
-                </tr>
-                <tr>
-                    <td class="setting_label">{{ENCRYPTION_LABEL}}</td>
-                    <td class="setting_value">
-                        <input id="setting_encryption" class="checkbox" type="checkbox">
-                    </td>
-                </tr>
-                <tr>
-                    <td class="setting_label">{{VERSION_LABEL}}</td>
-                    <td class="setting_value">
-                        <input id="setting_version" class="button_item" type="button" value="{{VERSION}}">
-                        <input id="setting_debug" class="button_item" type="button" value="DBG">
-                    </td>
-                </tr>
-            </table>
-            <input id="setting" class="panel_button" type="button" value="{{SETTING_LABEL}}">
+    <div id="install_view" class="hero is-primary is-fullheight" style="display:none">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half-tablet is-half-desktop is-half-widescreen is-5-fullhd">
+                        <div class="box">
+                            <div class="has-text-centered">
+                                <figure class="image is-96x96 is-inline-block">
+                                    <img src="{{CAMERA_APP_ICON192}}" alt="">
+                                </figure>
+                                <p><strong>{{CAMERA_APP_NAME}}</strong></p>
+                                <p><small>{{VERSION}}</small></p>
+                                <p class="is-size-4 my-3">{{INSTALL_MESSAGE}}</p>
+                                <a class="button is-warning is-rouded is-fullwidth" href="{{APP_MODE_URL_PARAM}}">{{OPEN_APP_LABEL}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- ローディングビュー：「おまちください」を表示. -->
-    <div id="loading_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{LOADING_ICON}}" alt="loading">
-            <div class="panel_message">{{LOADING_MESSAGE}}</div>
+    <div id="error_view" class="hero is-primary is-fullheight" style="display:none">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half-tablet is-half-desktop is-half-widescreen is-5-fullhd">
+                        <div class="box">
+                            <div class="has-text-centered">
+                                <figure class="image is-96x96 is-inline-block">
+                                    <img src="{{NG_ICON192}}" alt="">
+                                </figure>
+                                <p><strong>{{CAMERA_APP_NAME}}</strong></p>
+                                <p><small>{{VERSION}}</small></p>
+                                <p class="notification is-danger">{{FATA_ERROR_MESSAGE}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    <!-- インストールビュー：「インストールの準備ができました」を表示. -->
-    <div id="install_view" class="panel_view">
-        <div class="panel_content">
-            <img class="panel_icon" src="{{ICON_192}}" alt="install">
-            <div class="panel_title">{{NAME}}</div>
-            <div class="panel_subtitle">{{VERSION}}</div>
-            <div class="panel_message">{{INSTALL_MESSAGE}}</div>
-            <a class="panel_help_link" href="{{INSTALL_HELP_URL}}" target="_blank">{{INSTALL_HELP_LABEL}}</a>
-            <a class="app_open_link" href="{{MODE_APP}}">{{APP_OPEN_LABEL}}</a>
-        </div>
-    </div>
-    <!-- エラービュー：エラーを表示. -->
-    <div id="error_view" class="panel_view">
-        <div class="panel_content">
-            <img id="error_icon" class="panel_icon" src="{{ERROR_ICON}}" alt="error">
-            <div class="panel_message">{{ERROR_MESSAGE}}</div>
-        </div>
-    </div>
-    <!-- デバッグビュー：デバッグ用のビュー. -->
-    <div id="debug_view" class="panel_view">
-        <input id="debug_close" class="button" type="button" value="X">
-        <input id="debug_reload" class="button" type="button" value="LD">
-        <input id="debug_clear" class="button" type="button" value="CLR">
-        <input id="debug_reset" class="button" type="button" value="RST">
-        <input id="debug_camera" class="button" type="button" value="V">
-        <textarea id="debug_log" class="debug_log" readonly></textarea>
     </div>
 </body>
 

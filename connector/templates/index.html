@@ -1,53 +1,143 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="{{LANG}}">
 {% load static %}
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="{% static 'image/connector-app-favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
-    <link rel="shortcut icon" href="{% static 'image/connector-favicon.ico' %}">
-    <title>タマリンへようこそ！</title>
+    <title>タマリンへようこそ!</title>
 </head>
 
-<body>
-    <div class="header">
-        <img class="title" src="{% static 'image/connector-icon-192x192.png' %}" alt="tamarin">
-        <h1>タマリンへようこそ！</h1>
-    </div>
-    <div class="main">
-        <h2>タマリンとは？</h2>
-        <p>
-            タマリンとは、保育ドキュメンテーションに適した写真を簡単・安全に撮影するためのサービスです。
-        </p>
-        <h2>タマリンを使うには?</h2>
-        <p>
-            サインアップしていただくことでどなたでもタマリンをお試しいただけます。タマリンは写真を撮影するアプリである「タマリンカメラ」と、撮影した写真をダウンロードする「タマリンク」の２つのアプリで構成されています。 サインアップはタマリンクから行いますので、まずはタマリンクをインストールしてください。無事にサインアップを終えましたら、タマリンクとタマリンカメラをご利用いただくことができます。
-        </p>
-        <h2>どうやってインストールするの？</h2>
-        <p>
-            タマリンは通常のストアアプリとは異なり、以下のリンクから直接インストールすることができます。ご使用になる環境で具体的な操作方法が異なるため、詳しくは[<a href="{% static 'install-help.html' %}">インストールヘルプ</a>]を参照してください。
-        </p>
-        <div class="app-guide-base">
-            <div class="app-guide">
-                <img class="app-guide" src="{% static 'image/link-icon-192x192.png' %}" alt="tamarink">
-                <a class="app-guide" href="../../link/link-app.html">タマリンク</a>
-            </div>
-            &nbsp;
-            <div class="app-guide">
-                <img class="app-guide" src="{% static 'image/camera-icon-192x192.png' %}" alt="tamarincamera">
-                <a class="app-guide" href="../../camera/camera-app.html">タマリンカメラ</a>
+<body class="has-background-light">
+    <section class="hero is-primary is-medium is-bold">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <h1 class="title py-4">
+                    タマリンへようこそ
+                </h1>
+                <h2 class="subtitle">
+                    タマリンは、保育ドキュメンテーションに適した写真を簡単・安全に撮影するためのサービスです。
+                </h2>
             </div>
         </div>
-        <h2>お困りの時は?</h2>
-        <p>
-            以下のヘルプを参照してください。
-            <a class="help" href="{% static 'connector-help.html' %}">● サインインできないときは</a>
-            <a class="help" href="{% static 'link-help.html' %}">● タマリンクの使い方を知りたいときは</a>
-            <a class="help" href="{% static 'camera-help.html' %}">● タマリンカメラの使い方を知りたいときは</a>
-            <a class="help" href="{% static 'release-note.html' %}">● 制約・制限事項をしりたいときは</a>
+    </section>
+    <div class="box cta">
+        <p class="has-text-centered">
+            <span class="tag is-primary">{{VERSION}}</span>&nbsp;内部評価版です.
         </p>
     </div>
+    <section class="container">
+        <div class="columns features">
+            <div class="column is-4">
+                <div class="card is-shady">
+                    <div class="card-image has-text-centered">
+                        <figure class="image is-64x64 is-inline-block m-3">
+                            <img class="" src="{% static 'image/connector-app-icon192x192.png' %}" alt="">
+                        </figure>
+                    </div>
+                    <div class="card-content">
+                        <div class="content">
+                            <h4 class="has-text-centered">タマリンサービス</h4>
+                            <p>タマリンカメラとタマリンクをつなぐサービスです。タマリンサービスにサインアップすることでタマリンカメラとタマリンクをご使用いただけます。</p>
+                            <a class="button is-success is-rounded is-fullwidth" href="signup/">サインアップ</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-4">
+                <div class="card is-shady">
+                    <div class="card-image has-text-centered">
+                        <figure class="image is-64x64 is-inline-block m-3">
+                            <img class="" src="{% static 'image/camera-app-icon192x192.png' %}" alt="">
+                        </figure>
+                    </div>
+                    <div class="card-content">
+                        <div class="content">
+                            <h4 class="has-text-centered">タマリンカメラ</h4>
+                            <p>写真を簡単で安全に撮るためのアプリです。簡単な操作でタグをつけることができます。撮影した写真はタマリンクでPCにダウンロードすることができます。</p>
+                        </div>
+                        <a class="button is-success is-rounded is-fullwidth" href="../../camera/camera-app.html">インストール</a>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-4">
+                <div class="card is-shady">
+                    <div class="card-image has-text-centered">
+                        <figure class="image is-64x64 is-inline-block m-3">
+                            <img class="" src="{% static 'image/link-app-icon192x192.png' %}" alt="">
+                        </figure>
+                    </div>
+                    <div class="card-content">
+                        <div class="content">
+                            <h4 class="has-text-centered">タマリンク</h4>
+                            <p>タマリンカメラで撮影した写真をダウンロードするアプリです。撮影された写真をタグで確認することや、タグと日時の条件をくみあわせてダウンロードすることができます。</p>
+                            <a class="button is-success is-rounded is-fullwidth" href="../../link/link-app.html">インストール</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="intro column is-8 is-offset-2">
+            <h2 class="title has-text-centered">タマリンをぜひお試しください</h2><br>
+            <p class="subtitle has-text-centered">インターネット回線に接続したスマフォとPCがあればすぐにお試しいただけます。</p>
+        </div>
+        <div class="sandbox">
+            <div class="tile is-ancestor">
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">iPhoneでタマリンカメラを使う</p>
+                        <p class="content">TODO: つかいかたをかく</p>
+                    </article>
+                </div>
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">Androidでタマリンカメラを使う</p>
+                        <p class="content">TODO: つかいかたをかく</p>
+                    </article>
+                </div>
+            </div>
+            <div class="tile is-ancestor">
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">iPadでタマリンクを使う</p>
+                        <p class="content">TODO: つかいかたをかく</p>
+                    </article>
+                </div>
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">PCでタマリンクを使う</p>
+                        <p class="content">TODO: つかいかたをかく</p>
+                    </article>
+                </div>
+            </div>
+            <div class="tile is-ancestor">
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">パスワードを変えるには</p>
+                        <p class="content">こちらでパスワードの変更ができます。</p>
+                        <a class="button is-success is-rounded is-fullwidth" href="password-change/">パスワードを変更する</a>
+                    </article>
+                </div>
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">アカウントを削除するには</p>
+                        <p class="content">こちらから管理者までご連絡ください。</p>
+                        <a class="button is-success is-rounded is-fullwidth" href="feedback/">アカウントを削除する</a>
+                    </article>
+                </div>
+                <div class="tile is-parent is-shady">
+                    <article class="tile is-child notification is-white">
+                        <p class="subtitle">問題を報告するには</p>
+                        <p class="content">もし問題に遭遇したらこちらからご報告いただけますと幸いです。</p>
+                        <a class="button is-success is-rounded is-fullwidth" href="feedback/">問題を報告する</a>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

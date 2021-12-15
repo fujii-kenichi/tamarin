@@ -1,25 +1,25 @@
 /** 
- * タマリンク (Service worker).
+ * タマリンク (service worker).
  * by fujii.kenichi@tamariva.co.jp
  */
 "use strict";
 
 /**
- * install イベントの処理を定義する.
+ * installイベントの処理を定義する.
  */
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (event => {
     // なにもしない...
-});
+}));
 
 /**
- * activate イベントの処理を定義する.
+ * activateイベントの処理を定義する.
  */
 self.addEventListener("activate", (event => {
     // なにもしない...
 }));
 
 /**
- * fetch イベントの処理を定義する.
+ * fetchイベントの処理を定義する.
  */
 self.addEventListener("fetch", (event => {
     // なにもしない...

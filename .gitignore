@@ -143,5 +143,9 @@ db.sqlite3
 # django static files.
 staticfiles/
 
-# Mac ?
+# Mac
 .DS_Store
+
+# Bulma
+node_modules
+package-lock.json

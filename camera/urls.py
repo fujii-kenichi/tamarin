@@ -7,7 +7,7 @@ from django.urls import path
 
 from . import views
 
-# PWAとして内容を書き換えてブラウザに送りたいコンテンツのパスをここで定義.
+# 内容を書き換えてブラウザに送りたいコンテンツのパスをここで定義.
 urlpatterns = [
     path("camera-serviceworker.js", views.camera_serviceworker_js),
     path("camera-app.webmanifest", views.camera_app_webmanifest),
