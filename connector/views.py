@@ -3,8 +3,6 @@
 タマリンコネクタの画面とAPI処理を制御.
 @author: fujii.kenichi@tamariva.co.jp
 """
-import sys
-
 from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -14,11 +12,9 @@ from django.shortcuts import redirect, render
 from rest_framework import viewsets
 from rest_framework.parsers import JSONParser, MultiPartParser
 
-from tamarin.app_settings import APP_MESSAGES, APP_SETTINGS
+from .app_settings import APP_MESSAGES, APP_SETTINGS
 
 from . import models, serializers
-
-sys.path.append("../")
 
 # コンテンツ書き換えに使用される辞書を定義する.
 CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)

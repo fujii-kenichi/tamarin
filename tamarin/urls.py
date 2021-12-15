@@ -17,8 +17,6 @@ Including another URLconf
 
 @author: fujii.kenichi@tamariva.co.jp
 """
-import sys
-
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -28,9 +26,7 @@ from django.urls.conf import re_path
 from django.views.decorators.cache import never_cache
 from django.views.static import serve
 
-from tamarin.app_settings import APP_SETTINGS
-
-sys.path.append("../")
+from connector.app_settings import APP_SETTINGS
 
 
 @never_cache

@@ -6,15 +6,12 @@
 import random
 import re
 import string
-import sys
 
 from django.conf import settings
 from django.shortcuts import render
 from django.templatetags.static import static
 
-from tamarin.app_settings import APP_MESSAGES, APP_SETTINGS
-
-sys.path.append('../')
+from connector.app_settings import APP_MESSAGES, APP_SETTINGS
 
 # コンテンツ書き換えに使用される辞書を定義する.
 CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)

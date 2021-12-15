@@ -3,7 +3,6 @@
 タマリンコネクタのデータモデル.
 @author: fujii.kenichi@tamariva.co.jp
 """
-import sys
 import uuid
 
 from django.conf import settings
@@ -11,9 +10,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.db import models
 
-from tamarin.app_settings import APP_MESSAGES, APP_SETTINGS
-
-sys.path.append("../")
+from .app_settings import APP_MESSAGES, APP_SETTINGS
 
 # コンテンツ書き換えに使用される辞書を定義する.
 CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)

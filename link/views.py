@@ -3,13 +3,9 @@
 タマリンクの画面を生成.
 @author: fujii.kenichi@tamariva.co.jp
 """
-import sys
-
 from django.shortcuts import render
 
-from tamarin.app_settings import APP_MESSAGES, APP_SETTINGS
-
-sys.path.append("../")
+from connector.app_settings import APP_MESSAGES, APP_SETTINGS
 
 # コンテンツ書き換えに使用される辞書を定義する.
 CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)
