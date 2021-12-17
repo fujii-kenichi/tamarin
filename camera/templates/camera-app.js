@@ -18,12 +18,12 @@ const JPEG_Q = 0.85;
 let current_user = {
     dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
     user_id: null,
-    username: null,
-    encrypted_password: null,
-    author_name: null,
-    context_tag: null,
-    scene_tag: null,
-    scene_color: null,
+    username: "",
+    encrypted_password: "",
+    author_name: "",
+    context_tag: "",
+    scene_tag: "",
+    scene_color: "",
     shutter_sound: true, // シャッターサウンドはデフォルトでオン.
     auto_reload: true, // 自動リロードはデフォルトでオン.
     encryption: true, // 暗号化もデフォルトでオン.

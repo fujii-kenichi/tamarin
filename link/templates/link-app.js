@@ -29,8 +29,8 @@ const TAG_NAME_VALIDATOR = /[\s\,\:\;\&\"\'\`\¥\|\~\%\/\\<\>\?\\\*]/m;
 let current_user = {
     dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
     user_id: null,
-    username: null,
-    encrypted_password: null,
+    username: "",
+    encrypted_password: "",
     delete_after_download: true, // ダウンロード後にファイルを削除するかどうか.
     chart: "context"
 };
