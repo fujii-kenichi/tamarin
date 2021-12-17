@@ -55,11 +55,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "djoser",
     "import_export",
-#   "django_extensions",
-#   "silk",
+    "django_extensions",
+    "silk",
     "connector.apps.ConnectorConfig",
-    "link.apps.LinkConfig",    
-    "camera.apps.CameraConfig",    
+    "link.apps.LinkConfig",
+    "camera.apps.CameraConfig",
 ]
 
 # ミドルウェア関連の設定.
@@ -72,7 +72,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-#   "silk.middleware.SilkyMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "request_logging.middleware.LoggingMiddleware",
 ]
 
