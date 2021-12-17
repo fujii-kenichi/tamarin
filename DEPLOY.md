@@ -14,7 +14,7 @@ python3 -m pip install -r requirements.txt
 python3 manage.py makemigrations connector
 python3 manage.py migrate
 python3 manage.py createsuperuser
-python3 manage.py runserver
+python3 manage.py runserver_plus
 ```
 
 ### 1-2. PostgreSQL を使う場合
@@ -49,7 +49,7 @@ GRANT ALL PRIVILEGES ON DATABASE tamarin_db TO tamarin_db_admin;
 
 ```bash
 export DEBUG=True
-python3 manage.py runserver
+python3 manage.py runserver_plus
 ```
 
 デバッグ機能をオフで実行します。staticファイルやmediaファイルの扱いが変わります。
@@ -72,7 +72,7 @@ gunicorn を使ってデバッグ機能なしで起動します。ほぼ本番�
 ```bash
 export DEBUG=False
 export SECRET_KEY="内緒の文字列"
-export ALLOWED_HOSTS="公開しているエンドポイントのDNS名"
+export ALLOWED_HOSTS="公開しているエンドポイントのDNS名" もしくは "*"
 python3 manage.py collectstatic
 gunicorn --workers 5 tamarin.wsgi
 ```

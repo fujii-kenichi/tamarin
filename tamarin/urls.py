@@ -17,6 +17,8 @@ Including another URLconf
 
 @author: fujii.kenichi@tamariva.co.jp
 """
+import datetime
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -24,15 +26,17 @@ from django.http.response import HttpResponse
 from django.urls import include, path
 from django.urls.conf import re_path
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_safe
 from django.views.static import serve
 
 from connector.app_settings import APP_SETTINGS
 
 
 @never_cache
+@require_safe
 def heartbeat(request):
     """[ハートビート用の処理:キャッシュを抑制した上でシンプルな文字列だけを返す]"""
-    return HttpResponse("VERSION:" + APP_SETTINGS["VERSION"], content_type="text/plain")
+    return HttpResponse("{},{}".format(APP_SETTINGS["VERSION"], datetime.datetime.now().isoformat()), content_type="text/plain")
 
 
 urlpatterns = [
@@ -59,3 +63,4 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

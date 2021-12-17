@@ -18,7 +18,7 @@ CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)
 
 class User(AbstractUser):
     """[Userクラス]
-    タマリンサービスにおけるひとつのユーザーを表現する.
+    タマリンにおけるユーザーを表現する.
     AbstractUserクラスを拡張しているのでfirst_nameといった使わない属性もそのままであることに注意.
     """
     # IDはUUIDとする.
@@ -54,7 +54,7 @@ def generate_data_path(instance, filename):
 
 class Media(models.Model):
     """[Mediaクラス]
-    タマリンサービスにおけるひとつのメディアデータ(写真)を表現する.
+    タマリンにおけるメディアデータ(写真)を表現する.
     """
     # IDはUUIDとする.
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
@@ -93,7 +93,7 @@ class Media(models.Model):
 
 class History(models.Model):
     """[Historyクラス]
-    タマリンサービスにおけるひとつのヒストリーデータ(何らかの行動)を表現する.
+    タマリンにおける何らかの行動履歴を表現する.
     """
     # 発生した日時.
     date_occurred = models.DateTimeField(auto_now_add=True)
@@ -114,7 +114,7 @@ class History(models.Model):
 
 class Feedback(models.Model):
     """[Feedbackクラス]
-    タマリンサービスにおけるユーザーからのフィードバックを表現する.
+    タマリンにおけるユーザーからのフィードバックを表現する.
     """
     # 発生した日時.
     date_occurred = models.DateTimeField(auto_now_add=True)

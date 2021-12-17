@@ -9,9 +9,12 @@ from django.templatetags.static import static
 
 # タマリン固有の設定:共通して使用するシステム的な値を定義.
 APP_SETTINGS = {
-    # タマリンサービスのバージョンを定義.
+    # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.03B",
+    "VERSION": "0.0.03C",
+
+    # タマリン提供者の名前を定義.
+    "OWNER": "タマリバ株式会社",
 
     # シークレットキー情報:Djangoの設定を引き継ぐ.
     "SECRET_KEY": settings.SECRET_KEY,
@@ -103,7 +106,10 @@ APP_SETTINGS = {
     # タマリンカメラ:service workerのsyncに用いられるタグ文字列:写真のアップロード.
     "CAMERA_APP_UPLOAD_PHOTO_TAG": "upload_photo",
 
-    # タマリンカメラ:service workerのメッセージ送受信に用いられる文字列:アプリの強制アップデート.
+    # タマリンカメラ:service workerとのメッセージ送受信に用いられる文字列:写真をアップロードした.
+    "CAMERA_APP_PHOTO_UPLOADED_TAG": "photo_uploaded",
+
+    # タマリンカメラ:service workerとのメッセージ送受信に用いられる文字列:アプリの強制アップデート.
     "CAMERA_APP_FORCE_UPDATE_TAG": "force_update",
 
     # タマリンカメラ:写真を保持しておける枚数:あんまり多いとIndexedDBが耐えられないかも...
@@ -151,18 +157,18 @@ APP_MESSAGES = {
     "NEW_PASSWORD2_LABEL": "新しいパスワード(確認)",
 
     "SIGNUP_MESSAGE": "サインアップ",
-    "SIGNUP_LONG_MESSAGE": "タマリンサービスへようこそ",
+    "SIGNUP_LONG_MESSAGE": "タマリンへようこそ",
     "SIGNUP_DONE_MESSAGE": "サインアップ完了",
     "SIGNUP_DONE_LONG_MESSAGE": "サインアップが完了しました",
 
     "PASSWORD_CHANGE_MESSAGE": "パスワード変更",
     "PASSWORD_CHANGE_DONE_MESSAGE": "パスワード変更完了",
-    "PASSWORD_CHANGE_DONE_LONG_MESSAGE": "パスワードの変更が完了しました",
+    "PASSWORD_CHANGE_DONE_LONG_MESSAGE": "パスワードを変更しました",
 
     "FEEDBACK_MESSAGE": "フィードバック",
     "FEEDBACK_LONG_MESSAGE": "ご要望や問題をお書きください",
-    "FEEDBACK_DONW_MESSAGE": "ありがとうございます",
-    "FEEDBACK_DONE_LONG_MESSAGE": "フィードバックを記録いたしました",
+    "FEEDBACK_DONE_MESSAGE": "ありがとうございます",
+    "FEEDBACK_DONE_LONG_MESSAGE": "フィードバックを記録しました",
 
     "OK_LABEL": "OK",
     "SEND_LABEL": "送信する",
@@ -174,7 +180,7 @@ APP_MESSAGES = {
     # マニフェストに書く情報:タマリンカメラ.
     "CAMERA_APP_NAME": "タマリンカメラ",
     "CAMERA_APP_SHORT_NAME": "タマリンカメラ",
-    "CAMERA_APP_DESCRIPTION": "タマリンサービスのカメラです",
+    "CAMERA_APP_DESCRIPTION": "タマリンのカメラです",
 
     # タマリンカメラの各種メッセージ.
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
@@ -185,7 +191,7 @@ APP_MESSAGES = {
     # ニフェストに書く情報:タマリンク.
     "LINK_APP_NAME": "タマリンク",
     "LINK_APP_SHORT_NAME": "タマリンク",
-    "LINK_APP_DESCRIPTION": "タマリンサービスの管理アプリです",
+    "LINK_APP_DESCRIPTION": "タマリンの写真管理アプリです",
 
     # タマリンクの各種メッセージ.
     "CONTEXT_TAG_SECTION_LABEL": "コンテキスト",
@@ -241,8 +247,8 @@ APP_MESSAGES = {
 
     # サービス利用条件.
     "TERMS_MESSAGE": "\
-    【タマリンサービス利用規約】$\
-    タマリンサービスを利用するにあたり、注意していただきたいことを以下に記載します。$\
+    【タマリン利用規約】$\
+    タマリンを利用するにあたり、注意していただきたいことを以下に記載します。$\
     0. サインアップすることでここに記載の条件については合意していただいたとみなします。$\
     1. サービスは予告なく稼働を停止することがあります。また予告なく終了することがあります。$\
     2. お預かりしている写真については永続的なな保存をお約束するものではございません。$\

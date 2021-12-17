@@ -113,9 +113,9 @@ async function load_user() {
             return false;
         }
         // 現在のユーザーに対応するデータをUserサービスから持ってくる.
-        const response = await fetch("{{USER_API_URL}}" + "?username=" + current_user.username, {
+        const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
             headers: {
-                "Authorization": "{{TOKEN_FORMAT}} " + token
+                "Authorization": `{{TOKEN_FORMAT}} ${token}`
             }
         });
         if (response.status === 200) {
@@ -160,11 +160,11 @@ async function save_user() {
             return false;
         }
         // Userサービスにも保存する(PATCHで部分的な更新をしていることに注意!)
-        const response = await fetch("{{USER_API_URL}}" + current_user.user_id + "/", {
+        const response = await fetch(`{{USER_API_URL}}${current_user.user_id}/`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "{{TOKEN_FORMAT}} " + token
+                "Authorization": `{{TOKEN_FORMAT}} ${token}`
             },
             body: JSON.stringify({
                 "context_tag": context_tag,
@@ -191,11 +191,12 @@ function context_tag_csv2ui(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
-            document.getElementById("context_tag_" + i++).value = tag;
+            document.getElementById(`context_tag_${i}`).value = tag;
+            i++;
         }
     }
     for (; i < CONTEXT_TAG_COUNT; i++) {
-        document.getElementById("context_tag_" + i).value = "";
+        document.getElementById(`context_tag_${i}`).value = "";
     }
 }
 
@@ -206,7 +207,7 @@ function context_tag_csv2ui(tags) {
 function context_tag_ui2csv() {
     let result = "";
     for (let i = 0; i < CONTEXT_TAG_COUNT; i++) {
-        const value = document.getElementById("context_tag_" + i).value.trim();
+        const value = document.getElementById(`context_tag_${i}`).value.trim();
         if (value) {
             if (TAG_NAME_VALIDATOR.exec(value) || value.length > Number("{{MAX_CONTEXT_TAG_LENGTH}}")) {
                 return null;
@@ -228,11 +229,12 @@ function scene_tag_csv2ui(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
-            document.getElementById("scene_tag_" + i++).value = tag;
+            document.getElementById(`scene_tag_${i}`).value = tag;
+            i++;
         }
     }
     for (; i < SCENE_TAG_COUNT; i++) {
-        document.getElementById("scene_tag_" + i).value = "";
+        document.getElementById(`scene_tag_${i}`).value = "";
     }
 }
 
@@ -243,7 +245,7 @@ function scene_tag_csv2ui(tags) {
 function scene_tag_ui2csv() {
     let result = "";
     for (let i = 0; i < SCENE_TAG_COUNT; i++) {
-        const value = document.getElementById("scene_tag_" + i).value.trim();
+        const value = document.getElementById(`scene_tag_${i}`).value.trim();
         if (value) {
             if (TAG_NAME_VALIDATOR.exec(value) || value.length > Number("{{MAX_SCENE_TAG_LENGTH}}")) {
                 return null;
@@ -265,18 +267,18 @@ function scene_color_csv2ui(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
-            for (const option of document.getElementById("scene_color_" + i).childNodes) {
+            for (const option of document.getElementById(`scene_color_${i}`).childNodes) {
                 option.selected = option.value === tag ? true : false;
             }
-            document.getElementById("scene_tag_" + i).style.backgroundColor = tag;
+            document.getElementById(`scene_tag_${i}`).style.backgroundColor = tag;
             i++;
         }
     }
     for (; i < SCENE_TAG_COUNT; i++) {
-        for (const option of document.getElementById("scene_color_" + i).childNodes) {
+        for (const option of document.getElementById(`scene_color_${i}`).childNodes) {
             option.selected = option.value === SCENE_NOT_USED_COLOR ? true : false;
         }
-        document.getElementById("scene_tag_" + i).style.backgroundColor = SCENE_NOT_USED_COLOR;
+        document.getElementById(`scene_tag_${i}`).style.backgroundColor = SCENE_NOT_USED_COLOR;
     }
 }
 
@@ -287,9 +289,9 @@ function scene_color_csv2ui(tags) {
 function scene_color_ui2csv() {
     let result = "";
     for (let i = 0; i < SCENE_TAG_COUNT; i++) {
-        const scene_tag = document.getElementById("scene_tag_" + i);
+        const scene_tag = document.getElementById(`scene_tag_${i}`);
         if (scene_tag.value) {
-            for (const option of document.getElementById("scene_color_" + i).childNodes) {
+            for (const option of document.getElementById(`scene_color_${i}`).childNodes) {
                 if (option.selected) {
                     if (option.value === SCENE_NOT_USED_COLOR) {
                         scene_tag.value = "";
@@ -309,8 +311,8 @@ function scene_color_ui2csv() {
  * @param {number} index 着目しているシーンの番号.
  */
 function update_scene_color(index) {
-    for (const option of document.getElementById("scene_color_" + index).childNodes) {
-        const scene = document.getElementById("scene_tag_" + index);
+    for (const option of document.getElementById(`scene_color_${index}`).childNodes) {
+        const scene = document.getElementById(`scene_tag_${index}`);
         if (option.selected) {
             scene.style.backgroundColor = option.value;
             if (option.value === SCENE_NOT_USED_COLOR) {
@@ -328,14 +330,14 @@ function download_rule_csv2ui(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
-            for (const option of document.getElementById("download_rule_" + i).childNodes) {
+            for (const option of document.getElementById(`download_rule_${i}`).childNodes) {
                 option.selected = option.value === tag ? true : false;
             }
             i++;
         }
     }
     for (; i < DOWNLOAD_RULE_COUNT; i++) {
-        for (const option of document.getElementById("download_rule_" + i).childNodes) {
+        for (const option of document.getElementById(`download_rule_${i}`).childNodes) {
             option.selected = option.value === RULE_NOT_USED_VALUE ? true : false;
         }
     }
@@ -348,7 +350,7 @@ function download_rule_csv2ui(tags) {
 function download_rule_ui2csv() {
     let result = "";
     for (let i = 0; i < DOWNLOAD_RULE_COUNT; i++) {
-        for (const option of document.getElementById("download_rule_" + i).childNodes) {
+        for (const option of document.getElementById(`download_rule_${i}`).childNodes) {
             if (option.selected && option.value !== RULE_NOT_USED_VALUE) {
                 result += option.value;
                 result += ",";
@@ -369,9 +371,9 @@ async function get_download_file_list() {
             return null;
         }
         // ユーザーがOwnerのMediaのリストをMediaサービスから取得する.
-        const response = await fetch("{{MEDIA_API_URL}}" + "?owner=" + current_user.user_id, {
+        const response = await fetch(`{{MEDIA_API_URL}}?owner=${current_user.user_id}`, {
             headers: {
-                "Authorization": "{{TOKEN_FORMAT}} " + token
+                "Authorization": `{{TOKEN_FORMAT}} ${token}`
             }
         });
         if (response.status === 200) {
@@ -436,10 +438,10 @@ async function download_files() {
                 }
                 // ここからは保存するパス名とファイル名の要素を生成する.
                 const date_taken = new Date(file.date_taken);
-                const year = date_taken.getFullYear() + "{{DATETIME_YY}}";
-                const month = (date_taken.getMonth() + 1).toString().padStart(2.0) + "{{DATETIME_MM}}";
-                const day = date_taken.getDate().toString().padStart(2, 0) + "{{DATETIME_DD}}";
-                const time = date_taken.getHours().toString().padStart(2, 0) + "{{DATETIME_HH}}" + date_taken.getMinutes().toString().padStart(2, 0) + "{{DATETIME_MN}}" + date_taken.getSeconds().toString().padStart(2, 0) + "{{DATETIME_SS}}";
+                const year = `${date_taken.getFullYear()}{{DATETIME_YY}}`;
+                const month = `${(date_taken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
+                const day = `${date_taken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
+                const time = `${date_taken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${date_taken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${date_taken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
                 const ext = file.content_type.match(/[^¥/]+$/);
                 const author_name = file.author_name;
                 const context_tag = file.context_tag;
@@ -450,7 +452,7 @@ async function download_files() {
                 for (const rule of download_rules) {
                     switch (rule) {
                         case "YYMM":
-                            path.push(year + month);
+                            path.push(`${year}${month}`);
                             break;
 
                         case "YY":
@@ -491,7 +493,7 @@ async function download_files() {
                 let number = 0;
                 let actual_file_name = null;
                 do {
-                    actual_file_name = body + (number > 0 ? "(" + number + ")" : "") + "." + ext;
+                    actual_file_name = `${body}${(number > 0 ? number : "")}.${ext}`;
                     number++;
                     // ファイル名がぶつかっている間はずっとfile(1),(2)...と数字を上げ続ける.
                     // これは微妙に危険な(終わらない可能性のある)アルゴリズムのような気がする...
@@ -511,12 +513,12 @@ async function download_files() {
                 file_list.shift();
                 // Mediaサービスからもファイルを削除する.
                 if (current_user.delete_after_download) {
-                    fetch("{{MEDIA_API_URL}}" + file.id, {
+                    await fetch(`{{MEDIA_API_URL}}${file.id}`, {
                         method: "DELETE",
                         headers: {
-                            "Authorization": "{{TOKEN_FORMAT}} " + token
+                            "Authorization": `{{TOKEN_FORMAT}} ${token}`
                         }
-                    }); // TODO: 削除失敗時の処理を追加すべし!
+                    });
                 }
             }
         }

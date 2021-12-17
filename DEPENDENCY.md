@@ -26,6 +26,14 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 
 - めっちゃ簡単にデータベースの内容をCSVへエキスポートできるようになる。
 
+### [Django Silk](https://github.com/jazzband/django-silk)
+
+- HTTPリクエストとデータベースへのアクセスをプロファイリングできるツール.
+
+### [Django Extensions](https://django-extensions.readthedocs.io/en/latest/)
+
+- shell_plus や runserver_plus といったデバッグに便利な機能を追加してくれる.
+
 ----
 
 ## JavaScript

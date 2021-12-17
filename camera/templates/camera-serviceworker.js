@@ -29,6 +29,7 @@ self.addEventListener("install", (event => {
                 "{{CAMERA_APP_ICON192}}",
                 "{{CAMERA_APP_ICON512}}",
                 "{{CAMERA_APP_SHUTTER_WAV}}",
+                "camera-app.webmanifest",
                 "camera-app.css",
                 "camera-app.js",
                 "camera-app.html",
@@ -127,22 +128,29 @@ async function upload_photo() {
                     form_data.append("content_type", photo.content_type);
                     form_data.append("encryption_key", photo.encryption_key);
                     const start_time = new Date();
-                    const encrypted_data = new File([photo.encrypted_data], photo.id + ".bin", { lastModified: start_time });
+                    const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
                     form_data.append("encrypted_data", encrypted_data);
                     // Mediaサービスを呼んで写真をアップロードする.
                     fetch("{{MEDIA_API_URL}}", {
                         method: "POST",
                         headers: {
-                            "Authorization": "{{TOKEN_FORMAT}} " + token_result.access
+                            "Authorization": `{{TOKEN_FORMAT}} ${token_result.access}`
                         },
                         body: form_data
                     }).then(media_response => {
                         if (media_response.status === 201) {
-                            console.info("photo upload time :" + (new Date() - start_time));
+                            console.info(`photo upload time :${(new Date() - start_time)}`);
                             // データベースから写真を削除する.
-                            database.photo.delete(photo.id);
-                            // アップロードを繰り返したいので再度イベントを登録しておく.
-                            self.registration.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
+                            database.photo.delete(photo.id).then(() => {
+                                // クライアントにメッセージを送る.
+                                self.clients.matchAll().then(clients => {
+                                    for (const client of clients) {
+                                        client.postMessage({ tag: "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}" });
+                                    }
+                                });
+                                // アップロードを繰り返したいので再度イベントを登録しておく.
+                                self.registration.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
+                            });
                         } else {
                             console.error("unexpected response from media service :", media_response);
                             // TODO: 本当はここでなにか適切なエラーハンドリングをするべき.
@@ -177,8 +185,8 @@ async function force_update() {
         // クライアントにメッセージを送る.
         // クライアントはこれで再度自分自身へリダイレクトする.
         self.clients.matchAll().then(clients => {
-            for (const c of clients) {
-                c.postMessage({ tag: "{{CAMERA_APP_FORCE_UPDATE_TAG}}" });
+            for (const client of clients) {
+                client.postMessage({ tag: "{{CAMERA_APP_FORCE_UPDATE_TAG}}" });
             }
         });
     });

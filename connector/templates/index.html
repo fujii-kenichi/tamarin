@@ -5,6 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="author" content="{{OWNER}}">
     <link rel="shortcut icon" href="{% static 'image/connector-app-favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
@@ -12,24 +13,24 @@
 </head>
 
 <body class="has-background-light">
-    <section class="hero is-primary is-medium is-bold">
+    <header class="hero is-primary is-medium is-bold">
         <div class="hero-body">
             <div class="container has-text-centered">
                 <h1 class="title py-4">
                     タマリンへようこそ
                 </h1>
                 <h2 class="subtitle">
-                    タマリンは、保育ドキュメンテーションに適した写真を簡単・安全に撮影するためのサービスです。
+                    保育ドキュメンテーションに適した写真を簡単・安全に撮影するためのサービスです。
                 </h2>
             </div>
         </div>
-    </section>
+    </header>
     <div class="box cta">
         <p class="has-text-centered">
             <span class="tag is-primary">{{VERSION}}</span>&nbsp;内部評価版です.
         </p>
     </div>
-    <section class="container">
+    <main class="container">
         <div class="columns features">
             <div class="column is-4">
                 <div class="card is-shady">
@@ -81,21 +82,27 @@
             </div>
         </div>
         <div class="intro column is-8 is-offset-2">
-            <h2 class="title has-text-centered">タマリンをぜひお試しください</h2><br>
-            <p class="subtitle has-text-centered">インターネット回線に接続したスマフォとPCがあればすぐにお試しいただけます。</p>
+            <h2 class="title has-text-centered">お気軽にお試しください</h2><br>
+            <p class="subtitle has-text-centered">スマホとPCがあればすぐにお試しいただけます!</p>
         </div>
         <div class="sandbox">
             <div class="tile is-ancestor">
                 <div class="tile is-parent is-shady">
                     <article class="tile is-child notification is-white">
                         <p class="subtitle">iPhoneでタマリンカメラを使う</p>
-                        <p class="content">TODO: つかいかたをかく</p>
+                        <p class="content">
+                            TODO: ここに簡単なつかいかたをかく。
+                        </p>
+                        <a class="button is-rounded is-primary is-small" href="manual#iphone">さらに詳しく</a>
                     </article>
                 </div>
                 <div class="tile is-parent is-shady">
                     <article class="tile is-child notification is-white">
                         <p class="subtitle">Androidでタマリンカメラを使う</p>
-                        <p class="content">TODO: つかいかたをかく</p>
+                        <p class="content">
+                            TODO: ここに簡単なつかいかたをかく。
+                        </p>
+                        <a class="button is-rounded is-primary is-small" href="manual#android">さらに詳しく</a>
                     </article>
                 </div>
             </div>
@@ -103,13 +110,19 @@
                 <div class="tile is-parent is-shady">
                     <article class="tile is-child notification is-white">
                         <p class="subtitle">iPadでタマリンクを使う</p>
-                        <p class="content">TODO: つかいかたをかく</p>
+                        <p class="content">
+                            TODO: ここに簡単なつかいかたをかく。
+                        </p>
+                        <a class="button is-rounded is-primary is-small" href="manual#ipad">さらに詳しく</a>
                     </article>
                 </div>
                 <div class="tile is-parent is-shady">
                     <article class="tile is-child notification is-white">
                         <p class="subtitle">PCでタマリンクを使う</p>
-                        <p class="content">TODO: つかいかたをかく</p>
+                        <p class="content">
+                            TODO: ここに簡単なつかいかたをかく。
+                        </p>
+                        <a class="button is-rounded is-primary is-small" href="manual#pc">さらに詳しく</a>
                     </article>
                 </div>
             </div>
@@ -137,7 +150,12 @@
                 </div>
             </div>
         </div>
-    </section>
+    </main>
+    <footer class="level has-background-primary mt-5">
+        <div class="level-item p-2">
+            <p>{{OWNER}}</p>
+        </div>
+    </footer>
 </body>
 
 </html>

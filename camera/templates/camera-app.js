@@ -125,8 +125,8 @@ function take_photo(scene_tag) {
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     const capture_param = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
     image_capture.takePhoto(capture_param).then(image => {
-        console.info("captured image type :" + image.type);
-        console.info("captured image size :" + image.size);
+        console.info(`captured image type : ${image.type}`);
+        console.info(`captured image size : ${image.size}`);
         // プレビューを消す.
         preview.style.visibility = "hidden";
         // 画像を読み込む.
@@ -140,7 +140,7 @@ function take_photo(scene_tag) {
                 const base64_raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ""));
                 const base64_encrypted = CryptoJS.AES.encrypt(base64_raw, key).toString();
                 data = base64_encrypted;
-                console.info("encrypted data size :" + base64_encrypted.length);
+                console.info(`encrypted data size :${base64_encrypted.length}`);
             }
             // TODO: 本当はここでサイズを確認し超えていたら何らかのエラーにしてしまうべき.            
             // データベースに保管する.
@@ -154,7 +154,7 @@ function take_photo(scene_tag) {
                 encryption_key: key,
                 encrypted_data: data
             }).then(() => {
-                console.info("photo processing time :" + (new Date() - start_time));
+                console.info(`photo processing time :${(new Date() - start_time)}`);
                 // プレビューを再開する.
                 preview.style.visibility = "visible";
                 // アップロードのためにservice workerにsyncイベントを登録する.
@@ -229,9 +229,9 @@ async function load_user() {
             return false;
         }
         // 現在のユーザーに対応するデータをUserサービスから持ってくる.
-        const response = await fetch("{{USER_API_URL}}" + "?username=" + current_user.username, {
+        const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
             headers: {
-                "Authorization": "{{TOKEN_FORMAT}} " + token
+                "Authorization": `{{TOKEN_FORMAT}} ${token}`
             }
         });
         if (response.status === 200) {
@@ -245,6 +245,10 @@ async function load_user() {
                 current_user.scene_tag = result[0].scene_tag;
                 current_user.scene_color = result[0].scene_color;
                 setup_ui();
+            }
+            const select = document.getElementById("context_tags");
+            if (select.selectedIndex >= 0) {
+                current_user.selected_context = select.options[select.selectedIndex].value;
             }
             await database.user.put(current_user);
             // 成功で戻る.
@@ -289,19 +293,19 @@ async function upload_photo() {
     // でもSafariではform cacheに起因するバグ?で送信データのサイズが偶に0になってしまうということが起こる.
     // しょうがいないのでLastMOdifiedをつけるべくいったんFileオブジェクトを経由して設定する.
     const start_time = new Date();
-    const encrypted_data = new File([photo.encrypted_data], photo.id + ".bin", { lastModified: start_time });
+    const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
     form_data.append("encrypted_data", encrypted_data);
     // Mediaサービスに写真をアップロードする.
     const response = await fetch("{{MEDIA_API_URL}}", {
         method: "POST",
         headers: {
-            "Authorization": "{{TOKEN_FORMAT}} " + token
+            "Authorization": `{{TOKEN_FORMAT}} ${token}`
         },
         body: form_data
     });
     // うまくいったらデータベースから削除する.
     if (response.status === 201) {
-        console.info("photo upload time :" + (new Date() - start_time));
+        console.info(`photo upload time :${(new Date() - start_time)}`);
         await database.photo.delete(photo.id);
         return true;
     } else if (response.status === 401 || response.status === 403) {
@@ -335,7 +339,7 @@ function setup_ui() {
     if (current_user.context_tag) {
         for (const tag of current_user.context_tag.split(/,/)) {
             if (tag) {
-                context_tags_html += ("<option class=\"context_tag\" value=\"" + tag + "\"" + (tag === current_user.selected_context ? " selected" : "") + ">" + tag + "</option>");
+                context_tags_html += (`<option class=\"context_tag\" value=\"${tag}\" ${(tag === current_user.selected_context ? "selected" : "")}>${tag}</option>`);
             }
         }
     }
@@ -345,9 +349,9 @@ function setup_ui() {
         const scene_tags = current_user.scene_tag.split(/,/);
         const scene_colors = current_user.scene_color.split(/,/);
         for (let i = 0; i < scene_tags.length; i++) {
-            const s = scene_tags[i];
-            if (s) {
-                shutters_html += ("<div class=\"tama-shutter\" style=\"background-color:" + scene_colors[i] + ";\" onmousedown='take_photo(\"" + s + "\");'>" + s + "</div>");
+            const scene = scene_tags[i];
+            if (scene) {
+                shutters_html += (`<div class=\"tama-shutter\" style=\"background-color:${scene_colors[i]};\" onmousedown='take_photo(\"${scene}\")'>${scene}</div>`);
             }
         }
     }
@@ -377,6 +381,11 @@ function background_task() {
     database.photo.count().then(count => {
         document.getElementById("photo_count").value = photo_count = count;
     });
+    // 選択されているコンテキストを念の為更新.
+    const select = document.getElementById("context_tags");
+    if (select.selectedIndex >= 0) {
+        current_user.selected_context = select.options[select.selectedIndex].value;
+    }
     // ユーザーの設定を自動更新.
     if (current_user.auto_reload) {
         load_user();
@@ -413,8 +422,13 @@ function main() {
             service_worker = registration;
             // メッセージのハンドラも登録しておく.
             navigator.serviceWorker.onmessage = (event => {
-                if (event.data.tag === "{{CAMERA_APP_FORCE_UPDATE_TAG}}") {
-                    // service workerからメッセージが来たら強制アップデートのため自分自身を読み直す.
+                if (event.data.tag === "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}") {
+                    // service workerから写真アップロード実施のメッセージが来たら枚数のカウンタを変える.
+                    database.photo.count().then(count => {
+                        document.getElementById("photo_count").value = photo_count = count;
+                    });
+                } else if (event.data.tag === "{{CAMERA_APP_FORCE_UPDATE_TAG}}") {
+                    // service workerから強制アップデートのメッセージが来たら自分自身を読み直す.
                     // すでにキャッシュはservice workerが削除しているのでこれでアップデートされる.
                     window.location = "camera-app.html{{APP_MODE_URL_PARAM}}";
                 }
@@ -509,6 +523,10 @@ function main() {
         current_user.shutter_sound = document.getElementById("shutter_sound").checked;
         current_user.auto_reload = document.getElementById("auto_reload").checked;
         current_user.encryption = document.getElementById("encryption").checked;
+        const select = document.getElementById("context_tags");
+        if (select.selectedIndex >= 0) {
+            current_user.selected_context = select.options[select.selectedIndex].value;
+        }
         database.user.put(current_user).then(() => {
             document.getElementById("setting_dialog").classList.remove("is-active");
         });

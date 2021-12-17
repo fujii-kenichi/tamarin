@@ -55,9 +55,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "djoser",
     "import_export",
-    "connector",
-    "camera",
-    "link",
+    "django_extensions",
+    "silk",
+    "connector.apps.ConnectorConfig",
+    "link.apps.LinkConfig",    
+    "camera.apps.CameraConfig",    
 ]
 
 # ミドルウェア関連の設定.
@@ -70,6 +72,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "request_logging.middleware.LoggingMiddleware",
 ]
 
@@ -183,6 +186,10 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_REFERRER_POLICY = "same-origin"
+
+# SQLプロファイルング用Silkyへの指示:認証されたユーザのみ操作可能.
+SILKY_AUTHENTICATION = True
+SILKY_AUTHORISATION = True
 
 # デバッグ用のログ出力の設定:DEBUG時にはリクエストとレスポンスを毎回表示する.
 if DEBUG == "True":

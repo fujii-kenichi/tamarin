@@ -4,32 +4,40 @@
 @author: fujii.kenichi@tamariva.co.jp
 """
 from django import forms
-from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods, require_safe
 from rest_framework import viewsets
 from rest_framework.parsers import JSONParser, MultiPartParser
 
-from .app_settings import APP_MESSAGES, APP_SETTINGS
-
 from . import models, serializers
+from .app_settings import APP_MESSAGES, APP_SETTINGS
 
 # コンテンツ書き換えに使用される辞書を定義する.
 CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)
 
 
-def index(request):
-    """[indexの処理]"""
-    return render(request, "index.html", CONTEXT_DICT)
-
-
+@require_safe
 def debug(request):
     """[debugの処理]"""
     return render(request, "debug.html", CONTEXT_DICT)
 
 
+@require_safe
+def index(request):
+    """[indexの処理]"""
+    return render(request, "index.html", CONTEXT_DICT)
+
+
+@require_safe
+def manual(request):
+    """[manualの処理]"""
+    return render(request, "manual.html", CONTEXT_DICT)
+
+
+@require_http_methods(["GET", "HEAD", "POST"])
 def signup(request):
     """[サインアップの処理]"""
     if request.method == "POST":
@@ -46,11 +54,13 @@ def signup(request):
     return render(request, "signup.html", dict(**context, **CONTEXT_DICT))
 
 
+@require_safe
 def signup_done(request):
     """[サインアップ終了の処理]"""
     return render(request, "signup_done.html", CONTEXT_DICT)
 
 
+@require_http_methods(["GET", "HEAD", "POST"])
 def password_change(request):
     """[パスワード変更の処理]"""
     if request.method == "POST":
@@ -69,11 +79,13 @@ def password_change(request):
     return render(request, "password_change.html", dict(**context, **CONTEXT_DICT))
 
 
+@require_safe
 def password_change_done(request):
     """[パスワード変更終了の処理]"""
     return render(request, "password_change_done.html", CONTEXT_DICT)
 
 
+@require_http_methods(["GET", "HEAD", "POST"])
 def feedback(request):
     """[フィードバックの処理]"""
     if request.method == "POST":
@@ -91,6 +103,7 @@ def feedback(request):
     return render(request, "feedback.html", dict(**context, **CONTEXT_DICT))
 
 
+@require_safe
 def feedback_done(request):
     """[フィードバック終了の処理]"""
     return render(request, "feedback_done.html", CONTEXT_DICT)

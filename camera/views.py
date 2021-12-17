@@ -7,9 +7,8 @@ import random
 import re
 import string
 
-from django.conf import settings
 from django.shortcuts import render
-from django.templatetags.static import static
+from django.views.decorators.http import require_safe
 
 from connector.app_settings import APP_MESSAGES, APP_SETTINGS
 
@@ -17,6 +16,7 @@ from connector.app_settings import APP_MESSAGES, APP_SETTINGS
 CONTEXT_DICT = dict(**APP_SETTINGS, **APP_MESSAGES)
 
 
+@require_safe
 def camera_serviceworker_js(request):
     context_dict = CONTEXT_DICT
 
@@ -31,10 +31,12 @@ def camera_serviceworker_js(request):
     return render(request, "camera-serviceworker.js", context_dict, content_type="text/javascript; charset=utf-8")
 
 
+@require_safe
 def camera_app_webmanifest(request):
     return render(request, "camera-app.webmanifest", CONTEXT_DICT, content_type="application/manifest+json; charset=utf-8")
 
 
+@require_safe
 def camera_app_js(request):
     context_dict = CONTEXT_DICT
 
@@ -82,9 +84,11 @@ def camera_app_js(request):
     return render(request, "camera-app.js", context_dict, content_type="text/javascript; charset=utf-8")
 
 
+@require_safe
 def camera_app_css(request):
     return render(request, "camera-app.css", CONTEXT_DICT, content_type="text/css; charset=utf-8")
 
 
+@require_safe
 def camera_app_html(request):
     return render(request, "camera-app.html", CONTEXT_DICT, content_type="text/html; charset=utf-8")

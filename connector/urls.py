@@ -26,11 +26,14 @@ urlpatterns = [
     # User/Media/History APIを実行.
     path("api/", include(router.urls)),
 
-    # 通常のトップページ画面.
-    path("", views.index),
-
     # デバッグ用画面.
     path("debug/", views.debug),
+
+    # トップページ(index)画面.
+    path("", views.index),
+
+    # マニュアル画面.
+    path("manual/", views.manual),
 
     # サインアップ画面.
     path("signup/", views.signup),
