@@ -145,55 +145,72 @@ APP_MESSAGES = {
     "DEFAULT_CONTEXT_TAG": "コンテキスト1,コンテキスト2,コンテキスト3,コンテキスト4,コンテキスト5,",
     "DEFAULT_DOWNLOAD_RULE": "YYMM,DD,AUTHOR,SCENE,CONTEXT,",
 
-    # 表示に使用される文字列.
+    # 表示に使用される文字列:管理画面.
     "MEDIA_LABEL": "メディア",
     "HISTORY_LABEL": "ヒストリー",
     "FEEDBACK_LABEL": "フィードバック",
 
-    "USERNAME_LABEL": "ユーザー名",
+    # 表示に使用される文字列:サインイン.
+    "USERNAME_LABEL": "ユーザー名",    
     "PASSWORD_LABEL": "パスワード",
-    "PASSWORD2_LABEL": "パスワード(確認)",
-    "NEW_PASSWORD_LABEL": "新しいパスワード",
-    "NEW_PASSWORD2_LABEL": "新しいパスワード(確認)",
 
+    # 表示に使用される文字列:サインアップ.
     "SIGNUP_MESSAGE": "サインアップ",
     "SIGNUP_LONG_MESSAGE": "タマリンへようこそ",
     "SIGNUP_DONE_MESSAGE": "サインアップ完了",
     "SIGNUP_DONE_LONG_MESSAGE": "サインアップが完了しました",
 
+    # 表示に使用される文字列:パスワード変更.    
     "PASSWORD_CHANGE_MESSAGE": "パスワード変更",
     "PASSWORD_CHANGE_DONE_MESSAGE": "パスワード変更完了",
     "PASSWORD_CHANGE_DONE_LONG_MESSAGE": "パスワードを変更しました",
+    "INVALID_PASSWORD_MESSAGE": "パスワードが間違っています",
+    "PASSWORD2_LABEL": "パスワード(確認)",
+    "NEW_PASSWORD_LABEL": "新しいパスワード",
+    "NEW_PASSWORD2_LABEL": "新しいパスワード(確認)",
 
-    "FEEDBACK_MESSAGE": "フィードバック",
+    # 表示に使用される文字列:フィードバック.
     "FEEDBACK_LONG_MESSAGE": "ご要望や問題をお書きください",
     "FEEDBACK_DONE_MESSAGE": "ありがとうございます",
     "FEEDBACK_DONE_LONG_MESSAGE": "フィードバックを記録しました",
+    "FEEDBACK_MESSAGE": "フィードバック",
 
+    # 表示に使用される文字列:共通.
+    "VERSION_LABEL": "バージョン",
     "OK_LABEL": "OK",
     "SEND_LABEL": "送信する",
     "BACK_TO_HOME_LABEL": "戻る",
+    "LOADING_MESSAGE":"処理中です...",
+    "SAVE_LABEL": "保存",
+    "SAVE_SUCCEEDED_MESSAGE": "設定が保存されました",
+    "SAVE_FAILED_MESSAGE": "設定が保存できませんでした",
+    "FATAL_ERROR_MESSAGE": "アプリを実行できません",
 
-    # エラーメッセージ.
-    "INVALID_PASSWORD_MESSAGE": "パスワードが間違っています",
+    # 表示に使用される文字列:サインイン.
+    "AUTHOR_NAME_LABEL": "あなたの名前",
+    "SIGNIN_LABEL": "サインイン",
+    "SIGNIN_ERROR_MESSAGE": "入力に間違いがあります",
+
+    # 表示に使用される文字列:インストール.
+    "INSTALL_MESSAGE": "インストールできます!",
+    "OPEN_APP_LABEL": "このまま開く",
 
     # マニフェストに書く情報:タマリンカメラ.
     "CAMERA_APP_NAME": "タマリンカメラ",
     "CAMERA_APP_SHORT_NAME": "タマリンカメラ",
     "CAMERA_APP_DESCRIPTION": "タマリンのカメラです",
 
-    # タマリンカメラの各種メッセージ.
+    # 表示に使用される文字列:タマリンカメラ.
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを同期する",
     "ENCRYPTION_LABEL": "写真を暗号化する",
-    "VERSION_LABEL": "バージョン",
 
     # ニフェストに書く情報:タマリンク.
     "LINK_APP_NAME": "タマリンク",
     "LINK_APP_SHORT_NAME": "タマリンク",
     "LINK_APP_DESCRIPTION": "タマリンの写真管理アプリです",
 
-    # タマリンクの各種メッセージ.
+    # 表示に使用される文字列:タマリンク.
     "CONTEXT_TAG_SECTION_LABEL": "コンテキスト",
     "SCENE_TAG_SECTION_LABEL": "シーン",
     "STATUS_SECTION_LABEL": "現在の状況",
@@ -206,10 +223,6 @@ APP_MESSAGES = {
     "SHUTTER_COLOR_PINK": "桃",
     "SHUTTER_COLOR_NOT_USED": "未使用",
     "CONTEXT_TAG_NOT_USED": "未使用",
-
-    "SAVE_LABEL": "保存",
-    "SAVE_SUCCEEDED_MESSAGE": "設定が保存されました",
-    "SAVE_FAILED_MESSAGE": "設定が保存できませんでした",
 
     "RULE_YYMM": "年月",
     "RULE_YY": "年",
@@ -233,27 +246,16 @@ APP_MESSAGES = {
     "DATETIME_MN": "分",
     "DATETIME_SS": "秒",
 
-    # 表示されるメッセージ:サインインビュー.
-    "AUTHOR_NAME_LABEL": "あなたの名前",
-    "SIGNIN_LABEL": "サインイン",
-    "SIGNIN_ERROR_MESSAGE": "入力に間違いがあります",
-
-    # 表示されるメッセージ:インストールビュー.
-    "INSTALL_MESSAGE": "インストールできます!",
-    "OPEN_APP_LABEL": "このまま開く",
-
-    # 表示されるメッセージ:エラービュー.
-    "FATAL_ERROR_MESSAGE": "アプリを実行できません",
-
     # サービス利用条件.
     "TERMS_MESSAGE": "\
     【タマリン利用規約】$\
-    タマリンを利用するにあたり、注意していただきたいことを以下に記載します。$\
-    0. サインアップすることでここに記載の条件については合意していただいたとみなします。$\
-    1. サービスは予告なく稼働を停止することがあります。また予告なく終了することがあります。$\
-    2. お預かりしている写真については永続的なな保存をお約束するものではございません。$\
-    3. 当社のプライバシーポリシーはたぶんホームページを探せば見つかるかもしれません。$\
-    4. タマリンよりかわいい名前があったらそのうち名前を変えるかもしれません。$\
-    5. トイストーリーは4より3だと思う方はじっくり話をしたいのでご連絡ください。$\
-    6. その他お困りのことがありましたらなんでもすべて我慢してください。",
+    タマリンを利用するにあたり注意していただきたいことを以下に記載します。$\
+    1. サインアップにより記載の条件について合意していただいたとみなします。$\
+    2. タマリンは予告なく稼働を停止することや終了することがあります。$\
+    3. お預かりしている写真は永続的な保存をお約束するものではございません。$\
+    4. 当社のプライバシーポリシーについてはホームページをご覧ください。$\
+    5. タマリンよりかわいい名前があったらそっちに改名するかもしれません。$\
+    6. トイストーリーは3より4だと思う方はお話をしたいのでご連絡ください。$\
+    7. その他お困りのことがあれば[問題を報告する]からご連絡ください。$\
+    【2022年1月 タマリバ株式会社】",
 }

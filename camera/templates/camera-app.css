@@ -49,7 +49,10 @@ body::-webkit-scrollbar {
     text-align: center;
     width: 2em;
     margin: 0;
-    padding: 0.2em;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
     border: 0.1em;
     border-radius: 1em;
     font-size: large;
@@ -62,7 +65,10 @@ body::-webkit-scrollbar {
     text-align: center;
     width: 2em;
     margin: 0;
-    padding: 0.2em;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
     border: 0.1em;
     border-radius: 1em;
     font-size: large;

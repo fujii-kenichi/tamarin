@@ -113,8 +113,6 @@ function take_photo(scene_tag) {
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     const shutter_audio = document.getElementById("shutter_audio");
     if (current_user.shutter_sound) {
-        //const AudioContext = window.AudioContext || window.webkitAudioContext;
-        //const audioCtx = new AudioContext();
         shutter_audio.pause();
         shutter_audio.currentTime = 0;
         shutter_audio.load();
@@ -419,6 +417,7 @@ function background_task() {
  * アプリケーションのメイン.
  */
 function main() {
+    change_view("loading_view");
     // 起動時のURLを確認する.
     if (document.location.search !== "{{APP_MODE_URL_PARAM}}") {
         change_view("install_view");
@@ -547,6 +546,7 @@ function main() {
     // UIのイベントをセットする:バージョンアップ.
     document.getElementById("version").onclick = (() => {
         document.getElementById("setting_dialog").classList.remove("is-active");
+        change_view("loading_view");
         // service workerにメッセージをポストする.        
         if (navigator.serviceWorker.controller && ("postMessage" in navigator.serviceWorker.controller)) {
             navigator.serviceWorker.controller.postMessage({
