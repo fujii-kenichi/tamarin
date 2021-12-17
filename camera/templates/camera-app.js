@@ -506,7 +506,22 @@ function main() {
     });
     // UIのイベントをセットする:リロード.
     document.getElementById("photo_count").onclick = (() => {
-        background_task();
+        load_user().then(success => {
+            if (success) {
+                if (photo_count > 0) {
+                    change_view("loading_view");
+                    // 写真を全部アップロードする. 
+                    upload_all_photos().then(() => {
+                        change_view("main_view");
+                    });
+                }
+            } else {
+                // 再認証を要求する.
+                if (navigator.onLine && !token) {
+                    change_view("signin_view");
+                }
+            }
+        });
     });
     // UIのイベントをセットする:サインイン.
     document.getElementById("signin").onclick = (() => {
