@@ -7,6 +7,10 @@
 // バックグラウンドタスクを繰り返すときの待ち時間(ミリ秒).
 const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 
+// 撮影用のパラメータ.
+const CAPTURE_PARAM = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
+const DEVICE_PARAM = JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'));
+
 // 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
 let current_user = {
     dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
@@ -72,7 +76,7 @@ function update_preview() {
         // ページが表示状態なら再表示.
         if (document.visibilityState === "visible") {
             // デバイスパラメータを用いてストリームに接続する.        
-            navigator.mediaDevices.getUserMedia(JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'))).then(stream => {
+            navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
                 const preview = document.getElementById("preview");
                 const my_image_capture = class {
                     // 実行環境に存在しない時に使用する簡易版ImageCapture実装.                
@@ -109,6 +113,8 @@ function take_photo(scene_tag) {
     if (!image_capture || preview.style.visibility === "hidden") {
         return;
     }
+    // プレビューを消す.
+    preview.style.visibility = "hidden";
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     const shutter_audio = document.getElementById("shutter_audio");
@@ -118,28 +124,16 @@ function take_photo(scene_tag) {
         shutter_audio.load();
         shutter_audio.play();
     }
-    // 写真を実際に撮影する.
-    take_photo_main(scene_tag);
-}
-
-/**
- * 実際に写真を撮影するルーチン.
- * @param {string} scene_tag 撮影時に指定されたシーンタグ
- */
-async function take_photo_main(scene_tag) {
-    // 今の時点を撮影日時とする.
-    const start_time = new Date();
     // とりあえず枚数を増やしておく...
     photo_count++;
     document.getElementById("photo_count").value = photo_count;
+    // 今の時点を撮影日時とする.
+    const start_time = new Date();
     // 実際の画像情報を取得する.
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
-    const capture_param = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
-    image_capture.takePhoto(capture_param).then(image => {
+    image_capture.takePhoto(CAPTURE_PARAM).then(image => {
         console.info(`captured image type : ${image.type}`);
         console.info(`captured image size : ${image.size}`);
-        // プレビューを消す.
-        preview.style.visibility = "hidden";
         // 画像を読み込む.
         const image_reader = new FileReader();
         image_reader.onload = () => {
@@ -510,7 +504,7 @@ function main() {
             return;
         }
         // 入力情報を保存する.
-        current_user.author_name = author_name;
+        document.getElementById("current_author_name").value = current_user.author_name = author_name;
         current_user.username = username;
         current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{SECRET_KEY}}")).toString();
         database.user.put(current_user).then(() => {

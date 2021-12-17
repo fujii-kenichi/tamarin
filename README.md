@@ -10,19 +10,19 @@
 
 ## 3. アーキテクチャ
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) をみてください。
+- [ARCHITECTURE.md](./doc/ARCHITECTURE.md) をみてください。
 
 ## 4. デプロイ
 
-- [DEPLOY.md](./DEPLOY.md) をみてください。
+- [DEPLOY.md](./doc/DEPLOY.md) をみてください。
 
 ## 5. 使用しているOSSやデータ
 
-- [DEPENDENCY.md](./DEPENDENCY.md) をみてください。
+- [DEPENDENCY.md](./doc/DEPENDENCY.md) をみてください。
 
 ## 6. いろいろメモ
 
-- [MEMO.md](./MEMO.md) をみてください。
+- [MEMO.md](./doc/MEMO.md) をみてください。
 
 ## 7. Notice
 

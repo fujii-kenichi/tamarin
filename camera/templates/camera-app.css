@@ -23,13 +23,13 @@ body::-webkit-scrollbar {
 .tama-author-name {
     width: 30%;
     margin: 0;
-    padding: 0.2em;
+    padding: 0;
     border: 0.1em;
     border-radius: 1em;
     font-size: large;
-    cursor: pointer;
     background-color: lavenderblush;
     border-color: dimgray;
+    cursor: pointer;
 }
 
 .tama-context-tags {
@@ -46,13 +46,9 @@ body::-webkit-scrollbar {
 }
 
 .tama-photo-count {
-    text-align: center;
     width: 2em;
     margin: 0;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
+    padding: 0;
     border: 0.1em;
     border-radius: 1em;
     font-size: large;
@@ -62,13 +58,9 @@ body::-webkit-scrollbar {
 }
 
 .tama-setting {
-    text-align: center;
     width: 2em;
     margin: 0;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
+    padding: 0;
     border: 0.1em;
     border-radius: 1em;
     font-size: large;
