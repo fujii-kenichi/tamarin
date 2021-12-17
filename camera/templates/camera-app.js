@@ -109,17 +109,29 @@ function take_photo(scene_tag) {
     if (!image_capture || preview.style.visibility === "hidden") {
         return;
     }
-    // 今の時点を撮影日時とする.
-    const start_time = new Date();
     // シャッター音を再生する.
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
+    const shutter_audio = document.getElementById("shutter_audio");
     if (current_user.shutter_sound) {
-        const shutter_audio = document.getElementById("shutter_audio");
+        //const AudioContext = window.AudioContext || window.webkitAudioContext;
+        //const audioCtx = new AudioContext();
+        shutter_audio.pause();
         shutter_audio.currentTime = 0;
         shutter_audio.load();
         shutter_audio.play();
     }
-    // とりあえず増やしておく...
+    // 写真を実際に撮影する.
+    take_photo_main(scene_tag);
+}
+
+/**
+ * 実際に写真を撮影するルーチン.
+ * @param {string} scene_tag 撮影時に指定されたシーンタグ
+ */
+async function take_photo_main(scene_tag) {
+    // 今の時点を撮影日時とする.
+    const start_time = new Date();
+    // とりあえず枚数を増やしておく...
     photo_count++;
     document.getElementById("photo_count").value = photo_count;
     // 実際の画像情報を取得する.
