@@ -115,6 +115,7 @@ function take_photo(scene_tag) {
     // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     if (current_user.shutter_sound) {
         const shutter_audio = document.getElementById("shutter_audio");
+        shutter_audio.currentTime = 0;
         shutter_audio.load();
         shutter_audio.play();
     }

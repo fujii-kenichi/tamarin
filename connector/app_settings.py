@@ -11,7 +11,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.03C",
+    "VERSION": "0.0.03D",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -91,7 +91,7 @@ APP_SETTINGS = {
     "CAMERA_APP_ICON180": static("image/camera-app-icon180x180.png"),
     "CAMERA_APP_ICON192": static("image/camera-app-icon192x192.png"),
     "CAMERA_APP_ICON512": static("image/camera-app-icon512x512.png"),
-    "CAMERA_APP_SHUTTER_WAV": static("audio/camera-app-shutter.wav"),
+    "CAMERA_APP_SHUTTER_WAV": static("audio/camera-app-shutter.mp3"),
 
     # タマリンカメラ:manifestの値.
     "CAMERA_APP_START_URL": "/camera/camera-app.html",
