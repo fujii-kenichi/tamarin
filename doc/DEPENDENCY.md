@@ -2,8 +2,6 @@
 
 Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[package.json](./package.json)に書いてあるけど、備忘録もかねてここにメモ。
 
-----
-
 ## Python
 
 ### [Django](https://www.djangoproject.com/)
@@ -34,8 +32,6 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 
 - shell_plus や runserver_plus といったデバッグに便利な機能を追加してくれる.
 
-----
-
 ## JavaScript
 
 ### [Dexie.js](https://dexie.org/)
@@ -50,8 +46,6 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 
 - チャート描画ライブラリ。いろいろ試してみたけど、これが一番余計なことしないで素敵。
 
-----
-
 ## HTML/CSS
 
 ### [Bulma](https://bulma.io/)
@@ -59,8 +53,6 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 - めちゃくちゃ便利でかっこいい CSS フレームワーク。以下のリンクも便利。
 - [Bulmaswatch](https://jenil.github.io/bulmaswatch/default/)
 - [Free Bulma Templates](https://bulmatemplates.github.io/bulma-templates/)
-
-----
 
 ## データ
 
@@ -76,8 +68,6 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 #### [Freesound](https://freesound.org/)
 
 - [Single Electro Beat](https://freesound.org/people/Jofae/sounds/369724/)
-
-----
 
 ## その他とっても便利なサイト
 

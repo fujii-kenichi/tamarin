@@ -77,8 +77,6 @@ python3 manage.py collectstatic
 gunicorn --workers 5 tamarin.wsgi
 ```
 
-----
-
 ## 2. Azure へのデプロイ
 
 ここでは本番環境としてAzureを使用した場合を書きます。どういう構成なのか、 またどうしてそう決定したのかは [ARCHITECTURE.md](./ARCHITECTURE.md) に書いてあります。

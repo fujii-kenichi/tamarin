@@ -86,7 +86,7 @@ function update_preview() {
                             canvas.width = preview.videoWidth;
                             canvas.height = preview.videoHeight;
                             canvas.getContext("2d").drawImage(preview, 0, 0);
-                            canvas.toBlob(resolve, "image/jpeg", 1.0);
+                            canvas.toBlob(resolve, "image/jpeg", 0.90);
                         });
                     }
                 };
