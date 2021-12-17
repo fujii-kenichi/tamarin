@@ -11,6 +11,9 @@ const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 const CAPTURE_PARAM = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
 const DEVICE_PARAM = JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'));
 
+// 自前の実装でJPEGを作るときの品質値.
+const JPEG_Q = 0.85;
+
 // 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
 let current_user = {
     dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
@@ -86,7 +89,7 @@ function update_preview() {
                             canvas.width = preview.videoWidth;
                             canvas.height = preview.videoHeight;
                             canvas.getContext("2d").drawImage(preview, 0, 0);
-                            canvas.toBlob(resolve, "image/jpeg", 0.90);
+                            canvas.toBlob(resolve, "image/jpeg", JPEG_Q);
                         });
                     }
                 };
@@ -175,7 +178,7 @@ function take_photo(scene_tag) {
         };
         image_reader.readAsArrayBuffer(image);
     }).catch(error => {
-        console.warn("exception in take_photo() : ", error);
+        console.warn("error in take_photo() : ", error);
     });
 }
 
@@ -184,7 +187,12 @@ function take_photo(scene_tag) {
  * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
 async function get_token() {
-    if (!token) {
+    // トークンがあればとりあえずはもってこれたとする.
+    // 使った側がエラーが起きた時はリセットする.
+    if (token) {
+        return true;
+    }
+    try {
         const response = await fetch("{{CREATE_TOKEN_URL}}", {
             method: "POST",
             headers: {
@@ -195,17 +203,19 @@ async function get_token() {
                 "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
             })
         });
+        // レスポンスコートが想定内なら所定の処理.
         if (response.status === 200) {
             const result = await response.json();
-            if (result) {
-                token = result.access;
-                return token ? token : false;
-            }
+            token = result.access;
+            return token ? true : false;
+        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+            return false;
         }
-        return false;
+    } catch (error) {
+        console.error("exception in get_token() :", error);
     }
-    // とりあえずトークンはある...
-    return true;
+    change_view("error_view");
+    throw new Error("fatal error");
 }
 
 /**
@@ -233,34 +243,39 @@ async function load_user() {
         if (!await get_token()) {
             return false;
         }
-        // 現在のユーザーに対応するデータをUserサービスから持ってくる.
-        const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
-            headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+        try {
+            // 現在のユーザーに対応するデータをUserサービスから持ってくる.
+            const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
+                headers: {
+                    "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                }
+            });
+            if (response.status === 200) {
+                // 200ならとってきた情報をデータベースに格納する.
+                const result = await response.json();
+                current_user.user_id = result[0].id;
+                // 更新時刻が覚えているものと違えばUIを更新する.
+                if (date_updated !== result[0].date_updated) {
+                    date_updated = result[0].date_updated;
+                    current_user.context_tag = result[0].context_tag;
+                    current_user.scene_tag = result[0].scene_tag;
+                    current_user.scene_color = result[0].scene_color;
+                    setup_ui();
+                }
+                const select = document.getElementById("context_tags");
+                if (select.selectedIndex >= 0) {
+                    current_user.selected_context = select.options[select.selectedIndex].value;
+                }
+                await database.user.put(current_user);
+                // 成功で戻る.
+                return true;
+            } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+                // エラーなら今のトークンがダメということでリトライ. 
+                token = null;
             }
-        });
-        if (response.status === 200) {
-            // 200ならとってきた情報をデータベースに格納する.
-            const result = await response.json();
-            current_user.user_id = result[0].id;
-            // 更新時刻が覚えているものと違えばUIを更新する.
-            if (date_updated !== result[0].date_updated) {
-                date_updated = result[0].date_updated;
-                current_user.context_tag = result[0].context_tag;
-                current_user.scene_tag = result[0].scene_tag;
-                current_user.scene_color = result[0].scene_color;
-                setup_ui();
-            }
-            const select = document.getElementById("context_tags");
-            if (select.selectedIndex >= 0) {
-                current_user.selected_context = select.options[select.selectedIndex].value;
-            }
-            await database.user.put(current_user);
-            // 成功で戻る.
-            return true;
-        } else if (response.status === 401 || response.status === 403) {
-            // エラーなら今のトークンがダメということでリトライ. 
-            token = null;
+        } catch (error) {
+            console.error("exception in load_user() :", error);
+            return false;
         }
     }
 }
@@ -301,20 +316,24 @@ async function upload_photo() {
     const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
     form_data.append("encrypted_data", encrypted_data);
     // Mediaサービスに写真をアップロードする.
-    const response = await fetch("{{MEDIA_API_URL}}", {
-        method: "POST",
-        headers: {
-            "Authorization": `{{TOKEN_FORMAT}} ${token}`
-        },
-        body: form_data
-    });
-    // うまくいったらデータベースから削除する.
-    if (response.status === 201) {
-        console.info(`photo upload time :${(new Date() - start_time)}`);
-        await database.photo.delete(photo.id);
-        return true;
-    } else if (response.status === 401 || response.status === 403) {
-        token = null;
+    try {
+        const response = await fetch("{{MEDIA_API_URL}}", {
+            method: "POST",
+            headers: {
+                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+            },
+            body: form_data
+        });
+        // うまくいったらデータベースから削除する.
+        if (response.status === 201) {
+            console.info(`photo upload time :${(new Date() - start_time)}`);
+            await database.photo.delete(photo.id);
+            return true;
+        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+            token = null;
+        }
+    } catch (error) {
+        console.error("exception in upload_photo() :", error);
     }
     return false;
 }

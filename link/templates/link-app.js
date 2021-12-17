@@ -70,7 +70,12 @@ let author_list = [];
  * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
 async function get_token() {
-    if (!token) {
+    // トークンがあればとりあえずはもってこれたとする.
+    // 使った側がエラーが起きた時はリセットする.
+    if (token) {
+        return true;
+    }
+    try {
         const response = await fetch("{{CREATE_TOKEN_URL}}", {
             method: "POST",
             headers: {
@@ -81,17 +86,19 @@ async function get_token() {
                 "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
             })
         });
+        // レスポンスコートが想定内なら所定の処理.
         if (response.status === 200) {
             const result = await response.json();
-            if (result) {
-                token = result.access;
-                return token ? token : false;
-            }
+            token = result.access;
+            return token ? true : false;
+        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+            return false;
         }
-        return false;
+    } catch (error) {
+        console.error("exception in get_token() :", error);
     }
-    // とりあえずトークンはある...
-    return true;
+    change_view("error_view");
+    throw new Error("fatal error");
 }
 
 /**
@@ -112,30 +119,35 @@ async function load_user() {
         if (!await get_token()) {
             return false;
         }
-        // 現在のユーザーに対応するデータをUserサービスから持ってくる.
-        const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
-            headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+        try {
+            // 現在のユーザーに対応するデータをUserサービスから持ってくる.
+            const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
+                headers: {
+                    "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                }
+            });
+            if (response.status === 200) {
+                // 200ならとってきた情報をデータベースに格納する.
+                const result = await response.json();
+                current_user.user_id = result[0].id;
+                await database.user.put(current_user);
+                // 更新時刻が覚えているものと違えばUIを更新する.
+                if (date_updated !== result[0].date_updated) {
+                    date_updated = result[0].date_updated;
+                    context_tag_csv2ui(result[0].context_tag);
+                    scene_tag_csv2ui(result[0].scene_tag);
+                    scene_color_csv2ui(result[0].scene_color);
+                    download_rule_csv2ui(result[0].download_rule);
+                }
+                // 成功で戻る.
+                return true;
+            } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+                // エラーなら今のトークンがダメということでリトライ. 
+                token = null;
             }
-        });
-        if (response.status === 200) {
-            // 200ならとってきた情報をデータベースに格納する.
-            const result = await response.json();
-            current_user.user_id = result[0].id;
-            await database.user.put(current_user);
-            // 更新時刻が覚えているものと違えばUIを更新する.
-            if (date_updated !== result[0].date_updated) {
-                date_updated = result[0].date_updated;
-                context_tag_csv2ui(result[0].context_tag);
-                scene_tag_csv2ui(result[0].scene_tag);
-                scene_color_csv2ui(result[0].scene_color);
-                download_rule_csv2ui(result[0].download_rule);
-            }
-            // 成功で戻る.
-            return true;
-        } else if (response.status === 401 || response.status === 403) {
-            // エラーなら今のトークンがダメということでリトライ. 
-            token = null;
+        } catch (error) {
+            console.error("exception in load_user() :", error);
+            return false;
         }
     }
 }
@@ -159,26 +171,31 @@ async function save_user() {
         if (!await get_token()) {
             return false;
         }
-        // Userサービスにも保存する(PATCHで部分的な更新をしていることに注意!)
-        const response = await fetch(`{{USER_API_URL}}${current_user.user_id}/`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
-            },
-            body: JSON.stringify({
-                "context_tag": context_tag,
-                "scene_tag": scene_tag,
-                "scene_color": scene_color,
-                "download_rule": download_rule
-            })
-        });
-        if (response.status === 200) {
-            // 保存に成功したら再度ユーザーの読み直しをしてその結果を戻す.
-            return load_user();
-        } else if (response.status === 401 || response.status === 403) {
-            // エラーなら今のトークンがダメということでリトライ. 
-            token = null;
+        try {
+            // Userサービスにも保存する(PATCHで部分的な更新をしていることに注意!)
+            const response = await fetch(`{{USER_API_URL}}${current_user.user_id}/`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                },
+                body: JSON.stringify({
+                    "context_tag": context_tag,
+                    "scene_tag": scene_tag,
+                    "scene_color": scene_color,
+                    "download_rule": download_rule
+                })
+            });
+            if (response.status === 200) {
+                // 保存に成功したら再度ユーザーの読み直しをしてその結果を戻す.
+                return load_user();
+            } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+                // エラーなら今のトークンがダメということでリトライ. 
+                token = null;
+            }
+        } catch (error) {
+            console.error("exception in save_user() :", error);
+            return false;
         }
     }
 }
@@ -370,22 +387,27 @@ async function get_download_file_list() {
         if (!await get_token()) {
             return null;
         }
-        // ユーザーがOwnerのMediaのリストをMediaサービスから取得する.
-        const response = await fetch(`{{MEDIA_API_URL}}?owner=${current_user.user_id}`, {
-            headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
-            }
-        });
-        if (response.status === 200) {
-            const file_list = await response.json();
-            if (!file_list || file_list.length == 0) {
+        try {
+            // ユーザーがOwnerのMediaのリストをMediaサービスから取得する.
+            const response = await fetch(`{{MEDIA_API_URL}}?owner=${current_user.user_id}`, {
+                headers: {
+                    "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                }
+            });
+            if (response.status === 200) {
+                const file_list = await response.json();
+                if (!file_list || file_list.length == 0) {
+                    return null;
+                }
+                return file_list;
+            } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+                // エラーなら今のトークンがダメということでリトライ. 
+                token = null;
+            } else {
                 return null;
             }
-            return file_list;
-        } else if (response.status === 401 || response.status === 403) {
-            // エラーなら今のトークンがダメということでリトライ. 
-            token = null;
-        } else {
+        } catch (error) {
+            console.error("exception in get_download_file_list() :", error);
             return null;
         }
     }
@@ -523,7 +545,7 @@ async function download_files() {
             }
         }
     } catch (error) {
-        console.warn("exception in download_files() :", error);
+        console.warn("error in download_files() :", error);
     }
     in_downloading = false;
     // 強制的にバックグラウンドタスクを起動してチャートを再描画する.
