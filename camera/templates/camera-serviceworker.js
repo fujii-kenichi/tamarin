@@ -111,7 +111,7 @@ async function upload_photo() {
                     },
                     body: JSON.stringify({
                         "username": user.username,
-                        "password": CryptoJS.AES.decrypt(user.encrypted_password, String("{{SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+                        "password": CryptoJS.AES.decrypt(user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
                     })
                 }).then(token_response => {
                     if (token_response.status !== 200) {

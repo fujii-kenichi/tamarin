@@ -17,10 +17,11 @@
   - シミュレータ(iPhone は Xcode の、Android は Android Studio から呼び出せるやつ)だと残念ながらカメラがやっぱりちゃんと出ない。
   - 結局 localhost で動いている Django を使っている場合には、PWA の構成要件である https が成立しないのでアプリとしてはインストールはできない模様。もちろん Web サイトとして実行することはできる。
 - 実機でデバッグする場合、PWA は OS から見れば Web ブラウザが動いているだけなので、通常のデバッガはあんまり使えない（使いこなせていないだけという噂もある）
-  - モバイル Safari は USB ケーブルで繋げた母艦(Mac)の Safari からアタッチできるので、これは結構便利。
+  - モバイル Safari は USB ケーブルで繋げた母艦(Mac)の Safari からアタッチできるので、これは結構便利。もちろん Android の Chrome でも類似のことができる。
 - 実際の Deploy の前に python3 manage.py correctstatic; python3 manage.py check --deploy をしてみるといいかも。HSTS とかはまださすがに対応できないけど...
 - そういえば Python / Django 部分のデバッグには、もちろんログをちゃんと出すのが一番いいんだけど、めんどくさい時は print() でメッセージを出すようにして、python3 -u manage.py runserver と -u をつけて起動するとなにげにみることができる模様。
 - データベースのデバッグには python3 manage.py shell も便利。Django-extensions と Werkzeug を導入したので、python3 manage.py shell_plus コマンドと、 python3 manage.py runserver_plus コマンドが使えるようになった。
+- Google の Lighthouse でPWAとしての状態を確認することができる。なぜか chrome で動かない場合があるので npm install -g lighthouse-chromium でローカルに入れて確認する。
 
 ## アプリのアップデートについて
 
@@ -90,11 +91,11 @@
 ## そのうちいつかやること (優先度の高いやるべきことは Issue に移動)
 
 - API のバージョニングがされていない：Django REST Framework のベストプラクティスを採用して設定する。
-- ユーザーが入力したパスワードを IndexedDB に(復号可能な暗号化をして)永続化している：これは特にオフライン運用が想定されるタマリンカメラで認証ダイアログをださないようにするための意図的な仕様なんだけど、この是非は一回ちゃんと考えたほうがいいかも。
+- ユーザーが入力したパスワードを IndexedDB に(復号可能な暗号化をして)永続化している：これは特にオフライン運用が想定されるタマリンカメラで認証ダイアログをださないようにするための意図的な仕様なんだけど、この是非は一回ちゃんと考えたほうがいいかも。そもそも Credential Management API を使うべきのような気もする。
 - コネクタのセキュリティ診断をやってみる： Django の設定で基本的なことはやってあるが、CSP、HSTS なんかは未対応。
 - 多言語化の対応が中途半端：今のところ models.py と settings.py と app-settings.py と .html の3箇所を対応する必要があるけど、Django 標準に準拠した方式へさっさと移行するべき。
 - リフレッシュトークンの使用をさぼっている：いまはさぼってアクセストークンだけで処理しているけど、これをちゃんとリフレッシュトークンも使うように変える。
 - 暗号化関連処理を Web 標準に変える：今は CryptoJS を使っているけど、PWA でそもそも実行環境が制限できるのだから Web 標準機能に乗り換えるほうが安全性とか性能とかからみてよさそう。
+- 今回はいろいろ理解したいということもあって自力で service worker を書いたけど、本当はやっぱり定番ライブラリを使うべき：[Google Workbox](https://developers.google.com/web/tools/workbox)とか、みてみるとそもそも使わない理由がない気がする。
 - PWA の利点を生かして GA などの解析機能を入れる：外部から環境変数で注入するというイメージ。
-- Google の Lighthouse でサイトの状態を確認する：PWA 対応のスコアも出るので参考になる。なぜか chrome で動かない場合は npm install -g lighthouse-chromium でローカルに入れることもできる。
 - JS や html や css を静的解析のツールに通す：今はローカルで VS-Code にいれた HTMLLint / Stylelint / jshint に頼りっきり。これをちゃんとビルドプロセスに組み込みたい。

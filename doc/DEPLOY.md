@@ -72,6 +72,7 @@ gunicorn を使ってデバッグ機能なしで起動します。ほぼ本番�
 ```bash
 export DEBUG=False
 export SECRET_KEY="内緒の文字列"
+export APP_SECRET_KEY="内緒の文字列"
 export ALLOWED_HOSTS="公開しているエンドポイントのDNS名" もしくは "*"
 python3 manage.py collectstatic
 gunicorn --workers 5 tamarin.wsgi
@@ -164,6 +165,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
    | ---- | ---- | ---- |
    | DEBUG | False | Django の設定なので基本的に本番では False |
    | SECRET_KEY | 任意の文字列 | シークレットキー文字列 |
+   | APP_SECRET_KEY | 任意の文字列 | PWA用シークレットキー文字列 |
    | ALLOWED_HOSTS | App Service が待ち受ける FQDN | 例) hoge.azurewebsites.net |
    | DB_ENGINE | POSTGRESQL | データベースとして PostgreSQL を使用することを指示 |
    | DB_HOST | PostgreSQL が稼働している VM の IP アドレス | パブリック IP アドレスで動作確認 |

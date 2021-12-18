@@ -31,6 +31,7 @@ let current_user = {
     user_id: null,
     username: "",
     encrypted_password: "",
+    key: CryptoJS.lib.WordArray.random(Number("{{PASSWORD_ENCRYPTION_KEY_LENGTH}}")).toString(),
     delete_after_download: true, // ダウンロード後にファイルを削除するかどうか.
     chart: "context"
 };
@@ -83,7 +84,7 @@ async function get_token() {
             },
             body: JSON.stringify({
                 "username": current_user.username,
-                "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+                "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
             })
         });
         // レスポンスコートが想定内なら所定の処理.
@@ -624,32 +625,39 @@ function background_task() {
     // オンラインでダウンロード中でなければ...
     if (navigator.onLine && !in_downloading) {
         // ユーザーの情報をもってくる.
-        load_user().then(() => {
-            // 最新のダウンロードファイルの状況を取得する.
-            get_download_file_list().then(file_list => {
-                if (file_list) {
-                    file_count = file_list.length;
-                    // チャートのデータを作成する.
-                    for (const file of file_list) {
-                        const context_count = context_list[file.context_tag];
-                        context_list[file.context_tag] = context_count ? context_count + 1 : 1;
-                        const scene_count = scene_list[file.scene_tag];
-                        scene_list[file.scene_tag] = scene_count ? scene_count + 1 : 1;
-                        const author_count = author_list[file.author_name];
-                        author_list[file.author_name] = author_count ? author_count + 1 : 1;
+        load_user().then(success => {
+            if (success) {
+                // 最新のダウンロードファイルの状況を取得する.
+                get_download_file_list().then(file_list => {
+                    if (file_list) {
+                        file_count = file_list.length;
+                        // チャートのデータを作成する.
+                        for (const file of file_list) {
+                            const context_count = context_list[file.context_tag];
+                            context_list[file.context_tag] = context_count ? context_count + 1 : 1;
+                            const scene_count = scene_list[file.scene_tag];
+                            scene_list[file.scene_tag] = scene_count ? scene_count + 1 : 1;
+                            const author_count = author_list[file.author_name];
+                            author_list[file.author_name] = author_count ? author_count + 1 : 1;
+                        }
+                    } else {
+                        file_count = 0;
+                        context_list = [];
+                        scene_list = [];
+                        author_list = [];
                     }
-                } else {
-                    file_count = 0;
-                    context_list = [];
-                    scene_list = [];
-                    author_list = [];
-                }
-                // チャートを描画する.
-                draw_chart();
-            });
+                    // チャートを描画する.
+                    draw_chart();
+                    // ビューを変える.
+                    change_view("main_view");
+                });
+            } else {
+                // 再サインインを要求.
+                change_view("signin_view");
+            }
         });
     }
-    // 終わったらもう一回自分を登録.
+    // もう一回自分を登録しておしまい.
     background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
 }
 
@@ -657,6 +665,7 @@ function background_task() {
  * アプリケーションのメイン.
  */
 function main() {
+    change_view("loading_view");
     // 起動時のURLを確認する.
     if (document.location.search !== "{{APP_MODE_URL_PARAM}}") {
         change_view("install_view");
@@ -700,7 +709,7 @@ function main() {
         const raw_password = document.getElementById("password").value;
         // 入力情報を保存する.
         current_user.username = username;
-        current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{SECRET_KEY}}")).toString();
+        current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{APP_SECRET_KEY}}")).toString();
         database.user.put(current_user).then(() => {
             // 既存のトークンを無効化してユーザーをロードする.
             token = null;
@@ -708,7 +717,9 @@ function main() {
                 if (!success) {
                     signin_error.style.display = "block";
                 } else {
-                    change_view("main_view");
+                    change_view("loading_view");
+                    // もう一回load_user()しちゃうけど...
+                    background_task();
                 }
             });
         });
@@ -762,10 +773,6 @@ function main() {
     database.version("{{LINK_APP_DATABASE_VERSION}}").stores({
         user: "dummy_id, user_id"
     });
-    // ユーザーをロードして処理開始.
-    load_user().then(success => {
-        draw_chart();
-        background_task();
-        change_view(success ? "main_view" : "signin_view");
-    });
+    // バックグラウンドタスクの1回目を実行して処理開始.
+    background_task();
 }

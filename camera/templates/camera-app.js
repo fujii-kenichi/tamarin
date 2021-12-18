@@ -200,7 +200,7 @@ async function get_token() {
             },
             body: JSON.stringify({
                 "username": current_user.username,
-                "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+                "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
             })
         });
         // レスポンスコートが想定内なら所定の処理.
@@ -422,7 +422,7 @@ function background_task() {
     if (navigator.onLine && !token) {
         change_view("signin_view");
     }
-    // 終わったらもう一回自分を登録.
+    // もう一回自分を登録しておしまい.
     background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
 }
 
@@ -540,7 +540,7 @@ function main() {
         // 入力情報を保存する.
         document.getElementById("current_author_name").value = current_user.author_name = author_name;
         current_user.username = username;
-        current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{SECRET_KEY}}")).toString();
+        current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{APP_SECRET_KEY}}")).toString();
         database.user.put(current_user).then(() => {
             // 既存のトークンを無効化してユーザーをロードする.
             token = null;

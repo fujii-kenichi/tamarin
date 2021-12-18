@@ -4,6 +4,8 @@
 @author: fujii.kenichi@tamariva.co.jp
 """
 
+import os
+
 from django.conf import settings
 from django.templatetags.static import static
 
@@ -11,13 +13,13 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.03E",
+    "VERSION": "0.0.03F",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
 
-    # シークレットキー情報:Djangoの設定を引き継ぐ.
-    "SECRET_KEY": settings.SECRET_KEY,
+    # シークレットキー:本番環境では必ず上書きすること!
+    "APP_SECRET_KEY" : os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden",),
 
     # メディアを暗号化する時に自動生成するキーの長さ.
     "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
@@ -101,7 +103,7 @@ APP_SETTINGS = {
 
     # タマリンカメラ:Dexieを通じてIndexedDBの構成に使用される値.
     "CAMERA_APP_DATABASE_NAME": "tamarin-camera",
-    "CAMERA_APP_DATABASE_VERSION": "3",
+    "CAMERA_APP_DATABASE_VERSION": "5",
 
     # タマリンカメラ:service workerのsyncに用いられるタグ文字列:写真のアップロード.
     "CAMERA_APP_UPLOAD_PHOTO_TAG": "upload_photo",
@@ -129,7 +131,7 @@ APP_SETTINGS = {
 
     # タマリンク:Dexieを通じてIndexedDBの構成に使用される値.
     "LINK_APP_DATABASE_NAME": "tamarin-link",
-    "LINK_APP_DATABASE_VERSION": "3",
+    "LINK_APP_DATABASE_VERSION": "5",
 }
 
 # タマリン固有の設定:表示に使用するメッセージを定義.
