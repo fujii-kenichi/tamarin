@@ -28,7 +28,7 @@ self.addEventListener("install", (event => {
                 "{{CAMERA_APP_ICON180}}",
                 "{{CAMERA_APP_ICON192}}",
                 "{{CAMERA_APP_ICON512}}",
-                "{{CAMERA_APP_SHUTTER_WAV}}",
+                "{{CAMERA_APP_SHUTTER_AUDIO}}",
                 "camera-app.webmanifest",
                 "camera-app.css",
                 "camera-app.js",

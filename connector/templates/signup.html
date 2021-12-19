@@ -33,7 +33,7 @@
                                 <p><strong>{{SIGNUP_LONG_MESSAGE}}</strong></p>
                                 <p><small>{{VERSION}}</small></p>
                             </div>
-                            <form method="POST">
+                            <form method="POST" autocomplete="off">
                                 {% csrf_token %}
                                 <div class="field">
                                     <input id="id_username" name="username" class="input" type="text" minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" required placeholder="{{USERNAME_LABEL}}" autofocus>

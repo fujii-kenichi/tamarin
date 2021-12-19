@@ -110,7 +110,7 @@ def feedback_done(request):
 
 
 class SignupForm(UserCreationForm):
-    """[サインナップのフォーム]"""
+    """[サインアップのフォーム]"""
     class Meta:
         model = models.User
         fields = ("username", "password1", "password2", )

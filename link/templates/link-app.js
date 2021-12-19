@@ -31,7 +31,6 @@ let current_user = {
     user_id: null,
     username: "",
     encrypted_password: "",
-    key: CryptoJS.lib.WordArray.random(Number("{{PASSWORD_ENCRYPTION_KEY_LENGTH}}")).toString(),
     delete_after_download: true, // ダウンロード後にファイルを削除するかどうか.
     chart: "context"
 };

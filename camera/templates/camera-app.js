@@ -311,7 +311,7 @@ async function upload_photo() {
     // フォームに写真を追加する.
     // 本当は form_data.append("data", photo.encrypted_data); でいいような気もする(ChromeだとOK)
     // でもSafariではform cacheに起因するバグ?で送信データのサイズが偶に0になってしまうということが起こる.
-    // しょうがいないのでLastMOdifiedをつけるべくいったんFileオブジェクトを経由して設定する.
+    // しょうがいないのでLastModifiedをつけるべくいったんFileオブジェクトを経由して設定する.
     const start_time = new Date();
     const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
     form_data.append("encrypted_data", encrypted_data);

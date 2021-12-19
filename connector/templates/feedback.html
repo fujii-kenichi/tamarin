@@ -27,7 +27,7 @@
                                 <p><strong>{{FEEDBACK_MESSAGE}}</strong></p>
                                 <p><small>{{VERSION}}</small></p>
                             </div>
-                            <form method="POST">
+                            <form method="POST" autocomplete="off">
                                 {% csrf_token %}
                                 <div class="field">
                                     <input id="id_author_name" name="author_name" class="input" type="text" minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" required placeholder="{{USERNAME_LABEL}}" autofocus>
