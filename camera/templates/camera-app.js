@@ -17,7 +17,7 @@ const JPEG_Q = 0.85;
 // 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
 let current_user = {
     dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
-    user_id: null,
+    user_id: "",
     username: "",
     encrypted_password: "",
     author_name: "",
@@ -27,7 +27,7 @@ let current_user = {
     shutter_sound: true, // シャッターサウンドはデフォルトでオン.
     auto_reload: true, // 自動リロードはデフォルトでオン.
     encryption: true, // 暗号化もデフォルトでオン.
-    selected_context: null, // 現在選択しているコンテキストを覚えておく.
+    selected_context: "", // 現在選択しているコンテキストを覚えておく.
 };
 
 // データベース(IndexedDBを使うためのDexie)のインスタンス.
@@ -45,9 +45,6 @@ let date_updated = null;
 // バックグラウンドループで使うタイマー.
 let background_task_timer = null;
 
-// service workerに写真のアップロードを任せるか?
-let use_service_worker = false;
-
 // 撮影用のimage capture オブジェクト.
 let image_capture = null;
 
@@ -61,9 +58,7 @@ function update_preview() {
     // 以降の処理はトライ＆エラーの結果としてこうしているけど,
     // これが本当に適切なやり方なのかはちょっとよくわからない...
     try {
-        // いったんシャッターを消す.
         document.getElementById("shutters").style.display = "none";
-        // 結びつけているストリームを全てリセットする.
         const preview = document.getElementById("preview");
         preview.pause();
         if (preview.srcObject) {
@@ -76,13 +71,9 @@ function update_preview() {
             preview.srcObject = null;
         }
         image_capture = null;
-        // ページが表示状態なら再表示.
         if (document.visibilityState === "visible") {
-            // デバイスパラメータを用いてストリームに接続する.        
             navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
-                const preview = document.getElementById("preview");
-                const my_image_capture = class {
-                    // 実行環境に存在しない時に使用する簡易版ImageCapture実装.                
+                const MyImageCapture = class {
                     async takePhoto() {
                         return new Promise(resolve => {
                             const canvas = document.getElementById("canvas");
@@ -93,7 +84,7 @@ function update_preview() {
                         });
                     }
                 };
-                image_capture = typeof ImageCapture === "undefined" ? new my_image_capture() : new ImageCapture(stream.getVideoTracks()[0]);
+                image_capture = typeof ImageCapture === "undefined" ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 preview.srcObject = stream;
             });
         }
@@ -107,19 +98,14 @@ function update_preview() {
  * @param {string} scene_tag 撮影時に指定されたシーンタグ.
  */
 function take_photo(scene_tag) {
-    // もういっぱいならこれ以上撮影できない.
     if (photo_count >= Number("{{CAMERA_APP_MAX_PHOTO_COUNT}}")) {
         return;
     }
-    // プレビューが消えていたら撮影できない.
     const preview = document.getElementById("preview");
-    if (!image_capture || preview.style.visibility === "hidden") {
+    if (preview.style.visibility === "hidden") {
         return;
     }
-    // プレビューを消す.
     preview.style.visibility = "hidden";
-    // シャッター音を再生する.
-    // safariがUIイベント経由でないとサウンド再生を許可してくれないのでここで再生する.
     const shutter_audio = document.getElementById("shutter_audio");
     if (current_user.shutter_sound) {
         shutter_audio.pause();
@@ -127,22 +113,16 @@ function take_photo(scene_tag) {
         shutter_audio.load();
         shutter_audio.play();
     }
-    // とりあえず枚数を増やしておく...
-    photo_count++;
-    document.getElementById("photo_count").value = photo_count;
-    // 今の時点を撮影日時とする.
+    document.getElementById("photo_count").value = ++photo_count;
     const start_time = new Date();
-    // 実際の画像情報を取得する.
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     image_capture.takePhoto(CAPTURE_PARAM).then(image => {
         console.info(`captured image type : ${image.type}`);
         console.info(`captured image size : ${image.size}`);
-        // 画像を読み込む.
         const image_reader = new FileReader();
         image_reader.onload = () => {
             let data = image_reader.result;
             let key = "{{NO_ENCRYPTION_KEY}}";
-            // 暗号化の処理をする.
             if (current_user.encryption) {
                 key = CryptoJS.lib.WordArray.random(Number("{{MEDIA_ENCRYPTION_KEY_LENGTH}}")).toString();
                 const base64_raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ""));
@@ -150,9 +130,7 @@ function take_photo(scene_tag) {
                 data = base64_encrypted;
                 console.info(`encrypted data size :${base64_encrypted.length}`);
             }
-            // TODO: 本当はここでサイズを確認し超えていたら何らかのエラーにしてしまうべき.            
-            // データベースに保管する.
-            database.photo.add({
+            const photo = {
                 owner: current_user.user_id,
                 date_taken: start_time.toJSON(),
                 author_name: current_user.author_name,
@@ -161,24 +139,21 @@ function take_photo(scene_tag) {
                 content_type: image.type,
                 encryption_key: key,
                 encrypted_data: data
-            }).then(() => {
+            };
+            // TODO: 本当はここでサイズを確認して適切な処理をするべき.
+            database.photo.add(photo).then(() => {
                 console.info(`photo processing time :${(new Date() - start_time)}`);
-                // プレビューを再開する.
                 preview.style.visibility = "visible";
-                // アップロードのためにservice workerにsyncイベントを登録する.
-                if ("sync" in service_worker) {
-                    service_worker.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}").then(() => {
-                        use_service_worker = true;
-                    }).catch(error => {
-                        console.warn("could not register {{CAMERA_APP_UPLOAD_PHOTO_TAG}} :", error);
-                        use_service_worker = false;
-                    });
+                if (navigator.onLine) {
+                    upload_photo(photo);
+                } else {
+                    if ("sync" in service_worker) {
+                        service_worker.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
+                    }
                 }
             });
         };
         image_reader.readAsArrayBuffer(image);
-    }).catch(error => {
-        console.warn("error in take_photo() : ", error);
     });
 }
 
@@ -187,35 +162,25 @@ function take_photo(scene_tag) {
  * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
 async function get_token() {
-    // トークンがあればとりあえずはもってこれたとする.
-    // 使った側がエラーが起きた時はリセットする.
     if (token) {
         return true;
     }
-    try {
-        const response = await fetch("{{CREATE_TOKEN_URL}}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "username": current_user.username,
-                "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
-            })
-        });
-        // レスポンスコートが想定内なら所定の処理.
-        if (response.status === 200) {
-            const result = await response.json();
-            token = result.access;
-            return token ? true : false;
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            return false;
-        }
-    } catch (error) {
-        console.error("exception in get_token() :", error);
+    const response = await fetch("{{CREATE_TOKEN_URL}}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "username": current_user.username,
+            "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+        })
+    });
+    if (response.status === 200) {
+        const result = await response.json();
+        token = result.access;
+        return token ? true : false;
     }
-    change_view("error_view");
-    throw new Error("fatal error");
+    return false;
 }
 
 /**
@@ -224,99 +189,68 @@ async function get_token() {
  */
 async function load_user() {
     const user = await database.user.get("{{APP_DATABASE_CURRENT_USER}}");
-    // データベースにユーザーが(まだ)存在しない場合.
     if (!user) {
         return false;
     }
     current_user = user;
-    // 初回だけデータベースにあった情報で表示を更新する.
-    if (!date_updated) {
-        date_updated = "dummy";
-        setup_ui();
-    }
+    document.getElementById("username").value = current_user.username;
     while (true) {
-        // オフラインならここで終了.
         if (!navigator.onLine) {
             return true;
         }
-        // トークンがとれなければおしまい.        
         if (!await get_token()) {
             return false;
         }
-        try {
-            // 現在のユーザーに対応するデータをUserサービスから持ってくる.
-            const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
-                headers: {
-                    "Authorization": `{{TOKEN_FORMAT}} ${token}`
-                }
-            });
-            if (response.status === 200) {
-                // 200ならとってきた情報をデータベースに格納する.
-                const result = await response.json();
-                current_user.user_id = result[0].id;
-                // 更新時刻が覚えているものと違えばUIを更新する.
-                if (date_updated !== result[0].date_updated) {
-                    date_updated = result[0].date_updated;
-                    current_user.context_tag = result[0].context_tag;
-                    current_user.scene_tag = result[0].scene_tag;
-                    current_user.scene_color = result[0].scene_color;
-                    setup_ui();
-                }
-                const select = document.getElementById("context_tags");
-                if (select.selectedIndex >= 0) {
-                    current_user.selected_context = select.options[select.selectedIndex].value;
-                }
-                await database.user.put(current_user);
-                // 成功で戻る.
-                return true;
-            } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-                // エラーなら今のトークンがダメということでリトライ. 
-                token = null;
+        const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
+            headers: {
+                "Authorization": `{{TOKEN_FORMAT}} ${token}`
             }
-        } catch (error) {
-            console.error("exception in load_user() :", error);
+        });
+        if (response.status === 200) {
+            const result = await response.json();
+            current_user.user_id = result[0].id;
+            current_user.context_tag = result[0].context_tag;
+            current_user.scene_tag = result[0].scene_tag;
+            current_user.scene_color = result[0].scene_color;
+            const select = document.getElementById("context_tags");
+            current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
+            await database.user.put(current_user);
+            if (date_updated !== result[0].date_updated) {
+                date_updated = result[0].date_updated;
+                setup_ui();
+            }
+            return true;
+        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+            token = null;
+        } else {
             return false;
         }
     }
 }
 
 /**
- * データベースにある写真を１枚だけMediaサービスにアップロードする.
- * @return {Promise<boolean>} true:アップロードした / false:アップロードしなかった.
+ * 写真をMediaサービスにアップロードする.
+ * @param {*} photo 対象となる写真.
  */
-async function upload_photo() {
-    // オフラインならなにもしない.
-    if (!navigator.onLine) {
-        return false;
-    }
-    // 写真がなければなにもしない.
-    const photo = await database.photo.orderBy("date_taken").first();
-    if (!photo) {
-        return false;
-    }
-    // トークンがとれなければおしまい.
-    if (!await get_token()) {
-        return false;
-    }
-    // アップロードに使用するフォームを準備する.
-    // MediaサービスのAPIはこの時だけJSONではなくてHTML Formであげていることに注意!
-    const form_data = new FormData();
-    form_data.append("owner", photo.owner);
-    form_data.append("date_taken", photo.date_taken);
-    form_data.append("author_name", photo.author_name);
-    form_data.append("scene_tag", photo.scene_tag);
-    form_data.append("context_tag", photo.context_tag);
-    form_data.append("content_type", photo.content_type);
-    form_data.append("encryption_key", photo.encryption_key);
-    // フォームに写真を追加する.
-    // 本当は form_data.append("data", photo.encrypted_data); でいいような気もする(ChromeだとOK)
-    // でもSafariではform cacheに起因するバグ?で送信データのサイズが偶に0になってしまうということが起こる.
-    // しょうがいないのでLastModifiedをつけるべくいったんFileオブジェクトを経由して設定する.
-    const start_time = new Date();
-    const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
-    form_data.append("encrypted_data", encrypted_data);
-    // Mediaサービスに写真をアップロードする.
-    try {
+async function upload_photo(photo) {
+    while (true) {
+        if (!navigator.onLine) {
+            return;
+        }
+        if (!await get_token()) {
+            return;
+        }
+        const form_data = new FormData();
+        form_data.append("owner", photo.owner);
+        form_data.append("date_taken", photo.date_taken);
+        form_data.append("author_name", photo.author_name);
+        form_data.append("scene_tag", photo.scene_tag);
+        form_data.append("context_tag", photo.context_tag);
+        form_data.append("content_type", photo.content_type);
+        form_data.append("encryption_key", photo.encryption_key);
+        const start_time = new Date();
+        const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
+        form_data.append("encrypted_data", encrypted_data);
         const response = await fetch("{{MEDIA_API_URL}}", {
             method: "POST",
             headers: {
@@ -324,46 +258,46 @@ async function upload_photo() {
             },
             body: form_data
         });
-        // うまくいったらデータベースから削除する.
         if (response.status === 201) {
             console.info(`photo upload time :${(new Date() - start_time)}`);
             await database.photo.delete(photo.id);
-            return true;
+            document.getElementById("photo_count").value = photo_count = await database.photo.count();
+            return;
         } else if (response.status === 400 || response.status === 401 || response.status === 403) {
             token = null;
+        } else {
+            return;
         }
-    } catch (error) {
-        console.error("exception in upload_photo() :", error);
     }
-    return false;
 }
 
 /**
- * 写真をあるだけ全部アップロードする.
+ * 写真をあるだけアップロードする.
  */
-async function upload_all_photos() {
-    let result = true;
-    do {
-        result = await upload_photo();
-        photo_count = await database.photo.count();
-        document.getElementById("photo_count").value = photo_count;
-    } while (result && token);
+async function upload_photos() {
+    while (navigator.onLine && token) {
+        const photo = await database.photo.orderBy("date_taken").first();
+        if (photo) {
+            await upload_photo(photo);
+        } else {
+            break;
+        }
+    }
 }
 
 /**
  *  current_userの中身からUIのエレメントを設定する.
  */
 function setup_ui() {
-    document.getElementById("username").value = current_user.username;
     document.getElementById("author_name").value = document.getElementById("current_author_name").value = current_user.author_name;
     document.getElementById("shutter_sound").checked = current_user.shutter_sound;
     document.getElementById("auto_reload").checked = current_user.auto_reload;
     document.getElementById("encryption").checked = current_user.encryption;
     let context_tags_html = "";
     if (current_user.context_tag) {
-        for (const tag of current_user.context_tag.split(/,/)) {
-            if (tag) {
-                context_tags_html += (`<option class=\"context_tag\" value=\"${tag}\" ${(tag === current_user.selected_context ? "selected" : "")}>${tag}</option>`);
+        for (const context of current_user.context_tag.split(/,/)) {
+            if (context) {
+                context_tags_html += (`<option class=\"context_tag\" value=\"${context}\" ${(context === current_user.selected_context ? "selected" : "")}>${context}</option>`);
             }
         }
     }
@@ -380,6 +314,9 @@ function setup_ui() {
         }
     }
     document.getElementById("shutters").innerHTML = shutters_html;
+    database.photo.count().then(count => {
+        document.getElementById("photo_count").value = photo_count = count;
+    });
 }
 
 /**
@@ -396,34 +333,17 @@ function change_view(name) {
  * バックグラウンドタスク.
  */
 function background_task() {
-    // 前のタイマーがあれば破棄しておく.
-    if (background_task_timer) {
-        clearTimeout(background_task_timer);
-        background_task_timer = null;
-    }
-    // 写真の枚数を更新.
-    database.photo.count().then(count => {
-        document.getElementById("photo_count").value = photo_count = count;
-    });
-    // 選択されているコンテキストを念の為更新.
     const select = document.getElementById("context_tags");
-    if (select.selectedIndex >= 0) {
-        current_user.selected_context = select.options[select.selectedIndex].value;
-    }
-    // ユーザーの設定を自動更新.
+    current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
     if (current_user.auto_reload) {
         load_user();
     }
-    // 溜まっている写真をアップロード.
-    if (!use_service_worker) {
-        upload_all_photos();
-    }
-    // オンラインでかつトークンがないなら再度サインインを要求.
-    if (navigator.onLine && !token) {
+    if (!token) {
         change_view("signin_view");
     }
-    // もう一回自分を登録しておしまい.
-    background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
+    upload_photos().then(() => {
+        background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
+    });
 }
 
 /**
@@ -431,170 +351,124 @@ function background_task() {
  */
 function main() {
     change_view("loading_view");
-    // 起動時のURLを確認する.
-    if (document.location.search !== "{{APP_MODE_URL_PARAM}}") {
-        change_view("install_view");
-        return;
-    }
-    // service workerが使える環境かどうかをチェックする.
-    if (!("serviceWorker" in navigator)) {
-        change_view("error_view");
-        return;
-    }
-    // service workerの登録を行う.
-    navigator.serviceWorker.register("camera-serviceworker.js").then(registration => {
-        navigator.serviceWorker.ready.then(registration => {
-            service_worker = registration;
-            // メッセージのハンドラも登録しておく.
-            navigator.serviceWorker.onmessage = (event => {
-                if (event.data.tag === "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}") {
-                    // service workerから写真アップロード実施のメッセージが来たら枚数のカウンタを変える.
-                    database.photo.count().then(count => {
-                        document.getElementById("photo_count").value = photo_count = count;
-                    });
-                } else if (event.data.tag === "{{CAMERA_APP_FORCE_UPDATE_TAG}}") {
-                    // service workerから強制アップデートのメッセージが来たら自分自身を読み直す.
-                    // すでにキャッシュはservice workerが削除しているのでこれでアップデートされる.
-                    window.location = "camera-app.html{{APP_MODE_URL_PARAM}}";
-                }
-            });
-        });
-    });
-    // タッチイベントを無効にしておく.
     window.addEventListener("touchmove", (event => {
         event.preventDefault();
     }));
-    // オンラインになった時のイベントをセットする.
     window.addEventListener("offline", (() => {
         update_preview();
     }));
-    // オフラインになった時のイベントをセットする.
     window.addEventListener("online", (() => {
         update_preview();
     }));
-    // ページの表示状態が変わったときのイベントをセットする.
     document.addEventListener("visibilitychange", (() => {
         update_preview();
     }));
-    // プレビューのメタデータがロードされたら再生を開始するイベントをセットする.    
     document.getElementById("preview").onloadedmetadata = (() => {
         document.getElementById("preview").play().catch(error => {
             console.error("could not start play preview :", error);
         });
     });
-    // プレビューの再生が開始されたらシャッターを出現させるイベントをセットする.
     document.getElementById("preview").onplay = (() => {
         document.getElementById("shutters").style.display = "block";
     });
-    // UIのイベントをセットする:再サインイン.
     document.getElementById("current_author_name").onclick = (() => {
         change_view("signin_view");
     });
-    // UIのイベントをセットする:サインインキャンセル.
     document.getElementById("signin-cancel").onclick = (() => {
         if (token) {
             change_view("main_view");
         }
     });
-    // UIのイベントをセットする:コンテキストを選択.
     document.getElementById("context_tags").onchange = (() => {
         const select = document.getElementById("context_tags");
-        if (select.selectedIndex >= 0) {
-            current_user.selected_context = select.options[select.selectedIndex].value;
-            database.user.put(current_user);
-        }
+        current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
+        database.user.put(current_user);
     });
-    // UIのイベントをセットする:リロード.
     document.getElementById("photo_count").onclick = (() => {
-        load_user().then(success => {
-            if (success) {
-                if (photo_count > 0) {
-                    change_view("loading_view");
-                    // 写真を全部アップロードする. 
-                    upload_all_photos().then(() => {
-                        change_view("main_view");
-                    });
-                }
-            } else {
-                // 再認証を要求する.
-                if (navigator.onLine && !token) {
-                    change_view("signin_view");
-                }
-            }
+        load_user().then(() => {
+            change_view("loading_view");
+            upload_photos().then(() => {
+                change_view("main_view");
+            });
         });
     });
-    // UIのイベントをセットする:サインイン.
     document.getElementById("signin").onclick = (() => {
         const signin_error = document.getElementById("signin_error");
         signin_error.style.display = "none";
-        // 画面から情報をとってくる.
         const author_name = document.getElementById("author_name").value.trim();
         const username = document.getElementById("username").value.trim();
         const raw_password = document.getElementById("password").value;
-        // 利用者の名前が正当かどうかを確認してだめならエラーとする.        
         const validator = /[\s\,\:\;\&\"\'\`\¥\|\~\%\/\\<\>\?\\\*]/m;
         if (!author_name || validator.exec(author_name)) {
             signin_error.style.display = "block";
             return;
         }
-        // 入力情報を保存する.
         document.getElementById("current_author_name").value = current_user.author_name = author_name;
         current_user.username = username;
         current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{APP_SECRET_KEY}}")).toString();
         database.user.put(current_user).then(() => {
-            // 既存のトークンを無効化してユーザーをロードする.
             token = null;
-            load_user().then(success => {
-                if (!success) {
-                    signin_error.style.display = "block";
-                } else {
+            load_user().then(result => {
+                if (result) {
                     change_view("main_view");
+                } else {
+                    signin_error.style.display = "block";
                 }
             });
         });
     });
-    // UIのイベントをセットする:設定.
     document.getElementById("setting").onclick = (() => {
         document.getElementById("setting_dialog").classList.add("is-active");
     });
-    // UIのイベントをセットする:設定保存.
     document.getElementById("save_setting").onclick = (() => {
-        // 設定値を保存する.
         current_user.shutter_sound = document.getElementById("shutter_sound").checked;
         current_user.auto_reload = document.getElementById("auto_reload").checked;
         current_user.encryption = document.getElementById("encryption").checked;
         const select = document.getElementById("context_tags");
-        if (select.selectedIndex >= 0) {
-            current_user.selected_context = select.options[select.selectedIndex].value;
-        }
+        current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
         database.user.put(current_user).then(() => {
             document.getElementById("setting_dialog").classList.remove("is-active");
         });
     });
-    // UIのイベントをセットする:バージョンアップ.
     document.getElementById("version").onclick = (() => {
         document.getElementById("setting_dialog").classList.remove("is-active");
-        change_view("loading_view");
-        // service workerにメッセージをポストする.        
         if (navigator.serviceWorker.controller && ("postMessage" in navigator.serviceWorker.controller)) {
+            change_view("loading_view");
             navigator.serviceWorker.controller.postMessage({
                 tag: "{{CAMERA_APP_FORCE_UPDATE_TAG}}"
             });
-        } else {
-            console.warn("Cound not post message.");
         }
     });
-    // Dexieのインスタンスを作る.
     database = new Dexie("{{CAMERA_APP_DATABASE_NAME}}");
     database.version("{{CAMERA_APP_DATABASE_VERSION}}").stores({
         user: "dummy_id, user_id",
         photo: "++id, date_taken"
     });
-    // プレビューを開始する.
-    update_preview();
-    // ユーザーをロードして処理開始.
-    load_user().then(success => {
-        change_view(success ? "main_view" : "signin_view");
-        background_task();
+    navigator.serviceWorker.register("camera-serviceworker.js").then(() => {
+        navigator.serviceWorker.ready.then(registration => {
+            service_worker = registration;
+            if ("sync" in service_worker) {
+                service_worker.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
+            }
+            navigator.serviceWorker.onmessage = (event => {
+                if (event.data.tag === "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}") {
+                    database.photo.count().then(count => {
+                        document.getElementById("photo_count").value = photo_count = count;
+                    });
+                } else if (event.data.tag === "{{CAMERA_APP_FORCE_UPDATE_TAG}}") {
+                    window.location = "camera-app.html{{APP_MODE_URL_PARAM}}";
+                }
+            });
+        });
+    });
+    if (document.location.search !== "{{APP_MODE_URL_PARAM}}") {
+        change_view("install_view");
+        return;
+    }
+    load_user().then(result => {
+        setup_ui();
+        update_preview();
+        background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
+        change_view(result ? "main_view" : "signin_view");
     });
 }

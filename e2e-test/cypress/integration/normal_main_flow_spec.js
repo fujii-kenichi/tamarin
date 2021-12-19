@@ -36,10 +36,13 @@ describe("主要な処理の正常系を流すテスト", () => {
     });
     it("タマリンカメラ", () => {
         const database = new Dexie("tamarin-camera");
+
         database.version("5").stores({
             user: "dummy_id, user_id",
             photo: "++id, date_taken"
         });
+        database.user.clear();
+        database.photo.clear();
         let current_user = {
             dummy_id: "current_user",
             user_id: null,
@@ -99,17 +102,16 @@ describe("主要な処理の正常系を流すテスト", () => {
         cy.get("#preview").should("be.visible");
         // camera-app:撮影1. 
         cy.get("#context_tags").select(0);
-        cy.get("div.tama-shutter").eq(0).click();
-        //cy.get("#photo_count").invoke("val").should("eq", "1");
+        cy.get("div.tama-shutter").eq(0).trigger("mousedown");
+        cy.get("#photo_count").invoke("val").should("eq", "1");
         cy.wait(1000);
         cy.get("#context_tags").select(1);
-        cy.get("div.tama-shutter").eq(1).click();
-        //cy.get("#photo_count").invoke("val").should("eq", "2");
+        cy.get("div.tama-shutter").eq(1).trigger("mousedown");
         cy.wait(1000);
         cy.get("#context_tags").select(2);
-        cy.get("div.tama-shutter").eq(2).click();
-        //cy.get("#photo_count").invoke("val").should("eq", "3");
-        cy.wait(1000);
+        cy.get("div.tama-shutter").eq(2).trigger("mousedown");
+        cy.wait(1000 * 10);
+        cy.get("#photo_count").invoke("val").should("eq", "0");
         cy.visit("connector/");
     });
     it("タマリンク", () => {
