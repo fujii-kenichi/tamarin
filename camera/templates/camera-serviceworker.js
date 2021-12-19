@@ -52,7 +52,8 @@ self.addEventListener("fetch", (event => {
             } else {
                 return fetch(event.request);
             }
-        }));
+        })
+    );
 }));
 
 /**

@@ -131,21 +131,19 @@ dmypy.json
 # VS code
 .vscode
 
-# django migration files.
+# django.
 migrations/
-
-# django media files.
 media/
-
-# django database file.
 db.sqlite3
-
-# django static files.
 staticfiles/
 
 # Mac
 .DS_Store
 
-# Bulma
+# node
 node_modules
 package-lock.json
+
+# Cypress
+e2e-test/cypress/videos
+e2e-test/cypress/screenshots

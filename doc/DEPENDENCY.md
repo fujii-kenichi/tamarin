@@ -64,6 +64,12 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 - [Bulmaswatch](https://jenil.github.io/bulmaswatch/default/)
 - [Free Bulma Templates](https://bulmatemplates.github.io/bulma-templates/)
 
+## テスト
+
+### [Cypress](https://www.cypress.io/)
+
+- めちゃくちゃ便利な(こればっかり...)テストフレームワーク。
+
 ## データ
 
 ### アイコン
