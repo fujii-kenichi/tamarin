@@ -100,6 +100,7 @@ async function force_update() {
         });
     });
 }
+
 /**
  * 写真をあるだけアップロードする.
  */
@@ -109,10 +110,31 @@ async function upload_photos() {
         user: "dummy_id, user_id",
         photo: "++id, date_taken"
     });
-    let token = null;
+    const user = await database.user.get("{{APP_DATABASE_CURRENT_USER}}");
+    if (!user) {
+        return;
+    }
+    const response = await fetch("{{CREATE_TOKEN_URL}}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "username": user.username,
+            "password": CryptoJS.AES.decrypt(user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+        })
+    });
+    if (response.status !== 200) {
+        return;
+    }
+    const result = await response.json();
+    const token = result.access;
+    if (!token) {
+        return;
+    }
     while (true) {
-        const photo = await database.photo.orderBy("date_taken").first();
-        if (!photo) {
+        const photo_count = await database.photo.count();
+        if (photo_count == 0) {
             return;
         }
         if (!navigator.onLine) {
@@ -121,57 +143,55 @@ async function upload_photos() {
             }
             return;
         }
-        const user = await database.user.get("{{APP_DATABASE_CURRENT_USER}}");
-        if (!user) {
-            return;
-        }
-        if (!token) {
-            const response = await fetch("{{CREATE_TOKEN_URL}}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "username": user.username,
-                    "password": CryptoJS.AES.decrypt(user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
-                })
-            });
-            if (response.status !== 200) {
-                return;
-            }
-            const result = await response.json();
-            token = result.access;
-        }
-        const form_data = new FormData();
-        form_data.append("owner", photo.owner);
-        form_data.append("date_taken", photo.date_taken);
-        form_data.append("author_name", photo.author_name);
-        form_data.append("scene_tag", photo.scene_tag);
-        form_data.append("context_tag", photo.context_tag);
-        form_data.append("content_type", photo.content_type);
-        form_data.append("encryption_key", photo.encryption_key);
-        const start_time = new Date();
-        const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
-        form_data.append("encrypted_data", encrypted_data);
-        const response = await fetch("{{MEDIA_API_URL}}", {
-            method: "POST",
-            headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
-            },
-            body: form_data
-        });
-        if (response.status === 201) {
-            console.info(`photo upload time :${(new Date() - start_time)}`);
-            await database.photo.delete(photo.id);
-            self.clients.matchAll().then(clients => {
-                for (const client of clients) {
-                    client.postMessage({ tag: "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}" });
-                }
-            });
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            token = null;
-        } else {
-            return;
-        }
+        upload_photo(database, token);
     }
+}
+
+/**
+ * 写真を一枚だけアップロードする.
+ * @param {*} database データベース.
+ * @param {*} token アップロードに使用するトークン.
+ */
+function upload_photo(database, token) {
+    database.transaction("rw", database.photo, () => {
+        database.photo.orderBy("date_taken").first().then(photo => {
+            if (photo) {
+                database.photo.delete(photo.id).then(() => {
+                    const form_data = new FormData();
+                    form_data.append("owner", photo.owner);
+                    form_data.append("date_taken", photo.date_taken);
+                    form_data.append("author_name", photo.author_name);
+                    form_data.append("scene_tag", photo.scene_tag);
+                    form_data.append("context_tag", photo.context_tag);
+                    form_data.append("content_type", photo.content_type);
+                    form_data.append("encryption_key", photo.encryption_key);
+                    const start_time = new Date();
+                    const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
+                    form_data.append("encrypted_data", encrypted_data);
+                    fetch("{{MEDIA_API_URL}}", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                        },
+                        body: form_data
+                    }).then(response => {
+                        if (response.status === 201) {
+                            console.info(`photo upload time :${(new Date() - start_time)}`);
+                            self.clients.matchAll().then(clients => {
+                                for (const client of clients) {
+                                    client.postMessage({ tag: "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}" });
+                                }
+                            });
+                        } else {
+                            throw response;
+                        }
+                    }).catch(error => {
+                        throw error;
+                    });
+                }).catch(error => {
+                    throw error;
+                });
+            }
+        });
+    });
 }
