@@ -100,7 +100,7 @@ describe("主要な処理の正常系を流すテスト", () => {
         cy.get("#photo_count").invoke("val").should("not.be.empty");
         cy.get("#shutters").should("not.be.empty");
         cy.get("#preview").should("be.visible");
-        // camera-app:撮影1. 
+        // camera-app:撮影.
         cy.get("#context_tags").select(0);
         cy.get("div.tama-shutter").eq(0).trigger("mousedown");
         cy.get("#photo_count").invoke("val").should("eq", "1");
@@ -110,7 +110,7 @@ describe("主要な処理の正常系を流すテスト", () => {
         cy.wait(1000);
         cy.get("#context_tags").select(2);
         cy.get("div.tama-shutter").eq(2).trigger("mousedown");
-        cy.wait(1000 * 10);
+        cy.wait(1000 * 5);
         cy.get("#photo_count").invoke("val").should("eq", "0");
         cy.visit("connector/");
     });

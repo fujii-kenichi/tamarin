@@ -4,12 +4,23 @@
  */
 "use strict";
 
-// バックグラウンドタスクを繰り返すときの待ち時間(ミリ秒).
+// バックグラウンドを繰り返すときの待ち時間(ミリ秒).
 const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 
 // 撮影用のパラメータ.
 const CAPTURE_PARAM = JSON.parse(String("{{CAPTURE_PARAM}}").replaceAll("&quot;", '"'));
 const DEVICE_PARAM = JSON.parse(String("{{DEVICE_PARAM}}").replaceAll("&quot;", '"'));
+
+// 写真の最大枚数.
+const MAX_PHOTO_COUNT = Number("{{CAMERA_APP_MAX_PHOTO_COUNT}}");
+
+// よくつかうUIのエレメント.
+const PREVIEW = document.getElementById("preview");
+const CANVAS = document.getElementById("canvas");
+const SHUTTER_AUDIO = document.getElementById("shutter_audio");
+const SHUTTERS = document.getElementById("shutters");
+const PHOTO_COUNT = document.getElementById("photo_count");
+const CONTEXT_TAGS = document.getElementById("context_tags");
 
 // 自前の実装でJPEGを作るときの品質値.
 const JPEG_Q = 0.85;
@@ -27,14 +38,11 @@ let current_user = {
     shutter_sound: true, // シャッターサウンドはデフォルトでオン.
     auto_reload: true, // 自動リロードはデフォルトでオン.
     encryption: true, // 暗号化もデフォルトでオン.
-    selected_context: "", // 現在選択しているコンテキストを覚えておく.
+    selected_context_tag: "" // 現在選択しているコンテキストを覚えておく.
 };
 
 // データベース(IndexedDBを使うためのDexie)のインスタンス.
 let database = null;
-
-// Service workerの登録情報.
-let service_worker = null;
 
 // Tokenサービスが返してきたトークン.
 let token = null;
@@ -42,14 +50,14 @@ let token = null;
 // Userサービスの最終更新日時.
 let date_updated = null;
 
-// バックグラウンドループで使うタイマー.
-let background_task_timer = null;
-
 // 撮影用のimage capture オブジェクト.
 let image_capture = null;
 
 // 現在溜まっている写真の枚数.
 let photo_count = 0;
+
+// バックグラウンドタスクのタイマー.
+let background_task_timer = null;
 
 /**
  * カメラのプレビューを更新する.
@@ -58,17 +66,16 @@ function update_preview() {
     // 以降の処理はトライ＆エラーの結果としてこうしているけど,
     // これが本当に適切なやり方なのかはちょっとよくわからない...
     try {
-        document.getElementById("shutters").style.display = "none";
-        const preview = document.getElementById("preview");
-        preview.pause();
-        if (preview.srcObject) {
-            preview.srcObject.getVideoTracks().forEach(track => {
+        SHUTTERS.style.display = "none";
+        PREVIEW.pause();
+        if (PREVIEW.srcObject) {
+            PREVIEW.srcObject.getVideoTracks().forEach(track => {
                 track.stop();
-                preview.srcObject.removeTrack(track);
+                PREVIEW.srcObject.removeTrack(track);
             });
-            preview.removeAttribute("srcObject");
-            preview.load();
-            preview.srcObject = null;
+            PREVIEW.removeAttribute("srcObject");
+            PREVIEW.load();
+            PREVIEW.srcObject = null;
         }
         image_capture = null;
         if (document.visibilityState === "visible") {
@@ -76,16 +83,15 @@ function update_preview() {
                 const MyImageCapture = class {
                     async takePhoto() {
                         return new Promise(resolve => {
-                            const canvas = document.getElementById("canvas");
-                            canvas.width = preview.videoWidth;
-                            canvas.height = preview.videoHeight;
-                            canvas.getContext("2d").drawImage(preview, 0, 0);
-                            canvas.toBlob(resolve, "image/jpeg", JPEG_Q);
+                            CANVAS.width = PREVIEW.videoWidth;
+                            CANVAS.height = PREVIEW.videoHeight;
+                            CANVAS.getContext("2d").drawImage(PREVIEW, 0, 0);
+                            CANVAS.toBlob(resolve, "image/jpeg", JPEG_Q);
                         });
                     }
                 };
                 image_capture = typeof ImageCapture === "undefined" ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
-                preview.srcObject = stream;
+                PREVIEW.srcObject = stream;
             });
         }
     } catch (error) {
@@ -98,27 +104,20 @@ function update_preview() {
  * @param {string} scene_tag 撮影時に指定されたシーンタグ.
  */
 function take_photo(scene_tag) {
-    if (photo_count >= Number("{{CAMERA_APP_MAX_PHOTO_COUNT}}")) {
+    if (photo_count >= MAX_PHOTO_COUNT || PREVIEW.style.visibility === "hidden" || !image_capture) {
         return;
     }
-    const preview = document.getElementById("preview");
-    if (preview.style.visibility === "hidden") {
-        return;
-    }
-    preview.style.visibility = "hidden";
-    const shutter_audio = document.getElementById("shutter_audio");
+    PREVIEW.style.visibility = "hidden";
     if (current_user.shutter_sound) {
-        shutter_audio.pause();
-        shutter_audio.currentTime = 0;
-        shutter_audio.load();
-        shutter_audio.play();
+        SHUTTER_AUDIO.pause();
+        SHUTTER_AUDIO.currentTime = 0;
+        SHUTTER_AUDIO.load();
+        SHUTTER_AUDIO.play();
     }
-    document.getElementById("photo_count").value = ++photo_count;
+    PHOTO_COUNT.value = ++photo_count;
     const start_time = new Date();
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     image_capture.takePhoto(CAPTURE_PARAM).then(image => {
-        console.info(`captured image type : ${image.type}`);
-        console.info(`captured image size : ${image.size}`);
         const image_reader = new FileReader();
         image_reader.onload = () => {
             let data = image_reader.result;
@@ -135,22 +134,17 @@ function take_photo(scene_tag) {
                 date_taken: start_time.toJSON(),
                 author_name: current_user.author_name,
                 scene_tag: scene_tag,
-                context_tag: document.getElementById("context_tags").value,
+                context_tag: CONTEXT_TAGS.value,
                 content_type: image.type,
                 encryption_key: key,
                 encrypted_data: data
             };
-            // TODO: 本当はここでサイズを確認して適切な処理をするべき.
             database.photo.add(photo).then(() => {
+                PREVIEW.style.visibility = "visible";
+                navigator.serviceWorker.controller.postMessage({ tag: "{{CAMERA_APP_UPLOAD_PHOTO_TAG}}" });
                 console.info(`photo processing time :${(new Date() - start_time)}`);
-                preview.style.visibility = "visible";
-                if (navigator.onLine) {
-                    upload_photo(photo);
-                } else {
-                    if ("sync" in service_worker) {
-                        service_worker.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
-                    }
-                }
+                console.info(`captured image type : ${image.type}`);
+                console.info(`captured image size : ${image.size}`);
             });
         };
         image_reader.readAsArrayBuffer(image);
@@ -212,8 +206,7 @@ async function load_user() {
             current_user.context_tag = result[0].context_tag;
             current_user.scene_tag = result[0].scene_tag;
             current_user.scene_color = result[0].scene_color;
-            const select = document.getElementById("context_tags");
-            current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
+            current_user.selected_context_tag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : current_user.selected_context_tag;
             await database.user.put(current_user);
             if (date_updated !== result[0].date_updated) {
                 date_updated = result[0].date_updated;
@@ -224,63 +217,6 @@ async function load_user() {
             token = null;
         } else {
             return false;
-        }
-    }
-}
-
-/**
- * 写真をMediaサービスにアップロードする.
- * @param {*} photo 対象となる写真.
- */
-async function upload_photo(photo) {
-    while (true) {
-        if (!navigator.onLine) {
-            return;
-        }
-        if (!await get_token()) {
-            return;
-        }
-        const form_data = new FormData();
-        form_data.append("owner", photo.owner);
-        form_data.append("date_taken", photo.date_taken);
-        form_data.append("author_name", photo.author_name);
-        form_data.append("scene_tag", photo.scene_tag);
-        form_data.append("context_tag", photo.context_tag);
-        form_data.append("content_type", photo.content_type);
-        form_data.append("encryption_key", photo.encryption_key);
-        const start_time = new Date();
-        const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
-        form_data.append("encrypted_data", encrypted_data);
-        const response = await fetch("{{MEDIA_API_URL}}", {
-            method: "POST",
-            headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
-            },
-            body: form_data
-        });
-        if (response.status === 201) {
-            console.info(`photo upload time :${(new Date() - start_time)}`);
-            await database.photo.delete(photo.id);
-            document.getElementById("photo_count").value = photo_count = await database.photo.count();
-            return;
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            token = null;
-        } else {
-            return;
-        }
-    }
-}
-
-/**
- * 写真をあるだけアップロードする.
- */
-async function upload_photos() {
-    while (navigator.onLine && token) {
-        const photo = await database.photo.orderBy("date_taken").first();
-        if (photo) {
-            await upload_photo(photo);
-        } else {
-            break;
         }
     }
 }
@@ -297,11 +233,11 @@ function setup_ui() {
     if (current_user.context_tag) {
         for (const context of current_user.context_tag.split(/,/)) {
             if (context) {
-                context_tags_html += (`<option class=\"context_tag\" value=\"${context}\" ${(context === current_user.selected_context ? "selected" : "")}>${context}</option>`);
+                context_tags_html += (`<option class=\"context_tag\" value=\"${context}\" ${(context === current_user.selected_context_tag ? "selected" : "")}>${context}</option>`);
             }
         }
     }
-    document.getElementById("context_tags").innerHTML = context_tags_html;
+    CONTEXT_TAGS.innerHTML = context_tags_html;
     let shutters_html = "";
     if (current_user.scene_tag && current_user.scene_color) {
         const scene_tags = current_user.scene_tag.split(/,/);
@@ -313,9 +249,9 @@ function setup_ui() {
             }
         }
     }
-    document.getElementById("shutters").innerHTML = shutters_html;
+    SHUTTERS.innerHTML = shutters_html;
     database.photo.count().then(count => {
-        document.getElementById("photo_count").value = photo_count = count;
+        PHOTO_COUNT.value = photo_count = count;
     });
 }
 
@@ -333,17 +269,16 @@ function change_view(name) {
  * バックグラウンドタスク.
  */
 function background_task() {
-    const select = document.getElementById("context_tags");
-    current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
+    navigator.serviceWorker.controller.postMessage({ tag: "{{CAMERA_APP_UPLOAD_PHOTO_TAG}}" });
+    current_user.selected_context_tag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : current_user.selected_context_tag;
     if (current_user.auto_reload) {
-        load_user();
+        load_user().then(result => {
+            if (!result) {
+                change_view("signin_view");
+            }
+        });
     }
-    if (!token) {
-        change_view("signin_view");
-    }
-    upload_photos().then(() => {
-        background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
-    });
+    background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
 }
 
 /**
@@ -363,14 +298,6 @@ function main() {
     document.addEventListener("visibilitychange", (() => {
         update_preview();
     }));
-    document.getElementById("preview").onloadedmetadata = (() => {
-        document.getElementById("preview").play().catch(error => {
-            console.error("could not start play preview :", error);
-        });
-    });
-    document.getElementById("preview").onplay = (() => {
-        document.getElementById("shutters").style.display = "block";
-    });
     document.getElementById("current_author_name").onclick = (() => {
         change_view("signin_view");
     });
@@ -379,17 +306,21 @@ function main() {
             change_view("main_view");
         }
     });
-    document.getElementById("context_tags").onchange = (() => {
-        const select = document.getElementById("context_tags");
-        current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
+    PREVIEW.onloadedmetadata = (() => {
+        PREVIEW.play().catch(error => {
+            console.error("could not start play preview :", error);
+        });
+    });
+    PREVIEW.onplay = (() => {
+        SHUTTERS.style.display = "block";
+    });
+    CONTEXT_TAGS.onchange = (() => {
+        current_user.selected_context_tag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : current_user.selected_context_tag;
         database.user.put(current_user);
     });
-    document.getElementById("photo_count").onclick = (() => {
+    PHOTO_COUNT.onclick = (() => {
         load_user().then(() => {
-            change_view("loading_view");
-            upload_photos().then(() => {
-                change_view("main_view");
-            });
+            navigator.serviceWorker.controller.postMessage({ tag: "{{CAMERA_APP_UPLOAD_PHOTO_TAG}}" });
         });
     });
     document.getElementById("signin").onclick = (() => {
@@ -424,20 +355,15 @@ function main() {
         current_user.shutter_sound = document.getElementById("shutter_sound").checked;
         current_user.auto_reload = document.getElementById("auto_reload").checked;
         current_user.encryption = document.getElementById("encryption").checked;
-        const select = document.getElementById("context_tags");
-        current_user.selected_context = select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : current_user.selected_context;
+        current_user.selected_context_tag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : current_user.selected_context_tag;
         database.user.put(current_user).then(() => {
             document.getElementById("setting_dialog").classList.remove("is-active");
         });
     });
     document.getElementById("version").onclick = (() => {
         document.getElementById("setting_dialog").classList.remove("is-active");
-        if (navigator.serviceWorker.controller && ("postMessage" in navigator.serviceWorker.controller)) {
-            change_view("loading_view");
-            navigator.serviceWorker.controller.postMessage({
-                tag: "{{CAMERA_APP_FORCE_UPDATE_TAG}}"
-            });
-        }
+        change_view("loading_view");
+        navigator.serviceWorker.controller.postMessage({ tag: "{{CAMERA_APP_FORCE_UPDATE_TAG}}" });
     });
     database = new Dexie("{{CAMERA_APP_DATABASE_NAME}}");
     database.version("{{CAMERA_APP_DATABASE_VERSION}}").stores({
@@ -445,15 +371,11 @@ function main() {
         photo: "++id, date_taken"
     });
     navigator.serviceWorker.register("camera-serviceworker.js").then(() => {
-        navigator.serviceWorker.ready.then(registration => {
-            service_worker = registration;
-            if ("sync" in service_worker) {
-                service_worker.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
-            }
+        navigator.serviceWorker.ready.then(() => {
             navigator.serviceWorker.onmessage = (event => {
                 if (event.data.tag === "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}") {
                     database.photo.count().then(count => {
-                        document.getElementById("photo_count").value = photo_count = count;
+                        PHOTO_COUNT.value = photo_count = count;
                     });
                 } else if (event.data.tag === "{{CAMERA_APP_FORCE_UPDATE_TAG}}") {
                     window.location = "camera-app.html{{APP_MODE_URL_PARAM}}";
@@ -468,7 +390,7 @@ function main() {
     load_user().then(result => {
         setup_ui();
         update_preview();
-        background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
         change_view(result ? "main_view" : "signin_view");
+        background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
     });
 }

@@ -54,7 +54,7 @@ let background_task_timer = null;
 let in_downloading = false;
 
 // チャート描画用のダウンロード待ち写真ファイルの枚数.
-let file_count = 0;
+let photo_count = 0;
 
 // チャート描画用のコンテキストの配列.
 let context_list = [];
@@ -120,10 +120,10 @@ async function load_user() {
             await database.user.put(current_user);
             if (date_updated !== result[0].date_updated) {
                 date_updated = result[0].date_updated;
-                context_tag_csv2ui(result[0].context_tag);
-                scene_tag_csv2ui(result[0].scene_tag);
-                scene_color_csv2ui(result[0].scene_color);
-                download_rule_csv2ui(result[0].download_rule);
+                set_context_tags(result[0].context_tag);
+                set_scene_tags(result[0].scene_tag);
+                set_scene_color_tags(result[0].scene_color);
+                set_download_rules(result[0].download_rule);
             }
             return true;
         } else if (response.status === 400 || response.status === 401 || response.status === 403) {
@@ -139,10 +139,10 @@ async function load_user() {
  * @return {Promise<boolean>} true:保存できた. / false:保存できなかった.
  */
 async function save_user() {
-    const context_tag = context_tag_ui2csv();
-    const scene_color = scene_color_ui2csv(); // 色で操作しているからここだけscene_tagより先にする:
-    const scene_tag = scene_tag_ui2csv();
-    const download_rule = download_rule_ui2csv();
+    const context_tag = get_context_tags();
+    const scene_color = get_scene_color_tags(); // 色で操作しているからここだけscene_tagより先にする:
+    const scene_tag = get_scene_tags();
+    const download_rule = get_download_rules();
     if (!context_tag || !scene_color || !scene_tag || !download_rule) {
         return false;
     }
@@ -180,7 +180,7 @@ async function save_user() {
  * CSVテキストからコンテキストタグのUIを作る.
  * @param {string} tags タグがCSVで羅列されているテキスト.
  */
-function context_tag_csv2ui(tags) {
+function set_context_tags(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
@@ -196,7 +196,7 @@ function context_tag_csv2ui(tags) {
  * コンテキストタグのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function context_tag_ui2csv() {
+function get_context_tags() {
     let result = "";
     for (let i = 0; i < CONTEXT_TAG_COUNT; i++) {
         const value = document.getElementById(`context_tag_${i}`).value.trim();
@@ -212,7 +212,7 @@ function context_tag_ui2csv() {
  * CSVテキストからシーンタグのUIを作る.
  * @param {string} tags タグがCSVで羅列されているテキスト.
  */
-function scene_tag_csv2ui(tags) {
+function set_scene_tags(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
@@ -228,7 +228,7 @@ function scene_tag_csv2ui(tags) {
  * シーンタグのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function scene_tag_ui2csv() {
+function get_scene_tags() {
     let result = "";
     for (let i = 0; i < SCENE_TAG_COUNT; i++) {
         const value = document.getElementById(`scene_tag_${i}`).value.trim();
@@ -244,7 +244,7 @@ function scene_tag_ui2csv() {
  * CSVテキストからシーンカラーのUIを作る.
  * @param {string} tags タグがCSVで羅列されているテキスト.
  */
-function scene_color_csv2ui(tags) {
+function set_scene_color_tags(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
@@ -266,7 +266,7 @@ function scene_color_csv2ui(tags) {
  * シーンカラーのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function scene_color_ui2csv() {
+function get_scene_color_tags() {
     let result = "";
     for (let i = 0; i < SCENE_TAG_COUNT; i++) {
         const scene_tag = document.getElementById(`scene_tag_${i}`);
@@ -305,7 +305,7 @@ function update_scene_color(index) {
  * CSVテキストからダウンロードルールのUIを作る.
  * @param {string} tags タグがCSVで羅列されているテキスト.
  */
-function download_rule_csv2ui(tags) {
+function set_download_rules(tags) {
     let i = 0;
     for (const tag of tags.split(/,/)) {
         if (tag) {
@@ -325,7 +325,7 @@ function download_rule_csv2ui(tags) {
  * ダウンロードルールのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function download_rule_ui2csv() {
+function get_download_rules() {
     let result = "";
     for (let i = 0; i < DOWNLOAD_RULE_COUNT; i++) {
         for (const option of document.getElementById(`download_rule_${i}`).childNodes) {
@@ -338,10 +338,10 @@ function download_rule_ui2csv() {
 }
 
 /**
- * ダウンロードを待っているファイルのリストをMediaサービスから取得する.
- * @return {Promise<*>} ファイルの情報を示した配列. とれなかったらnull.
+ * ダウンロードを待っている写真のリストをMediaサービスから取得する.
+ * @return {Promise<*>} 写真の情報を示した配列. とれなかったらnull.
  */
-async function get_download_file_list() {
+async function get_photo_list() {
     while (true) {
         if (!navigator.onLine) {
             return null;
@@ -355,8 +355,8 @@ async function get_download_file_list() {
             }
         });
         if (response.status === 200) {
-            const file_list = await response.json();
-            return (!file_list || file_list.length == 0) ? null : file_list;
+            const list = await response.json();
+            return (!list || list.length == 0) ? null : list;
         } else if (response.status === 400 || response.status === 401 || response.status === 403) {
             token = null;
         } else {
@@ -366,37 +366,39 @@ async function get_download_file_list() {
 }
 
 /**
- * ファイルをMediaサービスからダウンロードする.
+ * 写真をMediaサービスからダウンロードする.
  */
-async function download_files() {
-    let file_list = await get_download_file_list();
-    if (!file_list) {
+async function download_photos() {
+    let photo_list = await get_photo_list();
+    if (!photo_list) {
         return;
     }
-    document.getElementById("download_count").innerHTML = file_list.length;
-    document.getElementById("download_file").innerHTML = "--------";
+    const download_count = document.getElementById("download_count");
+    const download_file = document.getElementById("download_file");
+    download_count.innerHTML = photo_list.length;
+    download_file.innerHTML = "--------";
     document.getElementById("downloading_dialog").classList.add("is-active");
-    const selected_folder_handle = await window.showDirectoryPicker();
-    const rules = download_rule_ui2csv().split(/,/);
     in_downloading = true;
+    let some_error = false;
     try {
-        while (selected_folder_handle && file_list.length && in_downloading) {
+        const selected_folder = await window.showDirectoryPicker();
+        while (selected_folder && photo_list.length && in_downloading && !some_error) {
             if (!navigator.onLine) {
                 break;
             }
             if (!await get_token()) {
-                change_view("signin_view");
+                some_error = true;
                 break;
             }
-            const file = file_list[0];
-            document.getElementById("download_count").innerHTML = file_list.length;
-            document.getElementById("download_file").innerHTML = file.id;
-            const response = await fetch(file.encrypted_data);
+            const photo = photo_list[0];
+            download_count.innerHTML = photo_list.length;
+            download_file.innerHTML = photo.id;
+            const response = await fetch(photo.encrypted_data);
             if (response.status === 200) {
                 let data = null;
-                if (file.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
+                if (photo.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
                     const base64_raw = await response.text();
-                    const base64_decrypted = CryptoJS.AES.decrypt(base64_raw, file.encryption_key).toString(CryptoJS.enc.Utf8);
+                    const base64_decrypted = CryptoJS.AES.decrypt(base64_raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
                     const tmp = window.atob(base64_decrypted);
                     const buffer = new Uint8Array(tmp.length);
                     for (let i = 0; i < tmp.length; i++) {
@@ -406,60 +408,61 @@ async function download_files() {
                 } else {
                     data = await response.arrayBuffer();
                 }
-                const date_taken = new Date(file.date_taken);
+                const date_taken = new Date(photo.date_taken);
                 const year = `${date_taken.getFullYear()}{{DATETIME_YY}}`;
                 const month = `${(date_taken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
                 const day = `${date_taken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
                 const time = `${date_taken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${date_taken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${date_taken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
-                const ext = file.content_type.match(/[^¥/]+$/);
-                const author_name = file.author_name;
-                const context_tag = file.context_tag;
-                const scene_tag = file.scene_tag;
-                let paths = [];
-                let body = time;
-                for (const rule of rules) {
+                const ext = photo.content_type.match(/[^¥/]+$/);
+                const author_name = photo.author_name;
+                const context_tag = photo.context_tag;
+                const scene_tag = photo.scene_tag;
+                let folder_names = [];
+                let file_name_body = time;
+                for (const rule of get_download_rules().split(/,/)) {
                     switch (rule) {
                         case "YYMM":
-                            paths.push(`${year}${month}`);
+                            folder_names.push(`${year}${month}`);
                             break;
 
                         case "YY":
-                            paths.push(year);
+                            folder_names.push(year);
                             break;
 
                         case "MM":
-                            paths.push(month);
+                            folder_names.push(month);
                             break;
 
                         case "DD":
-                            paths.push(day);
+                            folder_names.push(day);
                             break;
 
                         case "AUTHOR":
-                            paths.push(author_name);
+                            folder_names.push(author_name);
                             break;
 
                         case "CONTEXT":
-                            paths.push(context_tag);
+                            folder_names.push(context_tag);
                             break;
 
                         case "SCENE":
-                            paths.push(scene_tag);
+                            folder_names.push(scene_tag);
                             break;
 
                         case RULE_NOT_USED_VALUE:
+                        default:
                             break;
                     }
                 }
-                let folder_handle = selected_folder_handle;
-                for (const path of paths) {
-                    folder_handle = await folder_handle.getDirectoryHandle(path, { create: true });
+                let folder_handle = selected_folder;
+                for (const folder_name of folder_names) {
+                    folder_handle = await folder_handle.getDirectoryHandle(folder_name, { create: true });
                 }
                 let file_handle = null;
                 let number = 0;
                 let actual_file_name = null;
                 do {
-                    actual_file_name = `${body}${(number > 0 ? number : "")}.${ext}`;
+                    actual_file_name = `${file_name_body}${(number > 0 ? number : "")}.${ext}`;
                     number++;
                     try {
                         file_handle = await folder_handle.getFileHandle(actual_file_name);
@@ -471,7 +474,7 @@ async function download_files() {
                 const write_handle = await file_handle.createWritable();
                 await write_handle.write(data);
                 await write_handle.close();
-                file_list.shift();
+                photo_list.shift();
                 if (current_user.delete_after_download) {
                     while (true) {
                         if (!navigator.onLine) {
@@ -480,17 +483,18 @@ async function download_files() {
                         if (!await get_token()) {
                             break;
                         }
-                        const response = await fetch(`{{MEDIA_API_URL}}${file.id}`, {
+                        const delete_response = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
                             method: "DELETE",
                             headers: {
                                 "Authorization": `{{TOKEN_FORMAT}} ${token}`
                             }
                         });
-                        if (response === 200) {
+                        if (delete_response.status === 200 || delete_response.status === 204) {
                             break;
-                        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+                        } else if (delete_response.status === 400 || delete_response.status === 401 || delete_response.status === 403) {
                             token = null;
                         } else {
+                            some_error = true;
                             break;
                         }
                     }
@@ -498,14 +502,23 @@ async function download_files() {
             } else if (response.status === 400 || response.status === 401 || response.status === 403) {
                 token = null;
             } else {
+                some_error = true;
                 break;
             }
         }
     } catch (error) {
-        console.warn("error in download_files() :", error);
+        console.warn("error in download_photos() :", error);
     }
     in_downloading = false;
     document.getElementById("downloading_dialog").classList.remove("is-active");
+    if (some_error) {
+        if (!token) {
+            change_view("signin_view");
+        } else {
+            document.getElementById("download_failed_dialog").classList.add("is-active");
+        }
+        return;
+    }
     change_view("loading_view");
     update_ui().then(() => {
         change_view("main_view");
@@ -529,6 +542,9 @@ function draw_chart() {
         case "author":
             list = author_list;
             break;
+
+        default:
+            return;
     }
     let labels = [];
     let series = [];
@@ -544,9 +560,9 @@ function draw_chart() {
         labelPosition: "outside"
     });
     const status_title = document.getElementById("status_title");
-    status_title.innerHTML = file_count;
+    status_title.innerHTML = photo_count;
     // TODO: さぼって直接HTMLを操作している...
-    if (file_count == 0) {
+    if (photo_count == 0) {
         status_title.style.backgroundColor = "white";
         status_title.style.marginTop = "0";
     } else if (labels.length == 1) {
@@ -562,20 +578,20 @@ function draw_chart() {
  *  UIを更新する.
  */
 async function update_ui() {
-    get_download_file_list().then(file_list => {
-        file_count = 0;
+    get_photo_list().then(photo_list => {
+        photo_count = 0;
         context_list = [];
         scene_list = [];
         author_list = [];
-        if (file_list) {
-            file_count = file_list.length;
-            for (const file of file_list) {
-                const context_count = context_list[file.context_tag];
-                context_list[file.context_tag] = context_count ? context_count + 1 : 1;
-                const scene_count = scene_list[file.scene_tag];
-                scene_list[file.scene_tag] = scene_count ? scene_count + 1 : 1;
-                const author_count = author_list[file.author_name];
-                author_list[file.author_name] = author_count ? author_count + 1 : 1;
+        if (photo_list) {
+            photo_count = photo_list.length;
+            for (const photo of photo_list) {
+                const context_count = context_list[photo.context_tag];
+                context_list[photo.context_tag] = context_count ? context_count + 1 : 1;
+                const scene_count = scene_list[photo.scene_tag];
+                scene_list[photo.scene_tag] = scene_count ? scene_count + 1 : 1;
+                const author_count = author_list[photo.author_name];
+                author_list[photo.author_name] = author_count ? author_count + 1 : 1;
             }
         }
         draw_chart();
@@ -599,9 +615,7 @@ function background_task() {
     if (!in_downloading) {
         load_user().then(result => {
             if (result) {
-                update_ui().then(() => {
-                    change_view("main_view");
-                });
+                update_ui();
             } else {
                 change_view("signin_view");
             }
@@ -639,13 +653,13 @@ function main() {
         database.user.put(current_user).then(() => {
             token = null;
             load_user().then(result => {
-                if (!result) {
-                    signin_error.style.display = "block";
-                } else {
+                if (result) {
                     change_view("loading_view");
                     update_ui().then(() => {
                         change_view("main_view");
                     });
+                } else {
+                    signin_error.style.display = "block";
                 }
             });
         });
@@ -680,13 +694,16 @@ function main() {
             } else if (!("showDirectoryPicker" in window)) {
                 alert("{{NO_FILESYSTEM_API_ERROR_MESSAGE}}");
             } else {
-                download_files();
+                download_photos();
             }
         });
     });
     document.getElementById("download_stop").onclick = (() => {
         in_downloading = false;
         document.getElementById("downloading_dialog").classList.remove("is-active");
+    });
+    document.getElementById("download_failed_ok").onclick = (() => {
+        document.getElementById("download_failed_dialog").classList.remove("is-active");
     });
     database = new Dexie("{{LINK_APP_DATABASE_NAME}}");
     database.version("{{LINK_APP_DATABASE_VERSION}}").stores({
@@ -702,12 +719,12 @@ function main() {
         return;
     }
     load_user().then(result => {
-        if (!result) {
-            change_view("signin_view");
-        } else {
+        if (result) {
             update_ui().then(() => {
                 change_view("main_view");
             });
+        } else {
+            change_view("signin_view");
         }
         background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
     });
