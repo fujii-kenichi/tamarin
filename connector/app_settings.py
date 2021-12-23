@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.04B",
+    "VERSION": "0.0.04C",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -209,7 +209,7 @@ APP_MESSAGES = {
     "CAMERA_APP_DESCRIPTION": "タマリンのカメラです",
 
     # 表示に使用される文字列:タマリンカメラ.
-    "UPLOADING_MESSAGE": "写真のアップロードを開始しました",
+    "RELOAD_MESSAGE": "データの同期を行います",
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを同期する",
     "ENCRYPTION_LABEL": "写真を暗号化する",

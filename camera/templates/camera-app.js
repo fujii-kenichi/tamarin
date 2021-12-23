@@ -331,18 +331,18 @@ function main() {
         database.user.put(currentUser);
     });
     PHOTO_COUNT.onclick = (() => {
-        loadUser().then(() => {
-            if (photoCount > 0) {
-                bulmaToast.toast({
-                    message: '{{UPLOADING_MESSAGE}}',
-                    position: 'center',
-                    type: 'is-success',
-                    dismissible: false,
-                    animate: { in: 'fadeIn', out: 'fadeOut' },
-                });
+        if (navigator.onLine) {
+            bulmaToast.toast({
+                message: '{{RELOAD_MESSAGE}}',
+                position: 'center',
+                type: 'is-success',
+                dismissible: false,
+                animate: { in: 'fadeIn', out: 'fadeOut' },
+            });
+            loadUser().then(() => {
                 navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-            }
-        });
+            });
+        }
     });
     document.getElementById('signin').onclick = (() => {
         const signinError = document.getElementById('signin_error');
