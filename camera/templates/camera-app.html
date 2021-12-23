@@ -17,10 +17,13 @@
     <link rel="apple-touch-startup-image" href="{{CAMERA_APP_ICON512}}">
     <link rel="manifest" href="camera-app.webmanifest">
     <link rel="stylesheet" href="{{BULMA_CSS}}">
+    <link rel="stylesheet" href="{{ANIMATE_CSS}}">
     <link rel="stylesheet" href="{{COMMON_CSS}}">
     <link rel="stylesheet" href="camera-app.css">
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
+    <script src="{{BULMA_TOAST_JS}}" defer></script>
+    <script src="{{HOWLER_CORE_JS}}" defer></script>
     <script src="camera-app.js" defer></script>
     <title>{{CAMERA_APP_NAME}}</title>
 </head>
@@ -28,14 +31,13 @@
 <body id="app" class="app" onload="main()">
     <div id="main_view" class="tama-main" style="display:none">
         <div class="tama-menu">
-            <input id="current_author_name" class="tama-author-name" type="button">
+            <input id="current_author_name" class="tama-author-name" type="button" value="">
             <select id="context_tags" class="tama-context-tags" size="1"></select>
-            <input id="photo_count" class="tama-photo-count" type="button">
+            <input id="photo_count" class="tama-photo-count" type="button" value="0">
             <input id="setting" class="tama-setting" type="button" value="★">
         </div>
         <video id="preview" class="tama-preview" preload="metadata" playsinline muted></video>
         <div id="shutters" class="tama-shutters"></div>
-        <audio id="shutter_audio" src="{{CAMERA_APP_SHUTTER_AUDIO}}" style="display:none"></audio>
         <canvas id="canvas" style="display:none"></canvas>
         <div id="setting_dialog" class="modal px-5">
             <div class="modal-background"></div>
@@ -48,21 +50,21 @@
                     <div class="field">
                         <div class="control">
                             <label class="checkbox">
-                                <input id="shutter_sound" type="checkbox">{{SHUTTER_SOUND_LABEL}}                            
+                                <input id="shutter_sound" type="checkbox">&nbsp;{{SHUTTER_SOUND_LABEL}}
                             </label>
                         </div>
                     </div>
                     <div class="field">
                         <div class="control">
                             <label classs="checkbox">
-                                <input id="auto_reload" type="checkbox">{{AUTO_RELOAD_LABEL}}
+                                <input id="auto_reload" type="checkbox">&nbsp;{{AUTO_RELOAD_LABEL}}
                             </label>
                         </div>
                     </div>
                     <div class="field">
                         <div class="control">
                             <label classs="checkbox">
-                                <input id="encryption" type="checkbox">{{ENCRYPTION_LABEL}}
+                                <input id="encryption" type="checkbox">&nbsp;{{ENCRYPTION_LABEL}}
                             </label>
                         </div>
                     </div>

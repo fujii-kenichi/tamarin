@@ -13,13 +13,16 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.03K",
+    "VERSION": "0.0.04A",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
 
     # シークレットキー:本番環境では必ず上書きすること!
-    "APP_SECRET_KEY" : os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden",),
+    "APP_SECRET_KEY": os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden",),
+
+    # Google AnaliticsのトラッキングID.
+    "GA_ID": os.getenv("GA_ID", "dummy",),
 
     # メディアを暗号化する時に自動生成するキーの長さ.
     "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
@@ -74,13 +77,16 @@ APP_SETTINGS = {
     "APP_THEME_COLOR": "lightpink",
 
     # Dexieを通じてIndexedDBの構成に使用される値.
-    "APP_DATABASE_CURRENT_USER": "current_user",
+    "APP_DATABASE_CURRENT_USER": "currentUser",
 
     # 共通ライブラリ類のパス.
     "DEXIE_JS": static("js/dexie.min.js"),
     "CRYPTO_JS": static("js/crypto-js.min.js"),
-    "BULMA_CSS": static("css/bulma.css"),
     "CHARTIST_JS": static("js/chartist.min.js"),
+    "BULMA_TOAST_JS": static("js/bulma-toast.min.js"),
+    "HOWLER_CORE_JS": static("js/howler.core.min.js"),
+    "BULMA_CSS": static("css/bulma.css"),
+    "ANIMATE_CSS": static("css/animate.min.css"),
     "CHARTIST_CSS": static("css/chartist.min.css"),
     "COMMON_CSS": static("css/common.css"),
 
@@ -102,17 +108,17 @@ APP_SETTINGS = {
     "CAMERA_APP_ORIENTATION": "any",
 
     # タマリンカメラ:Dexieを通じてIndexedDBの構成に使用される値.
-    "CAMERA_APP_DATABASE_NAME": "tamarin-camera",
-    "CAMERA_APP_DATABASE_VERSION": "5",
+    "CAMERA_APP_DATABASE_NAME": "tamarinCamera",
+    "CAMERA_APP_DATABASE_VERSION": "1",
 
     # タマリンカメラ:service workerのsyncに用いられるタグ文字列:写真のアップロード.
-    "CAMERA_APP_UPLOAD_PHOTO_TAG": "upload_photo",
+    "CAMERA_APP_UPLOAD_PHOTO_TAG": "uploadPhoto",
 
     # タマリンカメラ:service workerとのメッセージ送受信に用いられる文字列:写真をアップロードした.
-    "CAMERA_APP_PHOTO_UPLOADED_TAG": "photo_uploaded",
+    "CAMERA_APP_PHOTO_UPLOADED_TAG": "photoUploaded",
 
     # タマリンカメラ:service workerとのメッセージ送受信に用いられる文字列:アプリの強制アップデート.
-    "CAMERA_APP_FORCE_UPDATE_TAG": "force_update",
+    "CAMERA_APP_FORCE_UPDATE_TAG": "forceUpdate",
 
     # タマリンカメラ:写真を保持しておける枚数:あんまり多いとIndexedDBが耐えられないかも...
     "CAMERA_APP_MAX_PHOTO_COUNT": 10,
@@ -130,8 +136,8 @@ APP_SETTINGS = {
     "LINK_APP_ORIENTATION": "any",
 
     # タマリンク:Dexieを通じてIndexedDBの構成に使用される値.
-    "LINK_APP_DATABASE_NAME": "tamarin-link",
-    "LINK_APP_DATABASE_VERSION": "5",
+    "LINK_APP_DATABASE_NAME": "tamarinLink",
+    "LINK_APP_DATABASE_VERSION": "1",
 }
 
 # タマリン固有の設定:表示に使用するメッセージを定義.
@@ -153,7 +159,7 @@ APP_MESSAGES = {
     "FEEDBACK_LABEL": "フィードバック",
 
     # 表示に使用される文字列:サインイン.
-    "USERNAME_LABEL": "ユーザー名",    
+    "USERNAME_LABEL": "ユーザー名",
     "PASSWORD_LABEL": "パスワード",
 
     # 表示に使用される文字列:サインアップ.
@@ -162,7 +168,7 @@ APP_MESSAGES = {
     "SIGNUP_DONE_MESSAGE": "サインアップ完了",
     "SIGNUP_DONE_LONG_MESSAGE": "サインアップが完了しました。タマリンカメラ・タマリンコネクタにお進みください。",
 
-    # 表示に使用される文字列:パスワード変更.    
+    # 表示に使用される文字列:パスワード変更.
     "PASSWORD_CHANGE_MESSAGE": "パスワード変更",
     "PASSWORD_CHANGE_DONE_MESSAGE": "パスワード変更完了",
     "PASSWORD_CHANGE_DONE_LONG_MESSAGE": "パスワードを変更しました",
@@ -182,7 +188,7 @@ APP_MESSAGES = {
     "OK_LABEL": "OK",
     "SEND_LABEL": "送信する",
     "BACK_TO_HOME_LABEL": "戻る",
-    "LOADING_MESSAGE":"処理中です...",
+    "LOADING_MESSAGE": "処理中です...",
     "SAVE_LABEL": "保存",
     "SAVE_SUCCEEDED_MESSAGE": "設定が保存されました",
     "SAVE_FAILED_MESSAGE": "設定が保存できませんでした",
@@ -203,6 +209,7 @@ APP_MESSAGES = {
     "CAMERA_APP_DESCRIPTION": "タマリンのカメラです",
 
     # 表示に使用される文字列:タマリンカメラ.
+    "UPLOADING_MESSAGE": "写真のアップロードを開始しました",
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを同期する",
     "ENCRYPTION_LABEL": "写真を暗号化する",
@@ -235,11 +242,11 @@ APP_MESSAGES = {
     "RULE_SCENE": "シーン",
     "RULE_NOT_USED": "未使用",
 
-    "NO_FILESYSTEM_API_ERROR_MESSAGE": "この環境はダウンロードが使用できません",
     "DOWNLOAD_START_LABEL": "ダウンロードを開始",
     "DOWNLOADING_LABEL": "ダウンロード中...",
     "DOWNLOAD_STOP_LABEL": "ダウンロードを停止",
     "DOWNLOAD_FAILED_MESSAGE": "ダウンロードでエラーがおきました",
+    "BROWSER_ERROR_MESSAGE": "この環境ではダウンロードがご利用いただけません",
 
     # ファイル名を生成するときに使う日時の補完用文字列.
     "DATETIME_YY": "年",

@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "cypress": "^9.1.1",
+        "cypress": "^9.2.0",
         "dexie": "^3.2.0",
         "faker": "^5.5.3"
     }

@@ -56,13 +56,26 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 - [MDN Web Docs](https://developer.mozilla.org/ja/)
 - [モダン JavaScript チートシート](https://mbeaudru.github.io/modern-js-cheatsheet/translations/ja-JP.html)
 
-## HTML/CSS
+## HTML/CSS/Audio
 
 ### [Bulma](https://bulma.io/)
 
 - めちゃくちゃ便利でかっこいい CSS フレームワーク。以下のリンクも便利。
 - [Bulmaswatch](https://jenil.github.io/bulmaswatch/default/)
 - [Free Bulma Templates](https://bulmatemplates.github.io/bulma-templates/)
+- [Bulma extensions](https://bulma.io/extensions/)
+
+### [Bulma Toast](https://rfoel.github.io/bulma-toast/)
+
+- Bulmaとあわせて超簡単にトーストが作れる。
+
+### [Animate.css](https://animate.style/)
+
+- アニメーション効果のために使用。なんだかちょっとかっこいいぞ...
+
+### [HOWLER.JS](https://howlerjs.com)
+
+- SafariのAUDIOタグとの戦いに疲れ果ててこれを発見。最初から使わせてもらえば良かった...
 
 ## テスト
 

@@ -104,10 +104,10 @@ describe("主要な処理の正常系を流すテスト", () => {
         cy.get("#context_tags").select(0);
         cy.get("div.tama-shutter").eq(0).trigger("mousedown");
         cy.get("#photo_count").invoke("val").should("eq", "1");
-        cy.wait(1000);
+        cy.wait(500);
         cy.get("#context_tags").select(1);
         cy.get("div.tama-shutter").eq(1).trigger("mousedown");
-        cy.wait(1000);
+        cy.wait(500);
         cy.get("#context_tags").select(2);
         cy.get("div.tama-shutter").eq(2).trigger("mousedown");
         cy.wait(1000 * 10);

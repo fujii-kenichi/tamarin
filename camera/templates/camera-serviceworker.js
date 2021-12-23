@@ -5,32 +5,35 @@
  * ↓ このファイルのバイト数を変えることでブラウザに更新を伝えるためのコメント.
  * {{VERSION}}:{{DUMMY_COMMENT}}
  */
-"use strict";
+'use strict';
 
-importScripts("{{DEXIE_JS}}");
-importScripts("{{CRYPTO_JS}}");
+importScripts('{{DEXIE_JS}}');
+importScripts('{{CRYPTO_JS}}');
 
 /**
  * installイベントの処理を定義する.
  */
-self.addEventListener("install", (event => {
+self.addEventListener('install', (event => {
     event.waitUntil(
-        caches.open("{{VERSION}}").then(cache => {
+        caches.open('{{VERSION}}').then(cache => {
             cache.addAll([
-                "{{DEXIE_JS}}",
-                "{{CRYPTO_JS}}",
-                "{{BULMA_CSS}}",
-                "{{COMMON_CSS}}",
-                "{{CAMERA_APP_FAVICON}}",
-                "{{CAMERA_APP_ICON180}}",
-                "{{CAMERA_APP_ICON192}}",
-                "{{CAMERA_APP_ICON512}}",
-                "{{CAMERA_APP_SHUTTER_AUDIO}}",
-                "camera-app.webmanifest",
-                "camera-app.css",
-                "camera-app.js",
-                "camera-app.html",
-                "camera-app.html{{APP_MODE_URL_PARAM}}"
+                '{{DEXIE_JS}}',
+                '{{CRYPTO_JS}}',
+                '{{HOWLER_CORE_JS}}',
+                '{{BULMA_TOAST_JS}}',
+                '{{BULMA_CSS}}',
+                '{{ANIMATE_CSS}}',
+                '{{COMMON_CSS}}',
+                '{{CAMERA_APP_FAVICON}}',
+                '{{CAMERA_APP_ICON180}}',
+                '{{CAMERA_APP_ICON192}}',
+                '{{CAMERA_APP_ICON512}}',
+                '{{CAMERA_APP_SHUTTER_AUDIO}}',
+                'camera-app.webmanifest',
+                'camera-app.css',
+                'camera-app.js',
+                'camera-app.html',
+                'camera-app.html{{APP_MODE_URL_PARAM}}'
             ]).then(self.skipWaiting());
         })
     );
@@ -39,7 +42,7 @@ self.addEventListener("install", (event => {
 /**
  * fetchイベントの処理を定義する.
  */
-self.addEventListener("fetch", (event => {
+self.addEventListener('fetch', (event => {
     event.respondWith(
         caches.match(event.request).then(response => {
             return response ? response : fetch(event.request);
@@ -50,11 +53,11 @@ self.addEventListener("fetch", (event => {
 /**
  * activateイベントの処理を定義する.
  */
-self.addEventListener("activate", (event => {
+self.addEventListener('activate', (event => {
     event.waitUntil(
-        caches.keys().then(cache_names => {
-            return Promise.all(cache_names.map(name => {
-                if (name !== "{{VERSION}}") {
+        caches.keys().then(cacheNames => {
+            return Promise.all(cacheNames.map(name => {
+                if (name !== '{{VERSION}}') {
                     return caches.delete(name);
                 }
             }));
@@ -67,35 +70,35 @@ self.addEventListener("activate", (event => {
 /**
  * syncイベントの処理を定義する.
  */
-self.addEventListener("sync", (event => {
-    if (event.tag === "{{CAMERA_APP_UPLOAD_PHOTO_TAG}}") {
-        event.waitUntil(upload_photos());
+self.addEventListener('sync', (event => {
+    if (event.tag === '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}') {
+        event.waitUntil(uploadPhotos());
     }
 }));
 
 /**
  * messageイベントの処理を定義する.
  */
-self.addEventListener("message", (event => {
-    if (event.data.tag === "{{CAMERA_APP_FORCE_UPDATE_TAG}}") {
-        event.waitUntil(force_update());
-    } else if (event.data.tag === "{{CAMERA_APP_UPLOAD_PHOTO_TAG}}") {
-        event.waitUntil(upload_photos());
+self.addEventListener('message', (event => {
+    if (event.data.tag === '{{CAMERA_APP_FORCE_UPDATE_TAG}}') {
+        event.waitUntil(forceUpdate());
+    } else if (event.data.tag === '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}') {
+        event.waitUntil(uploadPhotos());
     }
 }));
 
 /**
  * 強制アップデートの処理を行う.
  */
-async function force_update() {
-    caches.keys().then(cache_names => {
-        return Promise.all(cache_names.map(name => {
+async function forceUpdate() {
+    caches.keys().then(cacheNames => {
+        return Promise.all(cacheNames.map(name => {
             return caches.delete(name);
         }));
     }).then(() => {
         self.clients.matchAll().then(clients => {
             for (const client of clients) {
-                client.postMessage({ tag: "{{CAMERA_APP_FORCE_UPDATE_TAG}}" });
+                client.postMessage({ tag: '{{CAMERA_APP_FORCE_UPDATE_TAG}}' });
             }
         });
     });
@@ -104,24 +107,24 @@ async function force_update() {
 /**
  * 写真をあるだけアップロードする.
  */
-async function upload_photos() {
-    const database = new Dexie("{{CAMERA_APP_DATABASE_NAME}}");
-    database.version("{{CAMERA_APP_DATABASE_VERSION}}").stores({
-        user: "dummy_id, user_id",
-        photo: "++id, date_taken"
+async function uploadPhotos() {
+    const database = new Dexie('{{CAMERA_APP_DATABASE_NAME}}');
+    database.version('{{CAMERA_APP_DATABASE_VERSION}}').stores({
+        user: 'dummyId, userId',
+        photo: '++id, dateTaken'
     });
-    const user = await database.user.get("{{APP_DATABASE_CURRENT_USER}}");
+    const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
         return;
     }
-    const response = await fetch("{{CREATE_TOKEN_URL}}", {
-        method: "POST",
+    const response = await fetch('{{CREATE_TOKEN_URL}}', {
+        method: 'POST',
         headers: {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            "username": user.username,
-            "password": CryptoJS.AES.decrypt(user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+            'username': user.username,
+            'password': CryptoJS.AES.decrypt(user.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
         })
     });
     if (response.status !== 200) {
@@ -133,17 +136,17 @@ async function upload_photos() {
         return;
     }
     while (true) {
-        const photo_count = await database.photo.count();
-        if (photo_count == 0) {
+        const photoCount = await database.photo.count();
+        if (photoCount == 0) {
             return;
         }
         if (!navigator.onLine) {
-            if ("sync" in self.registration) {
-                self.registration.sync.register("{{CAMERA_APP_UPLOAD_PHOTO_TAG}}");
+            if ('sync' in self.registration) {
+                self.registration.sync.register('{{CAMERA_APP_UPLOAD_PHOTO_TAG}}');
             }
             return;
         }
-        upload_photo(database, token);
+        uploadPhoto(database, token);
     }
 }
 
@@ -152,34 +155,34 @@ async function upload_photos() {
  * @param {*} database データベース.
  * @param {*} token アップロードに使用するトークン.
  */
-function upload_photo(database, token) {
-    database.transaction("rw", database.photo, () => {
-        database.photo.orderBy("date_taken").first().then(photo => {
+function uploadPhoto(database, token) {
+    database.transaction('rw', database.photo, () => {
+        database.photo.orderBy('dateTaken').first().then(photo => {
             if (photo) {
                 database.photo.delete(photo.id).then(() => {
-                    const form_data = new FormData();
-                    form_data.append("owner", photo.owner);
-                    form_data.append("date_taken", photo.date_taken);
-                    form_data.append("author_name", photo.author_name);
-                    form_data.append("scene_tag", photo.scene_tag);
-                    form_data.append("context_tag", photo.context_tag);
-                    form_data.append("content_type", photo.content_type);
-                    form_data.append("encryption_key", photo.encryption_key);
-                    const start_time = new Date();
-                    const encrypted_data = new File([photo.encrypted_data], `${photo.id}.bin`, { lastModified: start_time });
-                    form_data.append("encrypted_data", encrypted_data);
-                    fetch("{{MEDIA_API_URL}}", {
-                        method: "POST",
+                    const form = new FormData();
+                    form.append('owner', photo.owner);
+                    form.append('date_taken', photo.dateTaken);
+                    form.append('author_name', photo.authorName);
+                    form.append('scene_tag', photo.sceneTag);
+                    form.append('context_tag', photo.contextTag);
+                    form.append('content_type', photo.contentType);
+                    form.append('encryption_key', photo.encryptionKey);
+                    const start = new Date();
+                    const data = new File([photo.encryptedData], `${photo.id}.bin`, { lastModified: start });
+                    form.append('encrypted_data', data);
+                    fetch('{{MEDIA_API_URL}}', {
+                        method: 'POST',
                         headers: {
-                            "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                            'Authorization': `{{TOKEN_FORMAT}} ${token}`
                         },
-                        body: form_data
+                        body: form
                     }).then(response => {
                         if (response.status === 201) {
-                            console.info(`photo upload time :${(new Date() - start_time)}`);
+                            console.info(`photo upload time :${(new Date() - start)}`);
                             self.clients.matchAll().then(clients => {
                                 for (const client of clients) {
-                                    client.postMessage({ tag: "{{CAMERA_APP_PHOTO_UPLOADED_TAG}}" });
+                                    client.postMessage({ tag: '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}' });
                                 }
                             });
                         } else {

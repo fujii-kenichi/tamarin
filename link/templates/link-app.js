@@ -2,7 +2,7 @@
  * タマリンク.
  * @author FUJII Kenichi <fujii.kenichi@tamariva.co.jp>
  */
-"use strict";
+'use strict';
 
 // バックグラウンドタスクを繰り返すときの待ち時間(ミリ秒).
 const BACKGROUND_TASK_INTERVAL = 15 * 1000;
@@ -17,70 +17,67 @@ const CONTEXT_TAG_COUNT = 6;
 const DOWNLOAD_RULE_COUNT = 6;
 
 // シーンで未使用とみなす色の名前.
-const SCENE_NOT_USED_COLOR = "black";
+const SCENE_NOT_USED_COLOR = 'black';
 
 // ダウンロードルールで未使用とみなすタグの名前.
-const RULE_NOT_USED_VALUE = "NOT_USED";
+const RULE_NOT_USED_VALUE = 'NOT_USED';
 
 // タグの値として入力された文字列の検証用正規表現.
-const TAG_NAME_VALIDATOR = /[\s\,\:\;\&\"\'\`\¥\|\~\%\/\\<\>\?\\\*]/m;
+const TAG_NAME_VALIDATOR = /[\s\,\:\;\&\'\"\`\¥\|\~\%\/\\<\>\?\\\*]/m;
 
 // 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
-let current_user = {
-    dummy_id: "{{APP_DATABASE_CURRENT_USER}}",
-    user_id: "",
-    username: "",
-    encrypted_password: "",
-    delete_after_download: true, // ダウンロード後にファイルを削除するかどうか.
-    chart: "context"
+let currentUser = {
+    dummyId: '{{APP_DATABASE_CURRENT_USER}}',
+    userId: '',
+    username: '',
+    password: '',
+    cleanup: true, // ダウンロード後にファイルを削除するかどうか.
+    chart: 'context' // 選択されているチャート.
 };
 
 // データベース(IndexedDBを使うためのDexie)のインスタンス.
 let database = null;
 
-// Service workerの登録情報.
-let service_worker = null;
-
 // Tokenサービスが返してきたトークン.
 let token = null;
 
 // Userサービスの最終更新日時.
-let date_updated = null;
+let dateUpdated = null;
 
 // バックグラウンドループで使うタイマー.
-let background_task_timer = null;
+let backgroundTaskTimer = null;
 
 // ダウンロード中かどうかを示すフラグ.
-let in_downloading = false;
+let inDownloading = false;
 
 // チャート描画用のダウンロード待ち写真ファイルの枚数.
-let photo_count = 0;
+let photoCount = 0;
 
 // チャート描画用のコンテキストの配列.
-let context_list = [];
+let contextList = [];
 
 // チャート描画用のシーンの配列.
-let scene_list = [];
+let sceneList = [];
 
 // チャート描画用の撮影者の配列.
-let author_list = [];
+let authorList = [];
 
 /**
  * Tokenサービスから現在のユーザーにもとづいたトークンをもってくる.
  * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
-async function get_token() {
+async function getToken() {
     if (token) {
         return true;
     }
-    const response = await fetch("{{CREATE_TOKEN_URL}}", {
-        method: "POST",
+    const response = await fetch('{{CREATE_TOKEN_URL}}', {
+        method: 'POST',
         headers: {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            "username": current_user.username,
-            "password": CryptoJS.AES.decrypt(current_user.encrypted_password, String("{{APP_SECRET_KEY}}")).toString(CryptoJS.enc.Utf8)
+            'username': currentUser.username,
+            'password': CryptoJS.AES.decrypt(currentUser.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
         })
     });
     if (response.status === 200) {
@@ -95,35 +92,35 @@ async function get_token() {
  * Userサービスから対応するユーザーの情報をもってくる.
  * @return {Promise<boolean>} true:もってこれた(もしくはそうみなしてOK). / false:もってこれなかった.
  */
-async function load_user() {
-    const user = await database.user.get("{{APP_DATABASE_CURRENT_USER}}");
+async function loadUser() {
+    const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
         return false;
     }
-    current_user = user;
-    document.getElementById("current_username").value = document.getElementById("username").value = current_user.username;
+    currentUser = user;
+    document.getElementById('current_username').value = document.getElementById('username').value = currentUser.username;
     while (true) {
         if (!navigator.onLine) {
             return true;
         }
-        if (!await get_token()) {
+        if (!await getToken()) {
             return false;
         }
-        const response = await fetch(`{{USER_API_URL}}?username=${current_user.username}`, {
+        const response = await fetch(`{{USER_API_URL}}?username=${currentUser.username}`, {
             headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                'Authorization': `{{TOKEN_FORMAT}} ${token}`
             }
         });
         if (response.status === 200) {
             const result = await response.json();
-            current_user.user_id = result[0].id;
-            await database.user.put(current_user);
-            if (date_updated !== result[0].date_updated) {
-                date_updated = result[0].date_updated;
-                set_context_tags(result[0].context_tag);
-                set_scene_tags(result[0].scene_tag);
-                set_scene_color_tags(result[0].scene_color);
-                set_download_rules(result[0].download_rule);
+            currentUser.userId = result[0].id;
+            await database.user.put(currentUser);
+            if (dateUpdated !== result[0].date_updated) {
+                dateUpdated = result[0].date_updated;
+                setContextTag(result[0].context_tag);
+                setSceneTag(result[0].scene_tag);
+                setSceneColor(result[0].scene_color);
+                setDownloadRule(result[0].download_rule);
             }
             return true;
         } else if (response.status === 400 || response.status === 401 || response.status === 403) {
@@ -138,36 +135,36 @@ async function load_user() {
  * Userサービスへ対応するユーザーの情報を保存する.
  * @return {Promise<boolean>} true:保存できた. / false:保存できなかった.
  */
-async function save_user() {
-    const context_tag = get_context_tags();
-    const scene_color = get_scene_color_tags(); // 色で操作しているからここだけscene_tagより先にする:
-    const scene_tag = get_scene_tags();
-    const download_rule = get_download_rules();
-    if (!context_tag || !scene_color || !scene_tag || !download_rule) {
+async function saveUser() {
+    const contextTag = getContextTag();
+    const sceneColor = getSceneColor(); // 色で操作しているからここだけsceneTagより先にする:
+    const sceneTag = getSceneTag();
+    const downloadRule = getDownloadRule();
+    if (!contextTag || !sceneColor || !sceneTag || !downloadRule) {
         return false;
     }
     while (true) {
         if (!navigator.onLine) {
             return false;
         }
-        if (!await get_token()) {
+        if (!await getToken()) {
             return false;
         }
-        const response = await fetch(`{{USER_API_URL}}${current_user.user_id}/`, {
-            method: "PATCH",
+        const response = await fetch(`{{USER_API_URL}}${currentUser.userId}/`, {
+            method: 'PATCH',
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                'Content-Type': 'application/json',
+                'Authorization': `{{TOKEN_FORMAT}} ${token}`
             },
             body: JSON.stringify({
-                "context_tag": context_tag,
-                "scene_tag": scene_tag,
-                "scene_color": scene_color,
-                "download_rule": download_rule
+                'context_tag': contextTag,
+                'scene_tag': sceneTag,
+                'scene_color': sceneColor,
+                'download_rule': downloadRule
             })
         });
         if (response.status === 200) {
-            return load_user();
+            return loadUser();
         } else if (response.status === 400 || response.status === 401 || response.status === 403) {
             token = null;
         } else {
@@ -178,17 +175,17 @@ async function save_user() {
 
 /**
  * CSVテキストからコンテキストタグのUIを作る.
- * @param {string} tags タグがCSVで羅列されているテキスト.
+ * @param {string} csv タグがCSVで羅列されているテキスト.
  */
-function set_context_tags(tags) {
+function setContextTag(csv) {
     let i = 0;
-    for (const tag of tags.split(/,/)) {
-        if (tag) {
-            document.getElementById(`context_tag_${i++}`).value = tag;
+    for (const v of csv.split(/,/)) {
+        if (v) {
+            document.getElementById(`context_tag_${i++}`).value = v;
         }
     }
     for (; i < CONTEXT_TAG_COUNT; i++) {
-        document.getElementById(`context_tag_${i}`).value = "";
+        document.getElementById(`context_tag_${i}`).value = '';
     }
 }
 
@@ -196,31 +193,31 @@ function set_context_tags(tags) {
  * コンテキストタグのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function get_context_tags() {
-    let result = "";
+function getContextTag() {
+    let csv = '';
     for (let i = 0; i < CONTEXT_TAG_COUNT; i++) {
-        const value = document.getElementById(`context_tag_${i}`).value.trim();
-        if (value.length > Number("{{MAX_CONTEXT_TAG_LENGTH}}") || TAG_NAME_VALIDATOR.exec(value)) {
+        const v = document.getElementById(`context_tag_${i}`).value.trim();
+        if (v.length > Number('{{MAX_CONTEXT_TAG_LENGTH}}') || TAG_NAME_VALIDATOR.exec(v)) {
             return null;
         }
-        result += value ? `${value},` : "";
+        csv += v ? `${v},` : '';
     }
-    return result;
+    return csv;
 }
 
 /**
  * CSVテキストからシーンタグのUIを作る.
- * @param {string} tags タグがCSVで羅列されているテキスト.
+ * @param {string} csv タグがCSVで羅列されているテキスト.
  */
-function set_scene_tags(tags) {
+function setSceneTag(csv) {
     let i = 0;
-    for (const tag of tags.split(/,/)) {
-        if (tag) {
-            document.getElementById(`scene_tag_${i++}`).value = tag;
+    for (const v of csv.split(/,/)) {
+        if (v) {
+            document.getElementById(`scene_tag_${i++}`).value = v;
         }
     }
     for (; i < SCENE_TAG_COUNT; i++) {
-        document.getElementById(`scene_tag_${i}`).value = "";
+        document.getElementById(`scene_tag_${i}`).value = '';
     }
 }
 
@@ -228,30 +225,30 @@ function set_scene_tags(tags) {
  * シーンタグのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function get_scene_tags() {
-    let result = "";
+function getSceneTag() {
+    let csv = '';
     for (let i = 0; i < SCENE_TAG_COUNT; i++) {
-        const value = document.getElementById(`scene_tag_${i}`).value.trim();
-        if (value.length > Number("{{MAX_SCENE_TAG_LENGTH}}") || TAG_NAME_VALIDATOR.exec(value)) {
+        const v = document.getElementById(`scene_tag_${i}`).value.trim();
+        if (v.length > Number('{{MAX_SCENE_TAG_LENGTH}}') || TAG_NAME_VALIDATOR.exec(v)) {
             return null;
         }
-        result += value ? `${value},` : "";
+        csv += v ? `${v},` : '';
     }
-    return result;
+    return csv;
 }
 
 /**
  * CSVテキストからシーンカラーのUIを作る.
- * @param {string} tags タグがCSVで羅列されているテキスト.
+ * @param {string} csv タグがCSVで羅列されているテキスト.
  */
-function set_scene_color_tags(tags) {
+function setSceneColor(csv) {
     let i = 0;
-    for (const tag of tags.split(/,/)) {
-        if (tag) {
+    for (const v of csv.split(/,/)) {
+        if (v) {
             for (const option of document.getElementById(`scene_color_${i}`).childNodes) {
-                option.selected = option.value === tag ? true : false;
+                option.selected = option.value === v ? true : false;
             }
-            document.getElementById(`scene_tag_${i++}`).style.backgroundColor = tag;
+            document.getElementById(`scene_tag_${i++}`).style.backgroundColor = v;
         }
     }
     for (; i < SCENE_TAG_COUNT; i++) {
@@ -266,36 +263,36 @@ function set_scene_color_tags(tags) {
  * シーンカラーのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function get_scene_color_tags() {
-    let result = "";
+function getSceneColor() {
+    let csv = '';
     for (let i = 0; i < SCENE_TAG_COUNT; i++) {
-        const scene_tag = document.getElementById(`scene_tag_${i}`);
-        if (scene_tag.value) {
+        const t = document.getElementById(`scene_tag_${i}`);
+        if (t.value) {
             for (const option of document.getElementById(`scene_color_${i}`).childNodes) {
                 if (option.selected) {
                     if (option.value === SCENE_NOT_USED_COLOR) {
-                        scene_tag.value = "";
+                        t.value = '';
                     } else {
-                        result += `${option.value},`;
+                        csv += `${option.value},`;
                     }
                 }
             }
         }
     }
-    return result;
+    return csv;
 }
 
 /**
  * シーンカラーが選択された時のイベントハンドラ.
  * @param {number} index 着目しているシーンの番号.
  */
-function update_scene_color(index) {
+function onSceneColorChange(index) {
     for (const option of document.getElementById(`scene_color_${index}`).childNodes) {
         const scene = document.getElementById(`scene_tag_${index}`);
         if (option.selected) {
             scene.style.backgroundColor = option.value;
             if (option.value === SCENE_NOT_USED_COLOR) {
-                scene.value = "";
+                scene.value = '';
             }
         }
     }
@@ -303,14 +300,14 @@ function update_scene_color(index) {
 
 /**
  * CSVテキストからダウンロードルールのUIを作る.
- * @param {string} tags タグがCSVで羅列されているテキスト.
+ * @param {string} csv タグがCSVで羅列されているテキスト.
  */
-function set_download_rules(tags) {
+function setDownloadRule(csv) {
     let i = 0;
-    for (const tag of tags.split(/,/)) {
-        if (tag) {
+    for (const v of csv.split(/,/)) {
+        if (v) {
             for (const option of document.getElementById(`download_rule_${i++}`).childNodes) {
-                option.selected = option.value === tag ? true : false;
+                option.selected = option.value === v ? true : false;
             }
         }
     }
@@ -325,33 +322,33 @@ function set_download_rules(tags) {
  * ダウンロードルールのUIからCSVテキストを作る.
  * @return {string} タグをCSVで羅列したテキスト.
  */
-function get_download_rules() {
-    let result = "";
+function getDownloadRule() {
+    let csv = '';
     for (let i = 0; i < DOWNLOAD_RULE_COUNT; i++) {
         for (const option of document.getElementById(`download_rule_${i}`).childNodes) {
             if (option.selected && option.value !== RULE_NOT_USED_VALUE) {
-                result += `${option.value},`;
+                csv += `${option.value},`;
             }
         }
     }
-    return result;
+    return csv;
 }
 
 /**
  * ダウンロードを待っている写真のリストをMediaサービスから取得する.
  * @return {Promise<*>} 写真の情報を示した配列. とれなかったらnull.
  */
-async function get_photo_list() {
+async function getPhotoList() {
     while (true) {
         if (!navigator.onLine) {
             return null;
         }
-        if (!await get_token()) {
+        if (!await getToken()) {
             return null;
         }
-        const response = await fetch(`{{MEDIA_API_URL}}?owner=${current_user.user_id}`, {
+        const response = await fetch(`{{MEDIA_API_URL}}?owner=${currentUser.userId}`, {
             headers: {
-                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                'Authorization': `{{TOKEN_FORMAT}} ${token}`
             }
         });
         if (response.status === 200) {
@@ -368,85 +365,85 @@ async function get_photo_list() {
 /**
  * 写真をMediaサービスからダウンロードする.
  */
-async function download_photos() {
-    let photo_list = await get_photo_list();
-    if (!photo_list) {
+async function downloadPhotos() {
+    let list = await getPhotoList();
+    if (!list) {
         return;
     }
-    const download_count = document.getElementById("download_count");
-    const download_file = document.getElementById("download_file");
-    download_count.innerHTML = photo_list.length;
-    download_file.innerHTML = "--------";
-    document.getElementById("downloading_dialog").classList.add("is-active");
-    in_downloading = true;
-    let some_error = false;
+    const downloadCount = document.getElementById('download_count');
+    const downloadFile = document.getElementById('download_file');
+    downloadCount.innerHTML = list.length;
+    downloadFile.innerHTML = '--------';
+    document.getElementById('downloading_dialog').classList.add('is-active');
+    inDownloading = true;
+    let someError = false;
     try {
-        const selected_folder = await window.showDirectoryPicker();
-        while (selected_folder && photo_list.length && in_downloading && !some_error) {
+        const pickedFolder = await window.showDirectoryPicker();
+        while (pickedFolder && list.length && inDownloading && !someError) {
             if (!navigator.onLine) {
                 break;
             }
-            if (!await get_token()) {
-                some_error = true;
+            if (!await getToken()) {
+                someError = true;
                 break;
             }
-            const photo = photo_list[0];
-            download_count.innerHTML = photo_list.length;
-            download_file.innerHTML = photo.id;
-            const response = await fetch(photo.encrypted_data);
-            if (response.status === 200) {
+            const photo = list[0];
+            downloadCount.innerHTML = list.length;
+            downloadFile.innerHTML = photo.id;
+            const downloadResponse = await fetch(photo.encrypted_data);
+            if (downloadResponse.status === 200) {
                 let data = null;
-                if (photo.encryption_key !== "{{NO_ENCRYPTION_KEY}}") {
-                    const base64_raw = await response.text();
-                    const base64_decrypted = CryptoJS.AES.decrypt(base64_raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
-                    const tmp = window.atob(base64_decrypted);
+                if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
+                    const raw = await downloadResponse.text();
+                    const decrypted = CryptoJS.AES.decrypt(raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
+                    const tmp = window.atob(decrypted);
                     const buffer = new Uint8Array(tmp.length);
                     for (let i = 0; i < tmp.length; i++) {
                         buffer[i] = tmp.charCodeAt(i);
                     }
                     data = buffer;
                 } else {
-                    data = await response.arrayBuffer();
+                    data = await downloadResponse.arrayBuffer();
                 }
-                const date_taken = new Date(photo.date_taken);
-                const year = `${date_taken.getFullYear()}{{DATETIME_YY}}`;
-                const month = `${(date_taken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
-                const day = `${date_taken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
-                const time = `${date_taken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${date_taken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${date_taken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
+                const dateTaken = new Date(photo.date_taken);
+                const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
+                const month = `${(dateTaken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
+                const day = `${dateTaken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
+                const time = `${dateTaken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${dateTaken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${dateTaken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
                 const ext = photo.content_type.match(/[^¥/]+$/);
-                const author_name = photo.author_name;
-                const context_tag = photo.context_tag;
-                const scene_tag = photo.scene_tag;
-                let folder_names = [];
-                let file_name_body = time;
-                for (const rule of get_download_rules().split(/,/)) {
+                const authorName = photo.author_name;
+                const contextTag = photo.context_tag;
+                const sceneTag = photo.scene_tag;
+                let folderNames = [];
+                let fileNameBody = time;
+                for (const rule of getDownloadRule().split(/,/)) {
                     switch (rule) {
-                        case "YYMM":
-                            folder_names.push(`${year}${month}`);
+                        case 'YYMM':
+                            folderNames.push(`${year}${month}`);
                             break;
 
-                        case "YY":
-                            folder_names.push(year);
+                        case 'YY':
+                            folderNames.push(year);
                             break;
 
-                        case "MM":
-                            folder_names.push(month);
+                        case 'MM':
+                            folderNames.push(month);
                             break;
 
-                        case "DD":
-                            folder_names.push(day);
+                        case 'DD':
+                            folderNames.push(day);
                             break;
 
-                        case "AUTHOR":
-                            folder_names.push(author_name);
+                        case 'AUTHOR':
+                            folderNames.push(authorName);
                             break;
 
-                        case "CONTEXT":
-                            folder_names.push(context_tag);
+                        case 'CONTEXT':
+                            folderNames.push(contextTag);
                             break;
 
-                        case "SCENE":
-                            folder_names.push(scene_tag);
+                        case 'SCENE':
+                            folderNames.push(sceneTag);
                             break;
 
                         case RULE_NOT_USED_VALUE:
@@ -454,93 +451,94 @@ async function download_photos() {
                             break;
                     }
                 }
-                let folder_handle = selected_folder;
-                for (const folder_name of folder_names) {
-                    folder_handle = await folder_handle.getDirectoryHandle(folder_name, { create: true });
+                let folderHandle = pickedFolder;
+                for (const folderName of folderNames) {
+                    folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
                 }
-                let file_handle = null;
+                let fileHandle = null;
                 let number = 0;
-                let actual_file_name = null;
+                let actualFileName = null;
                 do {
-                    actual_file_name = `${file_name_body}${(number > 0 ? number : "")}.${ext}`;
+                    const numberString = number > 0 ? `(${number})` : '';
+                    actualFileName = `${fileNameBody}${numberString}.${ext}`;
                     number++;
                     try {
-                        file_handle = await folder_handle.getFileHandle(actual_file_name);
-                    } catch (error) {
-                        file_handle = null;
+                        fileHandle = await folderHandle.getFileHandle(actualFileName);
+                    } catch (dummy) {
+                        fileHandle = null;
                     }
-                } while (file_handle);
-                file_handle = await folder_handle.getFileHandle(actual_file_name, { create: true });
-                const write_handle = await file_handle.createWritable();
-                await write_handle.write(data);
-                await write_handle.close();
-                photo_list.shift();
-                if (current_user.delete_after_download) {
+                } while (fileHandle);
+                fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(data);
+                await writable.close();
+                list.shift();
+                if (currentUser.cleanup) {
                     while (true) {
                         if (!navigator.onLine) {
                             break;
                         }
-                        if (!await get_token()) {
+                        if (!await getToken()) {
                             break;
                         }
-                        const delete_response = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
-                            method: "DELETE",
+                        const deleteResponse = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
+                            method: 'DELETE',
                             headers: {
-                                "Authorization": `{{TOKEN_FORMAT}} ${token}`
+                                'Authorization': `{{TOKEN_FORMAT}} ${token}`
                             }
                         });
-                        if (delete_response.status === 200 || delete_response.status === 204) {
+                        if (deleteResponse.status === 200 || deleteResponse.status === 204) {
                             break;
-                        } else if (delete_response.status === 400 || delete_response.status === 401 || delete_response.status === 403) {
+                        } else if (deleteResponse.status === 400 || deleteResponse.status === 401 || deleteResponse.status === 403) {
                             token = null;
                         } else {
-                            some_error = true;
+                            someError = true;
                             break;
                         }
                     }
                 }
-            } else if (response.status === 400 || response.status === 401 || response.status === 403) {
+            } else if (downloadResponse.status === 400 || downloadResponse.status === 401 || downloadResponse.status === 403) {
                 token = null;
             } else {
-                some_error = true;
+                someError = true;
                 break;
             }
         }
     } catch (error) {
-        console.warn("error in download_photos() :", error);
+        console.warn('error in download_photos() :', error);
     }
-    in_downloading = false;
-    document.getElementById("downloading_dialog").classList.remove("is-active");
-    if (some_error) {
+    inDownloading = false;
+    document.getElementById('downloading_dialog').classList.remove('is-active');
+    if (someError) {
         if (!token) {
-            change_view("signin_view");
+            switchView('signin_view');
         } else {
-            document.getElementById("download_failed_dialog").classList.add("is-active");
+            document.getElementById('download_failed_dialog').classList.add('is-active');
         }
         return;
     }
-    change_view("loading_view");
-    update_ui().then(() => {
-        change_view("main_view");
+    switchView('loading_view');
+    updateView().then(() => {
+        switchView('main_view');
     });
 }
 
 /**
  * チャートを描画する.
  */
-function draw_chart() {
+function drawChart() {
     let list = [];
-    switch (current_user.chart) {
-        case "context":
-            list = context_list;
+    switch (currentUser.chart) {
+        case 'context':
+            list = contextList;
             break;
 
-        case "scene":
-            list = scene_list;
+        case 'scene':
+            list = sceneList;
             break;
 
-        case "author":
-            list = author_list;
+        case 'author':
+            list = authorList;
             break;
 
         default:
@@ -552,180 +550,180 @@ function draw_chart() {
         labels.push(key);
         series.push(list[key]);
     }
-    new Chartist.Pie(".ct-chart", { labels, series }, {
+    new Chartist.Pie('.ct-chart', { labels, series }, {
         donut: true,
         labelInterpolationFnc: function(value) {
             return value;
         },
-        labelPosition: "outside"
+        labelPosition: 'outside'
     });
-    const status_title = document.getElementById("status_title");
-    status_title.innerHTML = photo_count;
-    // TODO: さぼって直接HTMLを操作している...
-    if (photo_count == 0) {
-        status_title.style.backgroundColor = "white";
-        status_title.style.marginTop = "0";
+    const statusTitle = document.getElementById('status_title');
+    statusTitle.innerHTML = photoCount;
+    if (photoCount == 0) {
+        statusTitle.style.backgroundColor = 'white';
+        statusTitle.style.marginTop = '0';
     } else if (labels.length == 1) {
-        status_title.style.backgroundColor = "transparent";
-        status_title.style.marginTop = "4ex";
+        statusTitle.style.backgroundColor = 'transparent';
+        statusTitle.style.marginTop = '4ex';
     } else {
-        status_title.style.backgroundColor = "transparent";
-        status_title.style.marginTop = "0";
+        statusTitle.style.backgroundColor = 'transparent';
+        statusTitle.style.marginTop = '0';
     }
 }
 
 /**
  *  UIを更新する.
  */
-async function update_ui() {
-    get_photo_list().then(photo_list => {
-        photo_count = 0;
-        context_list = [];
-        scene_list = [];
-        author_list = [];
-        if (photo_list) {
-            photo_count = photo_list.length;
-            for (const photo of photo_list) {
-                const context_count = context_list[photo.context_tag];
-                context_list[photo.context_tag] = context_count ? context_count + 1 : 1;
-                const scene_count = scene_list[photo.scene_tag];
-                scene_list[photo.scene_tag] = scene_count ? scene_count + 1 : 1;
-                const author_count = author_list[photo.author_name];
-                author_list[photo.author_name] = author_count ? author_count + 1 : 1;
+async function updateView() {
+    getPhotoList().then(photoList => {
+        photoCount = 0;
+        contextList = [];
+        sceneList = [];
+        authorList = [];
+        if (photoList) {
+            photoCount = photoList.length;
+            for (const photo of photoList) {
+                const contextCount = contextList[photo.context_tag];
+                contextList[photo.context_tag] = contextCount ? contextCount + 1 : 1;
+                const sceneCount = sceneList[photo.scene_tag];
+                sceneList[photo.scene_tag] = sceneCount ? sceneCount + 1 : 1;
+                const authorCount = authorList[photo.author_name];
+                authorList[photo.author_name] = authorCount ? authorCount + 1 : 1;
             }
         }
-        draw_chart();
+        drawChart();
     });
 }
 
 /**
- * 指定したビューだけを表示する.
+ * 指定したビューに切り替える.
  * @param {string} name ビューの名前.
  */
-function change_view(name) {
-    for (const view of document.getElementById("app").children) {
-        view.style.display = view.id === name ? "block" : "none";
+function switchView(name) {
+    for (const view of document.getElementById('app').children) {
+        view.style.display = view.id === name ? 'block' : 'none';
     }
 }
 
 /**
  * バックグラウンドタスク.
  */
-function background_task() {
-    if (!in_downloading) {
-        load_user().then(result => {
+function backgroundTask() {
+    if (!inDownloading) {
+        loadUser().then(result => {
             if (result) {
-                update_ui();
+                updateView();
             } else {
-                change_view("signin_view");
+                switchView('signin_view');
             }
         });
     }
-    background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
+    backgroundTaskTimer = setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
 }
 
 /**
  * アプリケーションのメイン.
  */
 function main() {
-    change_view("loading_view");
-    document.getElementById("save_context").onclick = document.getElementById("save_scene").onclick = (() => {
-        save_user().then(result => {
-            document.getElementById(result ? "save_succeeded_dialog" : "save_failed_dialog").classList.add("is-active");
+    switchView('loading_view');
+    document.getElementById('save_context').onclick = document.getElementById('save_scene').onclick = (() => {
+        saveUser().then(result => {
+            document.getElementById(result ? 'save_succeeded_dialog' : 'save_failed_dialog').classList.add('is-active');
         });
     });
-    document.getElementById("save_succeeded_ok").onclick = (() => {
-        document.getElementById("save_succeeded_dialog").classList.remove("is-active");
+    document.getElementById('save_succeeded_ok').onclick = (() => {
+        document.getElementById('save_succeeded_dialog').classList.remove('is-active');
     });
-    document.getElementById("save_failed_ok").onclick = (() => {
-        document.getElementById("save_failed_dialog").classList.remove("is-active");
+    document.getElementById('save_failed_ok').onclick = (() => {
+        document.getElementById('save_failed_dialog').classList.remove('is-active');
     });
-    document.getElementById("current_username").onclick = (() => {
-        change_view("signin_view");
+    document.getElementById('current_username').onclick = (() => {
+        switchView('signin_view');
     });
-    document.getElementById("signin").onclick = (() => {
-        const signin_error = document.getElementById("signin_error");
-        signin_error.style.display = "none";
-        const username = document.getElementById("username").value.trim();
-        const raw_password = document.getElementById("password").value;
-        current_user.username = username;
-        current_user.encrypted_password = CryptoJS.AES.encrypt(raw_password, String("{{APP_SECRET_KEY}}")).toString();
-        database.user.put(current_user).then(() => {
+    document.getElementById('signin').onclick = (() => {
+        const signinError = document.getElementById('signin_error');
+        signinError.style.display = 'none';
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        currentUser.username = username;
+        currentUser.password = CryptoJS.AES.encrypt(password, String('{{APP_SECRET_KEY}}')).toString();
+        database.user.put(currentUser).then(() => {
             token = null;
-            load_user().then(result => {
+            loadUser().then(result => {
                 if (result) {
-                    change_view("loading_view");
-                    update_ui().then(() => {
-                        change_view("main_view");
+                    switchView('loading_view');
+                    updateView().then(() => {
+                        switchView('main_view');
                     });
                 } else {
-                    signin_error.style.display = "block";
+                    signinError.style.display = 'block';
                 }
             });
         });
     });
-    document.getElementById("signin-cancel").onclick = (() => {
+    document.getElementById('signin-cancel').onclick = (() => {
         if (token) {
-            change_view("main_view");
+            switchView('main_view');
         }
     });
-    document.getElementById("show_context_status").onclick = (() => {
-        current_user.chart = "context";
-        database.user.put(current_user).then(() => {
-            draw_chart();
+    document.getElementById('show_context_status').onclick = (() => {
+        currentUser.chart = 'context';
+        database.user.put(currentUser).then(() => {
+            drawChart();
         });
     });
-    document.getElementById("show_scene_status").onclick = (() => {
-        current_user.chart = "scene";
-        database.user.put(current_user).then(() => {
-            draw_chart();
+    document.getElementById('show_scene_status').onclick = (() => {
+        currentUser.chart = 'scene';
+        database.user.put(currentUser).then(() => {
+            drawChart();
         });
     });
-    document.getElementById("show_author_status").onclick = (() => {
-        current_user.chart = "author";
-        database.user.put(current_user).then(() => {
-            draw_chart();
+    document.getElementById('show_author_status').onclick = (() => {
+        currentUser.chart = 'author';
+        database.user.put(currentUser).then(() => {
+            drawChart();
         });
     });
-    document.getElementById("download_start").onclick = (() => {
-        save_user().then(result => {
+    document.getElementById('download_start').onclick = (() => {
+        saveUser().then(result => {
             if (!result) {
-                document.getElementById("save_failed_dialog").classList.add("is-active");
-            } else if (!("showDirectoryPicker" in window)) {
-                alert("{{NO_FILESYSTEM_API_ERROR_MESSAGE}}");
+                document.getElementById('save_failed_dialog').classList.add('is-active');
+            } else if (!('showDirectoryPicker' in window)) {
+                document.getElementById('browser_error_dialog').classList.add('is-active');
             } else {
-                download_photos();
+                downloadPhotos();
             }
         });
     });
-    document.getElementById("download_stop").onclick = (() => {
-        in_downloading = false;
-        document.getElementById("downloading_dialog").classList.remove("is-active");
+    document.getElementById('download_stop').onclick = (() => {
+        inDownloading = false;
+        document.getElementById('downloading_dialog').classList.remove('is-active');
     });
-    document.getElementById("download_failed_ok").onclick = (() => {
-        document.getElementById("download_failed_dialog").classList.remove("is-active");
+    document.getElementById('download_failed_ok').onclick = (() => {
+        document.getElementById('download_failed_dialog').classList.remove('is-active');
     });
-    database = new Dexie("{{LINK_APP_DATABASE_NAME}}");
-    database.version("{{LINK_APP_DATABASE_VERSION}}").stores({
-        user: "dummy_id, user_id"
+    document.getElementById('browser_error_ok').onclick = (() => {
+        document.getElementById('browser_error_dialog').classList.remove('is-active');
     });
-    navigator.serviceWorker.register("link-serviceworker.js").then(registration => {
-        navigator.serviceWorker.ready.then(registration => {
-            service_worker = registration;
-        });
+    database = new Dexie('{{LINK_APP_DATABASE_NAME}}');
+    database.version('{{LINK_APP_DATABASE_VERSION}}').stores({
+        user: 'dummyId, userId'
     });
-    if (document.location.search !== "{{APP_MODE_URL_PARAM}}") {
-        change_view("install_view");
+    navigator.serviceWorker.register('link-serviceworker.js').then(() => {
+        navigator.serviceWorker.ready.then(() => {});
+    });
+    if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
+        switchView('install_view');
         return;
     }
-    load_user().then(result => {
+    loadUser().then(result => {
         if (result) {
-            update_ui().then(() => {
-                change_view("main_view");
+            updateView().then(() => {
+                switchView('main_view');
             });
         } else {
-            change_view("signin_view");
+            switchView('signin_view');
         }
-        background_task_timer = setTimeout(background_task, BACKGROUND_TASK_INTERVAL);
+        backgroundTaskTimer = setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
     });
 }

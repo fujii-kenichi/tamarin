@@ -10,6 +10,17 @@
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
     <link rel="shortcut icon" href="{% static 'image/connector-app-favicon.ico' %}">
     <title>TAMARIN DEBUG PAGE</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{GA_ID}}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', '{{GA_ID}}');
+    </script>
 </head>
 
 <body class="has-background-light">
