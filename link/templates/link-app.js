@@ -67,25 +67,23 @@ let authorList = [];
  * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
 async function getToken() {
-    if (token) {
-        return true;
+    if (!token && navigator.onLine) {
+        const response = await fetch('{{CREATE_TOKEN_URL}}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'username': currentUser.username,
+                'password': CryptoJS.AES.decrypt(currentUser.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
+            })
+        });
+        if (response.status === 200) {
+            const result = await response.json();
+            token = result ? result.access : null;
+        }
     }
-    const response = await fetch('{{CREATE_TOKEN_URL}}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            'username': currentUser.username,
-            'password': CryptoJS.AES.decrypt(currentUser.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
-        })
-    });
-    if (response.status === 200) {
-        const result = await response.json();
-        token = result.access;
-        return token ? true : false;
-    }
-    return false;
+    return token ? true : false;
 }
 
 /**
@@ -111,22 +109,28 @@ async function loadUser() {
                 'Authorization': `{{TOKEN_FORMAT}} ${token}`
             }
         });
-        if (response.status === 200) {
-            const result = await response.json();
-            currentUser.userId = result[0].id;
-            await database.user.put(currentUser);
-            if (dateUpdated !== result[0].date_updated) {
-                dateUpdated = result[0].date_updated;
-                setContextTag(result[0].context_tag);
-                setSceneTag(result[0].scene_tag);
-                setSceneColor(result[0].scene_color);
-                setDownloadRule(result[0].download_rule);
-            }
-            return true;
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            token = null;
-        } else {
-            return false;
+        switch (response.status) {
+            case 200:
+                const result = await response.json();
+                currentUser.userId = result[0].id;
+                await database.user.put(currentUser);
+                if (dateUpdated !== result[0].date_updated) {
+                    dateUpdated = result[0].date_updated;
+                    setContextTag(result[0].context_tag);
+                    setSceneTag(result[0].scene_tag);
+                    setSceneColor(result[0].scene_color);
+                    setDownloadRule(result[0].download_rule);
+                }
+                return true;
+
+            case 400:
+            case 401:
+            case 403:
+                token = null;
+                break;
+
+            default:
+                return false;
         }
     }
 }
@@ -163,12 +167,18 @@ async function saveUser() {
                 'download_rule': downloadRule
             })
         });
-        if (response.status === 200) {
-            return loadUser();
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            token = null;
-        } else {
-            return false;
+        switch (response.status) {
+            case 200:
+                return loadUser();
+
+            case 400:
+            case 401:
+            case 403:
+                token = null;
+                break;
+
+            default:
+                return false;
         }
     }
 }
@@ -351,13 +361,19 @@ async function getPhotoList() {
                 'Authorization': `{{TOKEN_FORMAT}} ${token}`
             }
         });
-        if (response.status === 200) {
-            const list = await response.json();
-            return (!list || list.length == 0) ? null : list;
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            token = null;
-        } else {
-            return null;
+        switch (response.status) {
+            case 200:
+                const list = await response.json();
+                return (!list || list.length === 0) ? null : list;
+
+            case 400:
+            case 401:
+            case 403:
+                token = null;
+                break;
+
+            default:
+                return null;
         }
     }
 }
@@ -391,117 +407,134 @@ async function downloadPhotos() {
             downloadCount.innerHTML = list.length;
             downloadFile.innerHTML = photo.id;
             const downloadResponse = await fetch(photo.encrypted_data);
-            if (downloadResponse.status === 200) {
-                let data = null;
-                if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
-                    const raw = await downloadResponse.text();
-                    const decrypted = CryptoJS.AES.decrypt(raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
-                    const tmp = window.atob(decrypted);
-                    const buffer = new Uint8Array(tmp.length);
-                    for (let i = 0; i < tmp.length; i++) {
-                        buffer[i] = tmp.charCodeAt(i);
-                    }
-                    data = buffer;
-                } else {
-                    data = await downloadResponse.arrayBuffer();
-                }
-                const dateTaken = new Date(photo.date_taken);
-                const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
-                const month = `${(dateTaken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
-                const day = `${dateTaken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
-                const time = `${dateTaken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${dateTaken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${dateTaken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
-                const ext = photo.content_type.match(/[^¥/]+$/);
-                const authorName = photo.author_name;
-                const contextTag = photo.context_tag;
-                const sceneTag = photo.scene_tag;
-                let folderNames = [];
-                let fileNameBody = time;
-                for (const rule of getDownloadRule().split(/,/)) {
-                    switch (rule) {
-                        case 'YYMM':
-                            folderNames.push(`${year}${month}`);
-                            break;
-
-                        case 'YY':
-                            folderNames.push(year);
-                            break;
-
-                        case 'MM':
-                            folderNames.push(month);
-                            break;
-
-                        case 'DD':
-                            folderNames.push(day);
-                            break;
-
-                        case 'AUTHOR':
-                            folderNames.push(authorName);
-                            break;
-
-                        case 'CONTEXT':
-                            folderNames.push(contextTag);
-                            break;
-
-                        case 'SCENE':
-                            folderNames.push(sceneTag);
-                            break;
-
-                        case RULE_NOT_USED_VALUE:
-                        default:
-                            break;
-                    }
-                }
-                let folderHandle = pickedFolder;
-                for (const folderName of folderNames) {
-                    folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
-                }
-                let fileHandle = null;
-                let number = 0;
-                let actualFileName = null;
-                do {
-                    const numberString = number > 0 ? `(${number})` : '';
-                    actualFileName = `${fileNameBody}${numberString}.${ext}`;
-                    number++;
-                    try {
-                        fileHandle = await folderHandle.getFileHandle(actualFileName);
-                    } catch (dummy) {
-                        fileHandle = null;
-                    }
-                } while (fileHandle);
-                fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
-                const writable = await fileHandle.createWritable();
-                await writable.write(data);
-                await writable.close();
-                list.shift();
-                if (currentUser.cleanup) {
-                    while (true) {
-                        if (!navigator.onLine) {
-                            break;
+            switch (downloadResponse.status) {
+                case 200:
+                    let data = null;
+                    if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
+                        const raw = await downloadResponse.text();
+                        const decrypted = CryptoJS.AES.decrypt(raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
+                        const tmp = window.atob(decrypted);
+                        const buffer = new Uint8Array(tmp.length);
+                        for (let i = 0; i < tmp.length; i++) {
+                            buffer[i] = tmp.charCodeAt(i);
                         }
-                        if (!await getToken()) {
-                            break;
+                        data = buffer;
+                    } else {
+                        data = await downloadResponse.arrayBuffer();
+                    }
+                    const dateTaken = new Date(photo.date_taken);
+                    const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
+                    const month = `${(dateTaken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
+                    const day = `${dateTaken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
+                    const time = `${dateTaken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${dateTaken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${dateTaken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
+                    const ext = photo.content_type.match(/[^¥/]+$/);
+                    const authorName = photo.author_name;
+                    const contextTag = photo.context_tag;
+                    const sceneTag = photo.scene_tag;
+                    let folderNames = [];
+                    let fileNameBody = time;
+                    for (const rule of getDownloadRule().split(/,/)) {
+                        switch (rule) {
+                            case 'YYMM':
+                                folderNames.push(`${year}${month}`);
+                                break;
+
+                            case 'YY':
+                                folderNames.push(year);
+                                break;
+
+                            case 'MM':
+                                folderNames.push(month);
+                                break;
+
+                            case 'DD':
+                                folderNames.push(day);
+                                break;
+
+                            case 'AUTHOR':
+                                folderNames.push(authorName);
+                                break;
+
+                            case 'CONTEXT':
+                                folderNames.push(contextTag);
+                                break;
+
+                            case 'SCENE':
+                                folderNames.push(sceneTag);
+                                break;
+
+                            case RULE_NOT_USED_VALUE:
+                            default:
+                                break;
                         }
-                        const deleteResponse = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `{{TOKEN_FORMAT}} ${token}`
+                    }
+                    let folderHandle = pickedFolder;
+                    for (const folderName of folderNames) {
+                        folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
+                    }
+                    let fileHandle = null;
+                    let number = 0;
+                    let actualFileName = null;
+                    do {
+                        const numberString = number > 0 ? `(${number})` : '';
+                        actualFileName = `${fileNameBody}${numberString}.${ext}`;
+                        number++;
+                        try {
+                            fileHandle = await folderHandle.getFileHandle(actualFileName);
+                        } catch (dummy) {
+                            fileHandle = null;
+                        }
+                    } while (fileHandle);
+                    fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(data);
+                    await writable.close();
+                    list.shift();
+                    if (currentUser.cleanup) {
+                        let deleteDone = false;
+                        while (!deleteDone) {
+                            if (!navigator.onLine) {
+                                break;
                             }
-                        });
-                        if (deleteResponse.status === 200 || deleteResponse.status === 204) {
-                            break;
-                        } else if (deleteResponse.status === 400 || deleteResponse.status === 401 || deleteResponse.status === 403) {
-                            token = null;
-                        } else {
-                            someError = true;
-                            break;
+                            if (!await getToken()) {
+                                break;
+                            }
+                            const deleteResponse = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `{{TOKEN_FORMAT}} ${token}`
+                                }
+                            });
+                            switch (deleteResponse.status) {
+                                case 200:
+                                case 204:
+                                    deleteDone = true;
+                                    break;
+
+                                case 400:
+                                case 401:
+                                case 403:
+                                    token = null;
+                                    break;
+
+                                default:
+                                    someError = true;
+                                    deleteDone = true;
+                                    break;
+                            }
                         }
                     }
-                }
-            } else if (downloadResponse.status === 400 || downloadResponse.status === 401 || downloadResponse.status === 403) {
-                token = null;
-            } else {
-                someError = true;
-                break;
+                    break;
+
+                case 400:
+                case 401:
+                case 403:
+                    token = null;
+                    break;
+
+                default:
+                    someError = true;
+                    break;
             }
         }
     } catch (error) {
@@ -559,10 +592,10 @@ function drawChart() {
     });
     const statusTitle = document.getElementById('status_title');
     statusTitle.innerHTML = photoCount;
-    if (photoCount == 0) {
+    if (photoCount === 0) {
         statusTitle.style.backgroundColor = 'white';
         statusTitle.style.marginTop = '0';
-    } else if (labels.length == 1) {
+    } else if (labels.length === 1) {
         statusTitle.style.backgroundColor = 'transparent';
         statusTitle.style.marginTop = '4ex';
     } else {

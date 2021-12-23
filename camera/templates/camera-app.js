@@ -7,6 +7,9 @@
 // バックグラウンドを繰り返すときの待ち時間(ミリ秒).
 const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 
+// シャッターのアニメーションのための時間.
+const SHUTTER_ANIUMATION_TIME = 500;
+
 // 撮影用のパラメータ.
 const CAPTURE_PARAM = JSON.parse(String('{{CAPTURE_PARAM}}').replaceAll('&quot;', '"'));
 const DEVICE_PARAM = JSON.parse(String('{{DEVICE_PARAM}}').replaceAll('&quot;', '"'));
@@ -110,10 +113,10 @@ function updatePreview() {
  * @param {string} sceneTag 撮影時に指定されたシーンタグ.
  */
 function takePhoto(index, sceneTag) {
-    if (photoCount >= MAX_PHOTO_COUNT || PREVIEW.style.visibility === 'hidden' || !imageCapture) {
+    if (photoCount >= MAX_PHOTO_COUNT || PREVIEW.style.visibility === 'hidden') {
         return;
     }
-    if (imageCapture.track && imageCapture.track.readyState && imageCapture.track.readyState !== 'live') {
+    if (!imageCapture || (imageCapture.track && imageCapture.track.readyState !== 'live')) {
         return;
     }
     const shutter = document.getElementById(`shutter_${index}`);
@@ -123,7 +126,7 @@ function takePhoto(index, sceneTag) {
         SHUTTER_AUDIO.play();
     }
     PHOTO_COUNT.value = ++photoCount;
-    const start = new Date();
+    const now = new Date();
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     imageCapture.takePhoto(CAPTURE_PARAM).then(image => {
         const reader = new FileReader();
@@ -138,7 +141,7 @@ function takePhoto(index, sceneTag) {
             }
             database.photo.add({
                 owner: currentUser.userId,
-                dateTaken: start.toJSON(),
+                dateTaken: now.toJSON(),
                 authorName: currentUser.authorName,
                 sceneTag: sceneTag,
                 contextTag: currentUser.selectedContextTag,
@@ -147,13 +150,13 @@ function takePhoto(index, sceneTag) {
                 encryptedData: data
             }).then(() => {
                 navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-                console.info(`photo processing time :${(new Date() - start)}`);
+                console.info(`photo processing time :${(new Date() - now)}`);
                 console.info(`captured image type : ${image.type}`);
                 console.info(`captured image size : ${image.size}`);
                 setTimeout(() => {
                     shutter.classList.remove('animate__animated');
                     PREVIEW.style.visibility = 'visible';
-                }, 0);
+                }, SHUTTER_ANIUMATION_TIME);
             });
         };
         reader.readAsArrayBuffer(image);
@@ -165,25 +168,23 @@ function takePhoto(index, sceneTag) {
  * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
  */
 async function getToken() {
-    if (token) {
-        return true;
+    if (!token && navigator.onLine) {
+        const response = await fetch('{{CREATE_TOKEN_URL}}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'username': currentUser.username,
+                'password': CryptoJS.AES.decrypt(currentUser.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
+            })
+        });
+        if (response.status === 200) {
+            const result = await response.json();
+            token = result ? result.access : null;
+        }
     }
-    const response = await fetch('{{CREATE_TOKEN_URL}}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            'username': currentUser.username,
-            'password': CryptoJS.AES.decrypt(currentUser.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
-        })
-    });
-    if (response.status === 200) {
-        const result = await response.json();
-        token = result.access;
-        return token ? true : false;
-    }
-    return false;
+    return token ? true : false;
 }
 
 /**
@@ -209,23 +210,29 @@ async function loadUser() {
                 'Authorization': `{{TOKEN_FORMAT}} ${token}`
             }
         });
-        if (response.status === 200) {
-            const result = await response.json();
-            currentUser.userId = result[0].id;
-            currentUser.contextTag = result[0].context_tag;
-            currentUser.sceneTag = result[0].scene_tag;
-            currentUser.sceneColor = result[0].scene_color;
-            currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
-            await database.user.put(currentUser);
-            if (dateUpdated !== result[0].date_updated) {
-                dateUpdated = result[0].date_updated;
-                updateView();
-            }
-            return true;
-        } else if (response.status === 400 || response.status === 401 || response.status === 403) {
-            token = null;
-        } else {
-            return false;
+        switch (response.status) {
+            case 200:
+                const result = await response.json();
+                currentUser.userId = result[0].id;
+                currentUser.contextTag = result[0].context_tag;
+                currentUser.sceneTag = result[0].scene_tag;
+                currentUser.sceneColor = result[0].scene_color;
+                currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
+                await database.user.put(currentUser);
+                if (dateUpdated !== result[0].date_updated) {
+                    dateUpdated = result[0].date_updated;
+                    updateView();
+                }
+                return true;
+
+            case 400:
+            case 401:
+            case 403:
+                token = null;
+                break;
+
+            default:
+                return false;
         }
     }
 }
@@ -394,12 +401,16 @@ function main() {
     navigator.serviceWorker.register('camera-serviceworker.js').then(() => {
         navigator.serviceWorker.ready.then(() => {
             navigator.serviceWorker.onmessage = (event => {
-                if (event.data.tag === '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}') {
-                    database.photo.count().then(count => {
-                        PHOTO_COUNT.value = photoCount = count;
-                    });
-                } else if (event.data.tag === '{{CAMERA_APP_FORCE_UPDATE_TAG}}') {
-                    window.location = 'camera-app.html{{APP_MODE_URL_PARAM}}';
+                switch (event.data.tag) {
+                    case '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}':
+                        database.photo.count().then(count => {
+                            PHOTO_COUNT.value = photoCount = count;
+                        });
+                        break;
+
+                    case '{{CAMERA_APP_FORCE_UPDATE_TAG}}':
+                        window.location = 'camera-app.html{{APP_MODE_URL_PARAM}}';
+                        break;
                 }
             });
         });

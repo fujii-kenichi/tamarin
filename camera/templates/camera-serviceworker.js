@@ -10,6 +10,9 @@
 importScripts('{{DEXIE_JS}}');
 importScripts('{{CRYPTO_JS}}');
 
+// この時間以内のタイムスタンプであればすでにアップロードが実施されたものとみなす.
+const TIMESTAMP_RANGE = 1000 * 60;
+
 /**
  * installイベントの処理を定義する.
  */
@@ -80,10 +83,14 @@ self.addEventListener('sync', (event => {
  * messageイベントの処理を定義する.
  */
 self.addEventListener('message', (event => {
-    if (event.data.tag === '{{CAMERA_APP_FORCE_UPDATE_TAG}}') {
-        event.waitUntil(forceUpdate());
-    } else if (event.data.tag === '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}') {
-        event.waitUntil(uploadPhotos());
+    switch (event.data.tag) {
+        case '{{CAMERA_APP_FORCE_UPDATE_TAG}}':
+            event.waitUntil(forceUpdate());
+            break;
+
+        case '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}':
+            event.waitUntil(uploadPhotos());
+            break;
     }
 }));
 
@@ -117,27 +124,25 @@ async function uploadPhotos() {
     if (!user) {
         return;
     }
-    const response = await fetch('{{CREATE_TOKEN_URL}}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            'username': user.username,
-            'password': CryptoJS.AES.decrypt(user.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
-        })
-    });
-    if (response.status !== 200) {
-        return;
-    }
-    const result = await response.json();
-    const token = result.access;
-    if (!token) {
-        return;
-    }
+    let token = null;
+    let now = null;
+    const getPhoto = async function() {
+        const firstPhoto = await database.photo.orderBy('dateTaken').first();
+        if (firstPhoto) {
+            if (firstPhoto.timestamp) {
+                if ((now - firstPhoto.timestamp) < TIMESTAMP_RANGE) {
+                    return null;
+                }
+            } else {
+                firstPhoto.timestamp = now;
+                await database.photo.put(firstPhoto);
+            }
+        }
+        return firstPhoto;
+    };
     while (true) {
         const photoCount = await database.photo.count();
-        if (photoCount == 0) {
+        if (photoCount === 0) {
             return;
         }
         if (!navigator.onLine) {
@@ -146,55 +151,56 @@ async function uploadPhotos() {
             }
             return;
         }
-        uploadPhoto(database, token);
-    }
-}
-
-/**
- * 写真を一枚だけアップロードする.
- * @param {*} database データベース.
- * @param {*} token アップロードに使用するトークン.
- */
-function uploadPhoto(database, token) {
-    database.transaction('rw', database.photo, () => {
-        database.photo.orderBy('dateTaken').first().then(photo => {
-            if (photo) {
-                database.photo.delete(photo.id).then(() => {
-                    const form = new FormData();
-                    form.append('owner', photo.owner);
-                    form.append('date_taken', photo.dateTaken);
-                    form.append('author_name', photo.authorName);
-                    form.append('scene_tag', photo.sceneTag);
-                    form.append('context_tag', photo.contextTag);
-                    form.append('content_type', photo.contentType);
-                    form.append('encryption_key', photo.encryptionKey);
-                    const start = new Date();
-                    const data = new File([photo.encryptedData], `${photo.id}.bin`, { lastModified: start });
-                    form.append('encrypted_data', data);
-                    fetch('{{MEDIA_API_URL}}', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `{{TOKEN_FORMAT}} ${token}`
-                        },
-                        body: form
-                    }).then(response => {
-                        if (response.status === 201) {
-                            console.info(`photo upload time :${(new Date() - start)}`);
-                            self.clients.matchAll().then(clients => {
-                                for (const client of clients) {
-                                    client.postMessage({ tag: '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}' });
-                                }
-                            });
-                        } else {
-                            throw response;
-                        }
-                    }).catch(error => {
-                        throw error;
-                    });
-                }).catch(error => {
-                    throw error;
-                });
+        if (!token) {
+            const tokenResponse = await fetch('{{CREATE_TOKEN_URL}}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'username': user.username,
+                    'password': CryptoJS.AES.decrypt(user.password, String('{{APP_SECRET_KEY}}')).toString(CryptoJS.enc.Utf8)
+                })
+            });
+            if (tokenResponse.status !== 200) {
+                return;
             }
+            const result = await tokenResponse.json();
+            token = result ? result.access : null;
+            if (!token) {
+                return;
+            }
+        }
+        now = new Date();
+        const photo = await database.transaction('rw', database.photo, getPhoto);
+        if (!photo) {
+            return;
+        }
+        const form = new FormData();
+        form.append('owner', photo.owner);
+        form.append('date_taken', photo.dateTaken);
+        form.append('author_name', photo.authorName);
+        form.append('scene_tag', photo.sceneTag);
+        form.append('context_tag', photo.contextTag);
+        form.append('content_type', photo.contentType);
+        form.append('encryption_key', photo.encryptionKey);
+        const data = new File([photo.encryptedData], `${photo.id}.bin`, { lastModified: now });
+        form.append('encrypted_data', data);
+        const mediaResponse = await fetch('{{MEDIA_API_URL}}', {
+            method: 'POST',
+            headers: {
+                'Authorization': `{{TOKEN_FORMAT}} ${token}`
+            },
+            body: form
         });
-    });
+        if (mediaResponse.status !== 201) {
+            return;
+        }
+        console.info(`photo upload time :${(new Date() - now)}`);
+        await database.photo.delete(photo.id);
+        const clients = await self.clients.matchAll();
+        for (const client of clients) {
+            client.postMessage({ tag: '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}' });
+        }
+    }
 }
