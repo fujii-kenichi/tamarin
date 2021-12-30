@@ -13,7 +13,7 @@ from .models import History, Media
 @receiver(post_save, sender=Media)
 def media_upload_handler(sender, instance, **kwargs):
     """[Mediaがアップロードされた時のシグナルハンドラ]"""
-    if settings.USE_HISTORY:
+    if settings.USE_HISTORY == "True":
         # Historyを作成して保存しておく.
         data = History.objects.create(type="upload", user=instance.owner.id, media=instance.id)
         data.save()
@@ -22,7 +22,7 @@ def media_upload_handler(sender, instance, **kwargs):
 @receiver(pre_delete, sender=Media)
 def media_delete_handler(sender, instance, **kwargs):
     """[Mediaが削除された時のシグナルハンドラ]"""
-    if settings.USE_HISTORY:
+    if settings.USE_HISTORY == "True":
         # Historyを作成して保存しておく.
         data = History.objects.create(type="delete", user=instance.owner.id, media=instance.id)
         data.save()

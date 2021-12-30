@@ -141,7 +141,7 @@ else:
 
 # API関連のセキュリティ設定.
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': ( # Web UIを無効化する.
+    'DEFAULT_RENDERER_CLASSES': (  # Web UIを無効化する.
         'rest_framework.renderers.JSONRenderer',
     ),
     "DEFAULT_PERMISSION_CLASSES": [
@@ -214,4 +214,4 @@ if DEBUG == "True":
     }
 
 #  ヒストリーの記録を行うかどうか.
-USE_HISTORY = os.getenv("USE_HISTORY", "False")
+USE_HISTORY = environ.Env().bool("USE_HISTORY", default=False)
