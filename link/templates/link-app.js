@@ -64,7 +64,7 @@ let authorList = [];
 
 /**
  * Tokenサービスから現在のユーザーにもとづいたトークンをもってくる.
- * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
+ * @return {Promise<boolean>} true:もってこれた. / false:もってこれなかった.
  */
 async function getToken() {
     if (!token && navigator.onLine) {
@@ -346,7 +346,7 @@ function getDownloadRule() {
 
 /**
  * ダウンロードを待っている写真のリストをMediaサービスから取得する.
- * @return {Promise<*>} 写真の情報を示した配列. とれなかったらnull.
+ * @return {Promise<[]>} 写真の情報を示した配列. とれなかったらnull.
  */
 async function getPhotoList() {
     while (true) {
@@ -397,6 +397,7 @@ async function downloadPhotos() {
         const pickedFolder = await window.showDirectoryPicker();
         while (pickedFolder && list.length && inDownloading && !someError) {
             if (!navigator.onLine) {
+                someError = true;
                 break;
             }
             if (!await getToken()) {
@@ -494,6 +495,7 @@ async function downloadPhotos() {
                         let deleteDone = false;
                         while (!deleteDone) {
                             if (!navigator.onLine) {
+                                someError = true;
                                 break;
                             }
                             if (!await getToken()) {

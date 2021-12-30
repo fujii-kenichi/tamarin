@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     "djoser",
     "import_export",
     "django_extensions",
-    "silk",
+    # "silk",
     "connector.apps.ConnectorConfig",
     "link.apps.LinkConfig",
     "camera.apps.CameraConfig",
@@ -72,7 +72,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "silk.middleware.SilkyMiddleware",
+    # "silk.middleware.SilkyMiddleware",
     "request_logging.middleware.LoggingMiddleware",
 ]
 
@@ -141,6 +141,9 @@ else:
 
 # API関連のセキュリティ設定.
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': ( # Web UIを無効化する.
+        'rest_framework.renderers.JSONRenderer',
+    ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated"
     ],
@@ -209,3 +212,6 @@ if DEBUG == "True":
             },
         },
     }
+
+#  ヒストリーの記録を行うかどうか.
+USE_HISTORY = os.getenv("USE_HISTORY", "False")

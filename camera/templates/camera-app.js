@@ -165,7 +165,7 @@ function takePhoto(index, sceneTag) {
 
 /**
  * Tokenサービスから現在のユーザーにもとづいたトークンをもってくる.
- * @return {Promise<boolean}> true:もってこれた. / false:もってこれなかった.
+ * @return {Promise<boolean>} true:もってこれた. / false:もってこれなかった.
  */
 async function getToken() {
     if (!token && navigator.onLine) {

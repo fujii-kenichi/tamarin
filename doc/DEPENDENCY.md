@@ -1,6 +1,6 @@
 # 使わせていただいているOSSやデータ
 
-Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[package.json](./package.json)に書いてあるけど、備忘録もかねてここにメモ。
+Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [package.json](./package.json) に書いてあるけど、備忘録もかねてここにメモ。
 
 ## Python
 
@@ -26,11 +26,11 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 
 ### [Django Silk](https://github.com/jazzband/django-silk)
 
-- HTTPリクエストとデータベースへのアクセスをプロファイリングできるツール.
+- HTTPリクエストとデータベースへのアクセスをプロファイリングできるツール。
 
 ### [Django Extensions](https://django-extensions.readthedocs.io/en/latest/)
 
-- shell_plus や runserver_plus といったデバッグに便利な機能を追加してくれる.
+- shell_plus や runserver_plus といったデバッグに便利な機能を追加してくれる。
 
 ### その他 Django 界隈で参考にさせていただいた記事
 
@@ -61,7 +61,7 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 ### [Bulma](https://bulma.io/)
 
 - めちゃくちゃ便利でかっこいい CSS フレームワーク。以下のリンクも便利。
-- [Bulmaswatch](https://jenil.github.io/bulmaswatch/default/)
+- [Bulmaswatch](https://jenil.github.io/bulmaswatch/)
 - [Free Bulma Templates](https://bulmatemplates.github.io/bulma-templates/)
 - [Bulma extensions](https://bulma.io/extensions/)
 
@@ -120,6 +120,8 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は[pac
 - [Appscope - Progressive Web Apps Examples](https://appsco.pe/)
 - [Background Sync with Service Workers](https://davidwalsh.name/background-sync)
 - [Web App Manifest Generator](https://app-manifest.firebaseapp.com/)
+- [PWAをもっと前進させませんか？【2021年末版】](https://zenn.dev/kaa_a_zu/articles/701efdbb4a7a49)
+- [iOSのPWA対応時に気をつけるべきこと](https://qiita.com/zprodev/items/e5db743727c5722874cb)
 
 ## その他とっても便利なサイト:ブラウザ編
 

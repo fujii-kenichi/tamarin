@@ -9,7 +9,7 @@
     <link rel="shortcut icon" href="{% static 'image/connector-app-favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
-    <title>タマリン マニュアル</title>
+    <title>タマリンの使い方</title>
     <script async src="https://www.googletagmanager.com/gtag/js?id={{GA_ID}}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -18,42 +18,43 @@
             dataLayer.push(arguments);
         }
         gtag('js', new Date());
-
         gtag('config', '{{GA_ID}}');
     </script>
 </head>
 
 <body class="has-background-light">
     <header class="section has-background-primary">
-        <h1 class="title">タマリン マニュアル</h1>
+        <h1 class="title">タマリンの使い方</h1>
     </header>
     <main class="content">
-        <section class="section box" id="iphone">
-            <h2 class="subtitle">iPhoneでの使い方</h2>
-            <p>
-                TODO: ここに詳しい使い方を書く。
-            </p>
+        <section class="section box" id="connector">
+            <h2 class="subtitle">アカウントについて</h2>
+            <ul>
+                <li>現在アカウント名に使用できるのはアルファベットと数字のみです。</li>
+                <li>ひとつの組織で何個アカウントを作成していただいてもかまいません。例えばひとつの保育園の中で各年齢別クラスでそれぞれ独立した写真の分類をしたい場合には、 それぞれのクラスでアカウントを作成していただいてかまいません。</li>
+            </ul>
             <a class="button is-rounded is-primary is-small" href="../">戻る</a>
         </section>
-        <section class="section box" id="android">
-            <h2 class="subtitle">Androidでの使い方</h2>
-            <p>
-                TODO: ここに詳しい使い方を書く。
-            </p>
+        <section class="section box" id="camera">
+            <h2 class="subtitle">タマリンカメラについて</h2>
+            <ul>
+                <li>インターネットに接続できる iOS 14以上を搭載した iPhone, iPod Touch, iPad と、Andoird 8 以上を搭載した Android スマートフォンで動作します。</li>
+                <li>機内モードなど、インターネットに接続されていない時は写真を転送しません。その場合に保持できる写真は最大で10枚までとなっています。</li>
+                <li>iOSではタマリンカメラが起動しているときにしか写真を転送しません。Android ではタマリンカメラが起動されていなくてもバックグラウンドで写真を転送します。</li>
+                <li>現在はズーム、フラッシュ、マクロ撮影、赤目補正などのカメラ固有機能は使用することができません。</li>
+                <li>ひとつのアカウントで使用できるタマリンカメラの台数に制約はありません。</li>
+            </ul>
             <a class="button is-rounded is-primary is-small" href="../">戻る</a>
         </section>
-        <section class="section box" id="ipad">
-            <h2 class="subtitle">iPadでの使い方</h2>
-            <p>
-                TODO: ここに詳しい使い方を書く。
-            </p>
-            <a class="button is-rounded is-primary is-small" href="../">戻る</a>
-        </section>
-        <section class="section box" id="pc">
-            <h2 class="subtitle">PCでの使い方</h2>
-            <p>
-                TODO: ここに詳しい使い方を書く。
-            </p>
+        <section class="section box" id="link">
+            <h2 class="subtitle">タマリンクについて</h2>
+            <ul>
+                <li>インターネットに接続できる Windows 10/11 を搭載した PC で動作します。最新版の Edge をご使用ください。</li>
+                <li>写真をダウンロードするフォルダは原則として"マイピクチャ"フォルダをご使用ください。</li>
+                <li>複数台の PC でご使用いただくことも可能ですが、いずれかのPCでダウンロードしたら写真はタマリンのサーバからは削除されることにご注意ください。</li>
+                <li>写真を長期間(1ヶ月以上)ダウンロードしない場合には、管理側で強制的に削除する場合がありますのでご注意ください。</li>
+                <li>ダウンロード機能を用いず、タグの変更や現在タマリンのサーバに保存されている写真の状況の確認だけであれば Mac あるいは iPad もご利用いただけます。最新版の Safari をご使用下さい。</li>
+            </ul>
             <a class="button is-rounded is-primary is-small" href="../">戻る</a>
         </section>
     </main>

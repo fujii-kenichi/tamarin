@@ -12,9 +12,9 @@ describe("公開しているエンドポイントのテスト", () => {
         cy.request({ url: "connector/auth/jwt/create", failOnStatusCode: false }).should(response => {
             expect(response.status).to.eq(405);
         });
-        cy.request({ url: "silk/", failOnStatusCode: false }).should(response => {
-            expect(response.status).to.eq(404);
-        });
+        //cy.request({ url: "silk/", failOnStatusCode: false }).should(response => {
+        //expect(response.status).to.eq(404);
+        //});
         cy.request("connector/debug/").should(response => {
             expect(response.status).to.eq(200);
         });
