@@ -77,7 +77,7 @@
   - CSV 化したあとのデータベースのレコード長としては app-settings.py で250と定義。
   - CSV 化する前の文字列としては app-settings.py で最長25文字で定義。
 - ユーザー名やパスワードや利用者名などの最大長
-  - app-settings.py で最短6文字最長50文字で定義。
+  - app-settings.py で最短8文字最長50文字で定義。
 - JWT トークンの有効期限
   - settings.py で定義していて、DBEUG じゃなければ60分、DEBUG の時は1分。
 
