@@ -23,7 +23,8 @@
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
     <script src="{{BULMA_TOAST_JS}}" defer></script>
-    <script src="{{HOWLER_CORE_JS}}" defer></script>
+    <script src="{{HOWLER_JS}}" defer></script>
+    <script src="{{QRCODE_JS}}" defer></script>
     <script src="camera-app.js" defer></script>
     <title>{{CAMERA_APP_NAME}}</title>
 </head>
@@ -138,6 +139,7 @@
                                 </figure>
                                 <p><strong>{{CAMERA_APP_NAME}}</strong></p>
                                 <p><small>{{VERSION}}</small></p>
+                                <canvas id="qrcode"></canvas><br>
                                 <p class="is-size-4 my-3">{{INSTALL_MESSAGE}}</p>
                                 <a class="button is-warning is-rouded is-fullwidth" href="{{APP_MODE_URL_PARAM}}">{{OPEN_APP_LABEL}}</a>
                             </div>

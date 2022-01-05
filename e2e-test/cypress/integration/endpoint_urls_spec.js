@@ -35,9 +35,9 @@ describe("公開しているエンドポイントのテスト", () => {
         cy.request("connector/password-change-done/").should(response => {
             expect(response.status).to.eq(200);
         });
-        cy.request("connector/feedback/").should(response => {
-            expect(response.status).to.eq(200);
-        });
+        //cy.request("connector/feedback/").should(response => {
+        //expect(response.status).to.eq(200);
+        //});
         cy.request("connector/feedback-done/").should(response => {
             expect(response.status).to.eq(200);
         });

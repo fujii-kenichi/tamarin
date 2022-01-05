@@ -23,6 +23,7 @@
     <script src="{{DEXIE_JS}}" defer></script>
     <script src="{{CRYPTO_JS}}" defer></script>
     <script src="{{CHARTIST_JS}}" defer></script>
+    <script src="{{QRCODE_JS}}" defer></script>
     <script src="link-app.js" defer></script>
     <title>{{LINK_APP_NAME}}</title>
 </head>
@@ -355,6 +356,7 @@
                                 </figure>
                                 <p><strong>{{LINK_APP_NAME}}</strong></p>
                                 <p><small>{{VERSION}}</small></p>
+                                <canvas id="qrcode"></canvas><br>
                                 <p class="is-size-4 my-3">{{INSTALL_MESSAGE}}</p>
                                 <a class="button is-warning is-rouded is-fullwidth" href="{{APP_MODE_URL_PARAM}}">{{OPEN_APP_LABEL}}</a>
                             </div>

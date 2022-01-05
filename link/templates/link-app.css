@@ -22,7 +22,6 @@ body::-webkit-scrollbar {
 
 .tama-shutter {
     box-sizing: border-box;
-    font-size: small;
     margin: 0.1em;
     padding: 0.1em;
     width: 5em;
@@ -33,6 +32,8 @@ body::-webkit-scrollbar {
     border-color: dimgray;
     background-color: black;
     text-align: center;
+    font-size: small;
+    font-weight: bold;
 }
 
 .tama-shutter-colors {

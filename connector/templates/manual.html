@@ -10,15 +10,17 @@
     <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
     <title>タマリンの使い方</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{GA_ID}}"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', '{{GA_ID}}');
+    <script type="text/javascript">
+        (function(c, l, a, r, i, t, y) {
+            c[a] = c[a] || function() {
+                (c[a].q = c[a].q || []).push(arguments)
+            };
+            t = l.createElement(r);
+            t.async = 1;
+            t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0];
+            y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "{{CLARITY_CODE}}");
     </script>
 </head>
 
@@ -44,6 +46,12 @@
                 <li>現在はズーム、フラッシュ、マクロ撮影、赤目補正などのカメラ固有機能は使用することができません。</li>
                 <li>ひとつのアカウントで使用できるタマリンカメラの台数に制約はありません。</li>
             </ul>
+            <h4>iPhoneで起動するたびに「カメラへのアクセスを求めています」が表示される</h4>
+            <p>申し訳ありませんがiOS(Safari)における現時点での制約事項になります。以下の方法でこの確認を出さないようにすることができますが、タマリン以外のサイトからのカメラアクセスも自動で許可されるようになってしまいます。 もしプライバシー・セキュリティの観点からこれが許容できるとお考えの場合には、どうぞこの設定のご利用をご検討ください。</p>
+            <ul>
+                <li>iOSの「設定」を開いて「Safari」を選ぶ。</li>
+                <li>スクロールして「WEBサイトの設定」から「カメラ」を選び、「許可」にチェックをつける。</li>
+            </ul>
             <a class="button is-rounded is-primary is-small" href="../">戻る</a>
         </section>
         <section class="section box" id="link">
@@ -53,8 +61,10 @@
                 <li>写真をダウンロードするフォルダは原則として"マイピクチャ"フォルダをご使用ください。</li>
                 <li>複数台の PC でご使用いただくことも可能ですが、いずれかのPCでダウンロードしたら写真はタマリンのサーバからは削除されることにご注意ください。</li>
                 <li>写真を長期間(1ヶ月以上)ダウンロードしない場合には、管理側で強制的に削除する場合がありますのでご注意ください。</li>
-                <li>ダウンロード機能を用いず、タグの変更や現在タマリンのサーバに保存されている写真の状況の確認だけであれば Mac あるいは iPad もご利用いただけます。最新版の Safari をご使用下さい。</li>
+                <li>ダウンロード機能を用いず、タグの変更や現在タマリンのサーバに保存されている写真の状況の確認だけであれば、Mac あるいは iPad もご利用いただけます。最新版の Safari をご使用下さい。</li>
             </ul>
+            <h4>保存するたびにブラウザの確認ダイアログが2回ほど表示される</h4>
+            <p>申し訳ありませんがEdge(Chrome)における現時点での制約事項になります。毎回「許可する」を選択して処理を続行してください。</p>
             <a class="button is-rounded is-primary is-small" href="../">戻る</a>
         </section>
     </main>

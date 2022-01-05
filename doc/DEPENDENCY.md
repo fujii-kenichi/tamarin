@@ -51,6 +51,10 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 - チャート描画ライブラリ。いろいろ試してみたけど、これが一番余計なことしないで素敵。
 
+### [node-qrcode](https://github.com/soldair/node-qrcode)
+
+- QRコード生成ライブラリ。
+
 ### その他、JavaScript界隈で便利なサイト
 
 - [MDN Web Docs](https://developer.mozilla.org/ja/)

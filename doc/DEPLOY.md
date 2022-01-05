@@ -178,7 +178,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
    | AZURE_CUSTOM_DOMAIN | ストレージアカウントのドメイン名 | 例) hogestorages.blob.core.windows.net |
    | AZURE_MEDIA_CONTAINER | ストレージコンテナ名 | 使用するストレージアコンテナの名称 |
    | AZURE_STORAGE_KEY | ストレージへのアクセスキー | Azure 管理コンソールから取得した値を設定 |
-   | GA_ID | Google Analytics の測定ID | Google Analytics を使用して測定を行う場合に設定 |
+   | CLARITY_CODE | Microsoft Clarity のトラッキングコード | 測定を行う場合に設定 |
 
 ### 2-4. Github からの自動デプロイの設定
 

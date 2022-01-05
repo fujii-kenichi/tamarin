@@ -13,16 +13,16 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.04E",
+    "VERSION": "0.0.05A",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
 
     # シークレットキー:本番環境では必ず上書きすること!
-    "APP_SECRET_KEY": os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden",),
+    "APP_SECRET_KEY": os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden"),
 
-    # Google AnaliticsのトラッキングID.
-    "GA_ID": os.getenv("GA_ID", "dummy",),
+    # Microsoft Clarityのトラッキングコード.
+    "CLARITY_CODE": os.getenv("CLARITY_CODE", "dummy"),
 
     # メディアを暗号化する時に自動生成するキーの長さ.
     "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
@@ -31,7 +31,7 @@ APP_SETTINGS = {
     "NO_ENCRYPTION_KEY": "none",
 
     # ユーザーが入力するユーザー名やパスワードの入力フィールドに渡す最小長.
-    "MIN_NAME_LENGTH": 6,
+    "MIN_NAME_LENGTH": 8,
 
     # ユーザーが入力するユーザー名やパスワードの入力フィールドに渡す最大長.
     "MAX_NAME_LENGTH": 50,
@@ -84,7 +84,8 @@ APP_SETTINGS = {
     "CRYPTO_JS": static("js/crypto-js.min.js"),
     "CHARTIST_JS": static("js/chartist.min.js"),
     "BULMA_TOAST_JS": static("js/bulma-toast.min.js"),
-    "HOWLER_CORE_JS": static("js/howler.core.min.js"),
+    "HOWLER_JS": static("js/howler.core.min.js"),
+    "QRCODE_JS": static("js/qrcode.js"),
     "BULMA_CSS": static("css/bulma.css"),
     "ANIMATE_CSS": static("css/animate.min.css"),
     "CHARTIST_CSS": static("css/chartist.min.css"),
@@ -210,6 +211,7 @@ APP_MESSAGES = {
 
     # 表示に使用される文字列:タマリンカメラ.
     "RELOAD_MESSAGE": "データの同期を行います",
+    "MAX_PHOTO_MESSAGE": "今はこれ以上撮影できません",
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
     "AUTO_RELOAD_LABEL": "自動でタグを同期する",
     "ENCRYPTION_LABEL": "写真を暗号化する",

@@ -44,9 +44,6 @@ let token = null;
 // Userサービスの最終更新日時.
 let dateUpdated = null;
 
-// バックグラウンドループで使うタイマー.
-let backgroundTaskTimer = null;
-
 // ダウンロード中かどうかを示すフラグ.
 let inDownloading = false;
 
@@ -388,13 +385,14 @@ async function downloadPhotos() {
     }
     const downloadCount = document.getElementById('download_count');
     const downloadFile = document.getElementById('download_file');
+    const downloadRule = getDownloadRule();
     downloadCount.innerHTML = list.length;
-    downloadFile.innerHTML = '--------';
+    downloadFile.innerHTML = '';
     document.getElementById('downloading_dialog').classList.add('is-active');
     inDownloading = true;
     let someError = false;
     try {
-        const pickedFolder = await window.showDirectoryPicker();
+        const pickedFolder = await window.showDirectoryPicker({ startIn: 'pictures' });
         while (pickedFolder && list.length && inDownloading && !someError) {
             if (!navigator.onLine) {
                 someError = true;
@@ -404,12 +402,80 @@ async function downloadPhotos() {
                 someError = true;
                 break;
             }
-            const photo = list[0];
             downloadCount.innerHTML = list.length;
-            downloadFile.innerHTML = photo.id;
+            const photo = list[0];
+            const dateTaken = new Date(photo.date_taken);
+            const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
+            const month = `${(dateTaken.getMonth() + 1).toString().padStart(2, 0)}{{DATETIME_MM}}`;
+            const day = `${dateTaken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
+            const time = `${dateTaken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${dateTaken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${dateTaken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
+            const ext = photo.content_type.match(/[^¥/]+$/);
+            const authorName = photo.author_name;
+            const contextTag = photo.context_tag;
+            const sceneTag = photo.scene_tag;
+            let fullFileName = pickedFolder.name;
+            let folderHandle = pickedFolder;
+            let folderNameList = [];
+            let fileNameBody = time;
+            for (const rule of downloadRule.split(/,/)) {
+                switch (rule) {
+                    case 'YYMM':
+                        folderNameList.push(`${year}${month}`);
+                        break;
+
+                    case 'YY':
+                        folderNameList.push(year);
+                        break;
+
+                    case 'MM':
+                        folderNameList.push(month);
+                        break;
+
+                    case 'DD':
+                        folderNameList.push(day);
+                        break;
+
+                    case 'AUTHOR':
+                        folderNameList.push(authorName);
+                        break;
+
+                    case 'CONTEXT':
+                        folderNameList.push(contextTag);
+                        break;
+
+                    case 'SCENE':
+                        folderNameList.push(sceneTag);
+                        break;
+
+                    case RULE_NOT_USED_VALUE:
+                    default:
+                        break;
+                }
+            }
+            for (const folderName of folderNameList) {
+                folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
+                fullFileName += `/${folderName}`;
+            }
+            let fileHandle = null;
+            let number = 0;
+            let actualFileName = null;
+            do {
+                const numberString = number > 0 ? `(${number})` : '';
+                actualFileName = `${fileNameBody}${numberString}.${ext}`;
+                number++;
+                try {
+                    fileHandle = await folderHandle.getFileHandle(actualFileName);
+                } catch (dummy) {
+                    fileHandle = null;
+                }
+            } while (fileHandle);
+            fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
+            fullFileName += `/${actualFileName}`;
+            downloadFile.innerHTML = fullFileName;
             const downloadResponse = await fetch(photo.encrypted_data);
             switch (downloadResponse.status) {
                 case 200:
+                    const writable = await fileHandle.createWritable();
                     let data = null;
                     if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
                         const raw = await downloadResponse.text();
@@ -423,71 +489,6 @@ async function downloadPhotos() {
                     } else {
                         data = await downloadResponse.arrayBuffer();
                     }
-                    const dateTaken = new Date(photo.date_taken);
-                    const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
-                    const month = `${(dateTaken.getMonth() + 1).toString().padStart(2.0)}{{DATETIME_MM}}`;
-                    const day = `${dateTaken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
-                    const time = `${dateTaken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${dateTaken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${dateTaken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
-                    const ext = photo.content_type.match(/[^¥/]+$/);
-                    const authorName = photo.author_name;
-                    const contextTag = photo.context_tag;
-                    const sceneTag = photo.scene_tag;
-                    let folderNames = [];
-                    let fileNameBody = time;
-                    for (const rule of getDownloadRule().split(/,/)) {
-                        switch (rule) {
-                            case 'YYMM':
-                                folderNames.push(`${year}${month}`);
-                                break;
-
-                            case 'YY':
-                                folderNames.push(year);
-                                break;
-
-                            case 'MM':
-                                folderNames.push(month);
-                                break;
-
-                            case 'DD':
-                                folderNames.push(day);
-                                break;
-
-                            case 'AUTHOR':
-                                folderNames.push(authorName);
-                                break;
-
-                            case 'CONTEXT':
-                                folderNames.push(contextTag);
-                                break;
-
-                            case 'SCENE':
-                                folderNames.push(sceneTag);
-                                break;
-
-                            case RULE_NOT_USED_VALUE:
-                            default:
-                                break;
-                        }
-                    }
-                    let folderHandle = pickedFolder;
-                    for (const folderName of folderNames) {
-                        folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
-                    }
-                    let fileHandle = null;
-                    let number = 0;
-                    let actualFileName = null;
-                    do {
-                        const numberString = number > 0 ? `(${number})` : '';
-                        actualFileName = `${fileNameBody}${numberString}.${ext}`;
-                        number++;
-                        try {
-                            fileHandle = await folderHandle.getFileHandle(actualFileName);
-                        } catch (dummy) {
-                            fileHandle = null;
-                        }
-                    } while (fileHandle);
-                    fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
-                    const writable = await fileHandle.createWritable();
                     await writable.write(data);
                     await writable.close();
                     list.shift();
@@ -540,7 +541,7 @@ async function downloadPhotos() {
             }
         }
     } catch (error) {
-        console.warn('error in download_photos() :', error);
+        console.error(error);
     }
     inDownloading = false;
     document.getElementById('downloading_dialog').classList.remove('is-active');
@@ -653,7 +654,7 @@ function backgroundTask() {
             }
         });
     }
-    backgroundTaskTimer = setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
+    setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
 }
 
 /**
@@ -748,6 +749,8 @@ function main() {
         navigator.serviceWorker.ready.then(() => {});
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
+        const url = '{{ABSOLUTE_URI}}'; // htmlの時に辞書に入っている値を利用.
+        QRCode.toCanvas(document.getElementById('qrcode'), url);
         switchView('install_view');
         return;
     }
@@ -759,6 +762,6 @@ function main() {
         } else {
             switchView('signin_view');
         }
-        backgroundTaskTimer = setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
+        setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
     });
 }

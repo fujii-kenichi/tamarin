@@ -103,6 +103,7 @@ body::-webkit-scrollbar {
     border-color: lightgray;
     border-width: 0.1em;
     font-size: small;
+    font-weight: bold;
     text-align: center;
     z-index: 20;
     cursor: pointer;

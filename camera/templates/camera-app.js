@@ -64,9 +64,6 @@ let imageCapture = null;
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
-// バックグラウンドタスクのタイマー.
-let backgroundTaskTimer = null;
-
 /**
  * カメラのプレビューを更新する.
  */
@@ -103,7 +100,7 @@ function updatePreview() {
             });
         }
     } catch (error) {
-        console.error('could not update preview :', error);
+        console.error(error);
     }
 }
 
@@ -113,10 +110,17 @@ function updatePreview() {
  * @param {string} sceneTag 撮影時に指定されたシーンタグ.
  */
 function takePhoto(index, sceneTag) {
-    if (photoCount >= MAX_PHOTO_COUNT || PREVIEW.style.visibility === 'hidden') {
+    if (PREVIEW.style.visibility === 'hidden' || !imageCapture || (imageCapture.track && imageCapture.track.readyState !== 'live')) {
         return;
     }
-    if (!imageCapture || (imageCapture.track && imageCapture.track.readyState !== 'live')) {
+    if (photoCount >= MAX_PHOTO_COUNT) {
+        bulmaToast.toast({
+            message: '{{MAX_PHOTO_MESSAGE}}',
+            position: 'center',
+            type: 'is-success',
+            dismissible: false,
+            animate: { in: 'fadeIn', out: 'fadeOut' },
+        });
         return;
     }
     const shutter = document.getElementById(`shutter_${index}`);
@@ -149,14 +153,14 @@ function takePhoto(index, sceneTag) {
                 encryptionKey: key,
                 encryptedData: data
             }).then(() => {
-                navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-                console.info(`photo processing time :${(new Date() - now)}`);
-                console.info(`captured image type : ${image.type}`);
-                console.info(`captured image size : ${image.size}`);
                 setTimeout(() => {
                     shutter.classList.remove('animate__animated');
                     PREVIEW.style.visibility = 'visible';
                 }, SHUTTER_ANIUMATION_TIME);
+                navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
+                console.info(`photo processing time :${(new Date() - now)}`);
+                console.info(`captured image type : ${image.type}`);
+                console.info(`captured image size : ${image.size}`);
             });
         };
         reader.readAsArrayBuffer(image);
@@ -297,7 +301,7 @@ function backgroundTask() {
     database.photo.count().then(count => {
         PHOTO_COUNT.value = photoCount = count;
     });
-    backgroundTaskTimer = setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
+    setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
 }
 
 /**
@@ -327,7 +331,7 @@ function main() {
     });
     PREVIEW.onloadedmetadata = (() => {
         PREVIEW.play().catch(error => {
-            console.error('could not start play preview :', error);
+            console.error(error);
         });
     });
     PREVIEW.onplay = (() => {
@@ -335,7 +339,9 @@ function main() {
     });
     CONTEXT_TAGS.onchange = (() => {
         currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
-        database.user.put(currentUser);
+        database.user.put(currentUser).catch(error => {
+            console.error(error);
+        });
     });
     PHOTO_COUNT.onclick = (() => {
         if (navigator.onLine) {
@@ -416,6 +422,8 @@ function main() {
         });
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
+        const url = '{{ABSOLUTE_URI}}'; // htmlの時に辞書に入っている値を利用.
+        QRCode.toCanvas(document.getElementById('qrcode'), url);
         switchView('install_view');
         return;
     }
@@ -423,6 +431,6 @@ function main() {
         updateView();
         updatePreview();
         switchView(result ? 'main_view' : 'signin_view');
-        backgroundTaskTimer = setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
+        setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
     });
 }

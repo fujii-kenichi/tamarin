@@ -22,7 +22,7 @@ self.addEventListener('install', (event => {
             cache.addAll([
                 '{{DEXIE_JS}}',
                 '{{CRYPTO_JS}}',
-                '{{HOWLER_CORE_JS}}',
+                '{{HOWLER_JS}}',
                 '{{BULMA_TOAST_JS}}',
                 '{{BULMA_CSS}}',
                 '{{ANIMATE_CSS}}',
@@ -37,7 +37,9 @@ self.addEventListener('install', (event => {
                 'camera-app.js',
                 'camera-app.html',
                 'camera-app.html{{APP_MODE_URL_PARAM}}'
-            ]).then(self.skipWaiting());
+            ]).then(() => {
+                self.skipWaiting();
+            });
         })
     );
 }));
