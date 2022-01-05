@@ -215,6 +215,3 @@ if DEBUG == "True":
 
 #  ヒストリーの記録を行うかどうか.
 USE_HISTORY = environ.Env().bool("USE_HISTORY", default=False)
-
-# フィードバックに用いるサイトのURL.
-FEEDBACK_URL = os.getenv("FEEDBACK_URL", "feedback/")

@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.05A",
+    "VERSION": "0.0.05B",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -69,6 +69,9 @@ APP_SETTINGS = {
 
     # Media APIのエンドポイント.
     "MEDIA_API_URL": "../connector/api/medias/",
+
+    # フィードバックに用いるサイトのURL.
+    "FEEDBACK_URL": os.getenv("FEEDBACK_URL", "feedback/"),
 
     # PWAとしての起動かどうかを判定するためのURLパラメータ.
     "APP_MODE_URL_PARAM": "?mode=app",
