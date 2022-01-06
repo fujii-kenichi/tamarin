@@ -35,8 +35,7 @@ self.addEventListener('install', (event => {
                 'camera-app.webmanifest',
                 'camera-app.css',
                 'camera-app.js',
-                'camera-app.html',
-                'camera-app.html{{APP_MODE_URL_PARAM}}'
+                'camera-app.html'
             ]).then(() => {
                 self.skipWaiting();
             });

@@ -749,8 +749,7 @@ function main() {
         navigator.serviceWorker.ready.then(() => {});
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
-        const url = '{{ABSOLUTE_URI}}'; // htmlの時に辞書に入っている値を利用.
-        QRCode.toCanvas(document.getElementById('qrcode'), url);
+        QRCode.toCanvas(document.getElementById('qrcode'), document.location.href);
         switchView('install_view');
         return;
     }

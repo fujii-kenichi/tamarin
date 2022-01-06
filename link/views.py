@@ -34,6 +34,4 @@ def link_app_css(request):
 
 @require_safe
 def link_app_html(request):
-    CONTEXT_DICT["ABSOLUTE_URI"] = request.build_absolute_uri()
-
     return render(request, "link-app.html", CONTEXT_DICT, content_type="text/html; charset=utf-8")
