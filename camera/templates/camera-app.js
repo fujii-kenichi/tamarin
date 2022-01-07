@@ -130,7 +130,7 @@ function takePhoto(index, sceneTag) {
         SHUTTER_AUDIO.play();
     }
     PHOTO_COUNT.value = ++photoCount;
-    const now = Date.now();
+    const now = new Date();
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     imageCapture.takePhoto(CAPTURE_PARAM).then(image => {
         const reader = new FileReader();
