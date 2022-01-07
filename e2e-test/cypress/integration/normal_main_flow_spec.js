@@ -36,7 +36,6 @@ describe("主要な処理の正常系を流すテスト", () => {
     });
     it("タマリンカメラ", () => {
         const database = new Dexie("tamarin-camera");
-
         database.version("5").stores({
             user: "dummy_id, user_id",
             photo: "++id, date_taken"

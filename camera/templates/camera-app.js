@@ -8,7 +8,7 @@
 const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 
 // シャッターのアニメーションのための時間.
-const SHUTTER_ANIUMATION_TIME = 500;
+const SHUTTER_ANIMATION_TIME = 500;
 
 // 撮影用のパラメータ.
 const CAPTURE_PARAM = JSON.parse(String('{{CAPTURE_PARAM}}').replaceAll('&quot;', '"'));
@@ -130,7 +130,7 @@ function takePhoto(index, sceneTag) {
         SHUTTER_AUDIO.play();
     }
     PHOTO_COUNT.value = ++photoCount;
-    const now = new Date();
+    const now = Date.now();
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     imageCapture.takePhoto(CAPTURE_PARAM).then(image => {
         const reader = new FileReader();
@@ -156,9 +156,9 @@ function takePhoto(index, sceneTag) {
                 setTimeout(() => {
                     shutter.classList.remove('animate__animated');
                     PREVIEW.style.visibility = 'visible';
-                }, SHUTTER_ANIUMATION_TIME);
+                }, SHUTTER_ANIMATION_TIME);
                 navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-                console.info(`photo processing time :${(new Date() - now)}`);
+                console.info(`photo processing time :${(Date.now() - now)}`);
                 console.info(`captured image type : ${image.type}`);
                 console.info(`captured image size : ${image.size}`);
             });
@@ -290,6 +290,9 @@ function switchView(name) {
  */
 function backgroundTask() {
     navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
+    database.photo.count().then(count => {
+        PHOTO_COUNT.value = photoCount = count;
+    });
     currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
     if (currentUser.autoReload) {
         loadUser().then(result => {
@@ -298,9 +301,6 @@ function backgroundTask() {
             }
         });
     }
-    database.photo.count().then(count => {
-        PHOTO_COUNT.value = photoCount = count;
-    });
     setTimeout(backgroundTask, BACKGROUND_TASK_INTERVAL);
 }
 
@@ -317,6 +317,7 @@ function main() {
     }));
     window.addEventListener('online', (() => {
         updatePreview();
+        navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
     }));
     document.addEventListener('visibilitychange', (() => {
         updatePreview();

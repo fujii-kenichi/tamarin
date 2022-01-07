@@ -460,7 +460,7 @@ async function downloadPhotos() {
             let number = 0;
             let actualFileName = null;
             do {
-                const numberString = number > 0 ? `(${number})` : '';
+                const numberString = number > 0 ? `_${number}` : '';
                 actualFileName = `${fileNameBody}${numberString}.${ext}`;
                 number++;
                 try {
