@@ -75,8 +75,7 @@ function updatePreview() {
     // 以降の処理はトライ＆エラーの結果としてこうしているけど,
     // これが本当に適切なやり方なのかはちょっとよくわからない...
     try {
-        ZOOM.visibility = 'hidden';
-        SHUTTERS.style.display = 'none';
+        ZOOM.style.display = SHUTTERS.style.display = 'none';
         PREVIEW.pause();
         if (PREVIEW.srcObject) {
             PREVIEW.srcObject.getVideoTracks().forEach(track => {
@@ -110,7 +109,7 @@ function updatePreview() {
                     ZOOM.max = capabilities.zoom.max;
                     ZOOM.step = capabilities.zoom.step;
                     ZOOM.value = settings.zoom;
-                    ZOOM.visibility = 'visible';
+                    ZOOM.style.display = 'inline-block';
                 }
             });
         }
