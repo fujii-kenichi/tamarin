@@ -94,11 +94,12 @@ body::-webkit-scrollbar {
 }
 
 .tama-zoom {
+    visibility: hidden;
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
     outline: none;
-    background: blue;
+    background: navy;
     border-radius: 0.5ex;
     padding: 0.1em;
     position: absolute;
@@ -108,14 +109,6 @@ body::-webkit-scrollbar {
     right: 25%;
     height: 1ex;
     bottom: 1ex;
-    /*
-    width: 40ex;
-    height: 1ex;
-    left: 1ex;
-    top: auto;
-    bottom: auto;
-    transform: translateY(+40ex) translateX(-18ex) rotate(270deg);
-    */
 }
 
 .tama-shutter {

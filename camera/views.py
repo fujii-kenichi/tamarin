@@ -49,7 +49,8 @@ def camera_app_js(request):
             \"video\" : {\
                 \"width\" :  { \"min\" : 1920, \"ideal\" : 1920, \"max\" : 1920 },\
                 \"height\" : { \"min\" : 1080, \"ideal\" : 1080, \"max\" : 1080 },\
-                \"facingMode\" : { \"exact\" : \"environment\" }\
+                \"facingMode\" : { \"exact\" : \"environment\" },\
+                \"zoom\" : true\
             }\
         }",
         "CAPTURE_PARAM": "{\
@@ -66,7 +67,8 @@ def camera_app_js(request):
             \"video\" : {\
                 \"width\" :  { \"ideal\" : 1920, \"max\" : 1920 },\
                 \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
-                \"facingMode\" : \"user\"\
+                \"facingMode\" : \"user\",\
+                \"zoom\" : true\
             }\
         }",
         "CAPTURE_PARAM": "{\

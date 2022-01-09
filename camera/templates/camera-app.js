@@ -23,6 +23,7 @@ const CANVAS = document.getElementById('canvas');
 const SHUTTERS = document.getElementById('shutters');
 const PHOTO_COUNT = document.getElementById('photo_count');
 const CONTEXT_TAGS = document.getElementById('context_tags');
+const ZOOM = document.getElementById('zoom');
 
 // 自前の実装でJPEGを作るときの品質値.
 const JPEG_Q_FACTOR = 0.85;
@@ -61,6 +62,9 @@ let dateUpdated = null;
 // 撮影用のimage capture オブジェクト.
 let imageCapture = null;
 
+// プレビューのビデオトラック.
+let videoTrack = null;
+
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
@@ -97,6 +101,19 @@ function updatePreview() {
                 };
                 imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 PREVIEW.srcObject = stream;
+                videoTrack = stream.getVideoTracks()[0];
+                const settings = videoTrack.getSettings();
+                ZOOM.visibility = 'hidden';
+                if ('zoom' in settings) {
+                    const capabilities = videoTrack.getCapabilities();
+                    if ('zoom' in capabilities) {
+                        ZOOM.min = capabilities.zoom.min;
+                        ZOOM.max = capabilities.zoom.max;
+                        ZOOM.step = capabilities.zoom.step;
+                        ZOOM.value = settings.zoom;
+                        ZOOM.visibility = 'visible';
+                    }
+                }
             });
         }
     } catch (error) {
@@ -356,6 +373,11 @@ function main() {
             loadUser().then(() => {
                 navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
             });
+        }
+    });
+    ZOOM.oninput = ((event) => {
+        if (videoTrack) {
+            videoTrack.applyConstraints({ advanced: [{ zoom: event.target.value }] });
         }
     });
     document.getElementById('signin').onclick = (() => {
