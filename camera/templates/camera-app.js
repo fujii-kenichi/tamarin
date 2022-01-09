@@ -106,13 +106,11 @@ function updatePreview() {
                 ZOOM.visibility = 'hidden';
                 if ('zoom' in settings) {
                     const capabilities = videoTrack.getCapabilities();
-                    if ('zoom' in capabilities) {
-                        ZOOM.min = capabilities.zoom.min;
-                        ZOOM.max = capabilities.zoom.max;
-                        ZOOM.step = capabilities.zoom.step;
-                        ZOOM.value = settings.zoom;
-                        ZOOM.visibility = 'visible';
-                    }
+                    ZOOM.min = capabilities.zoom.min;
+                    ZOOM.max = capabilities.zoom.max;
+                    ZOOM.step = capabilities.zoom.step;
+                    ZOOM.value = settings.zoom;
+                    ZOOM.visibility = 'visible';
                 }
             });
         }
