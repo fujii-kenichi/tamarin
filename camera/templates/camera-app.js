@@ -75,6 +75,7 @@ function updatePreview() {
     // 以降の処理はトライ＆エラーの結果としてこうしているけど,
     // これが本当に適切なやり方なのかはちょっとよくわからない...
     try {
+        ZOOM.visibility = 'hidden';
         SHUTTERS.style.display = 'none';
         PREVIEW.pause();
         if (PREVIEW.srcObject) {
@@ -103,7 +104,6 @@ function updatePreview() {
                 PREVIEW.srcObject = stream;
                 videoTrack = stream.getVideoTracks()[0];
                 const settings = videoTrack.getSettings();
-                ZOOM.visibility = 'hidden';
                 if ('zoom' in settings) {
                     const capabilities = videoTrack.getCapabilities();
                     ZOOM.min = capabilities.zoom.min;

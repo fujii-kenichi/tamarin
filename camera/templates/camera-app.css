@@ -94,7 +94,6 @@ body::-webkit-scrollbar {
 }
 
 .tama-zoom {
-    visibility: hidden;
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
