@@ -392,7 +392,7 @@ async function downloadPhotos() {
     inDownloading = true;
     let someError = false;
     try {
-        const pickedFolder = await window.showDirectoryPicker({ startIn: 'pictures' });
+        const pickedFolder = await window.showDirectoryPicker();
         while (pickedFolder && list.length && inDownloading && !someError) {
             if (!navigator.onLine) {
                 someError = true;
@@ -749,6 +749,7 @@ function main() {
         navigator.serviceWorker.ready.then(() => {});
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
+        console.log(document.location.href);
         QRCode.toCanvas(document.getElementById('qrcode'), document.location.href);
         switchView('install_view');
         return;

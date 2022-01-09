@@ -37,8 +37,13 @@
             <input id="photo_count" class="tama-photo-count" type="button" value="0">
             <input id="setting" class="tama-setting" type="button" value="★">
         </div>
+        <div>
+            <input id="zoom" class="tama-zoom" type="range">
+        </div>
         <video id="preview" class="tama-preview" preload="metadata" playsinline muted></video>
-        <div id="shutters" class="tama-shutters"></div>
+        <div class="tama-shutters">
+            <div id="shutters"></div>
+        </div>
         <canvas id="canvas" style="display:none"></canvas>
         <div id="setting_dialog" class="modal px-5">
             <div class="modal-background"></div>

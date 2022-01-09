@@ -423,6 +423,7 @@ function main() {
         });
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
+        console.log(document.location.href);
         QRCode.toCanvas(document.getElementById('qrcode'), document.location.href);
         switchView('install_view');
         return;
