@@ -10,9 +10,16 @@ const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 // シャッターのアニメーションのための時間.
 const SHUTTER_ANIMATION_TIME = 500;
 
-// 撮影用のパラメータ.
-const CAPTURE_PARAM = JSON.parse(String('{{CAPTURE_PARAM}}').replaceAll('&quot;', '"'));
-const DEVICE_PARAM = JSON.parse(String('{{DEVICE_PARAM}}').replaceAll('&quot;', '"'));
+// カメラ用のパラメータ.
+const DEVICE_PARAM = {
+    audio: false,
+    video: {
+        width: { ideal: 1920, max: 1920 },
+        height: { ideal: 1080, max: 1080 },
+        facingMode: { ideal: "environment" },
+        zoom: true
+    }
+};
 
 // 写真の最大枚数.
 const MAX_PHOTO_COUNT = Number('{{CAMERA_APP_MAX_PHOTO_COUNT}}');
@@ -65,6 +72,10 @@ let imageCapture = null;
 // プレビューのビデオトラック.
 let videoTrack = null;
 
+// プレビューの画像サイズ.
+let videoWidth = 0;
+let videoHeight = 0;
+
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
@@ -90,19 +101,19 @@ function updatePreview() {
         if (document.visibilityState === 'visible') {
             navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
                 const MyImageCapture = class {
-                    async takePhoto() {
-                        return new Promise(resolve => {
-                            CANVAS.width = PREVIEW.videoWidth;
-                            CANVAS.height = PREVIEW.videoHeight;
-                            CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
-                            CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR);
-                        });
+                    async takePhoto(param) {
+                        CANVAS.width = param.imageWidth;
+                        CANVAS.height = param.imageHeight;
+                        CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
+                        return await new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR));
                     }
                 };
                 imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 PREVIEW.srcObject = stream;
                 videoTrack = stream.getVideoTracks()[0];
                 const settings = videoTrack.getSettings();
+                videoWidth = settings.width;
+                videoHeight = settings.height;
                 if ('zoom' in settings) {
                     const capabilities = videoTrack.getCapabilities();
                     ZOOM.min = capabilities.zoom.min;
@@ -141,15 +152,20 @@ function takePhoto(index, sceneTag) {
     const shutter = document.getElementById(`shutter_${index}`);
     shutter.classList.add('animate__animated');
     PREVIEW.style.visibility = 'hidden';
+    setTimeout(() => {
+        shutter.classList.remove('animate__animated');
+        PREVIEW.style.visibility = 'visible';
+    }, SHUTTER_ANIMATION_TIME);
     if (currentUser.shutterSound) {
         SHUTTER_AUDIO.play();
     }
-    const now = new Date();
-    // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
-    imageCapture.takePhoto(CAPTURE_PARAM).then(image => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            let data = reader.result;
+    imageCapture.takePhoto({
+        imageWidth: videoWidth,
+        imageHeight: videoHeight
+    }).then(image => {
+        image.arrayBuffer().then(buffer => {
+            const now = new Date();
+            let data = buffer;
             let key = '{{NO_ENCRYPTION_KEY}}';
             if (currentUser.encryption) {
                 key = CryptoJS.lib.WordArray.random(Number('{{MEDIA_ENCRYPTION_KEY_LENGTH}}')).toString();
@@ -167,18 +183,11 @@ function takePhoto(index, sceneTag) {
                 encryptionKey: key,
                 encryptedData: data
             }).then(() => {
-                setTimeout(() => {
-                    shutter.classList.remove('animate__animated');
-                    PREVIEW.style.visibility = 'visible';
-                }, SHUTTER_ANIMATION_TIME);
                 navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
                 console.info(`photo processing time :${(Date.now() - now)}`);
                 console.info(`captured image type : ${image.type}`);
                 console.info(`captured image size : ${image.size}`);
             });
-        };
-        reader.readAsArrayBuffer(image).catch(error => {
-            console.error(error);
         });
     });
 }

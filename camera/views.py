@@ -38,51 +38,7 @@ def camera_app_webmanifest(request):
 
 @require_safe
 def camera_app_js(request):
-    # user-agent判定用文字列.
-    MOBILE_AGENT_RE = re.compile(r".*(iphone|ipod|mobile|android)", re.IGNORECASE)
-
-    # モバイルデバイス向けの初期化パラメータ.
-    MOBILE_PARAM = {
-        "DEVICE_PARAM": "\
-        {\
-            \"audio\" : false,\
-            \"video\" : {\
-                \"width\" :  { \"min\" : 1920, \"ideal\" : 1920, \"max\" : 1920 },\
-                \"height\" : { \"min\" : 1080, \"ideal\" : 1080, \"max\" : 1080 },\
-                \"facingMode\" : { \"exact\" : \"environment\" },\
-                \"zoom\" : true\
-            }\
-        }",
-        "CAPTURE_PARAM": "{\
-            \"imageWidth\" : 1920,\
-            \"imageHeight\" : 1080\
-        }"
-    }
-
-    # PC向けの初期化パラメータ.
-    PC_PARAM = {
-        "DEVICE_PARAM": "\
-        {\
-            \"audio\" : false,\
-            \"video\" : {\
-                \"width\" :  { \"ideal\" : 1920, \"max\" : 1920 },\
-                \"height\" : { \"ideal\" : 1080, \"max\" : 1080 },\
-                \"facingMode\" : \"user\",\
-                \"zoom\" : true\
-            }\
-        }",
-        "CAPTURE_PARAM": "{\
-        }"
-    }
-
-    context_dict = CONTEXT_DICT
-    # user-agentでリクエストを判定してデバイス初期化パラメータを決定する.
-    if MOBILE_AGENT_RE.match(request.META["HTTP_USER_AGENT"]):
-        context_dict.update(MOBILE_PARAM)
-    else:
-        context_dict.update(PC_PARAM)
-
-    return render(request, "camera-app.js", context_dict, content_type="text/javascript; charset=utf-8")
+    return render(request, "camera-app.js", CONTEXT_DICT, content_type="text/javascript; charset=utf-8")
 
 
 @require_safe
