@@ -76,6 +76,10 @@ let imageCapture = null;
 // プレビュービデオのトラック.
 let previewTrack = null;
 
+// 撮影するイメージのサイズ.
+let imageWidth = 0;
+let imageHeight = 0;
+
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
@@ -111,9 +115,13 @@ function updatePreview() {
                 imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 PREVIEW.srcObject = stream;
                 previewTrack = stream.getVideoTracks()[0];
+                const capabilities = previewTrack.getCapabilities();
+                imageWidth = Math.min(capabilities.width.max, PHOTO_WIDTH);
+                console.info(`image width: ${imageWidth}`);
+                imageHeight = Math.min(capabilities.height.max, PHOTO_HEIGHT);
+                console.info(`image height: ${imageHeight}`);
                 const settings = previewTrack.getSettings();
                 if ('zoom' in settings) {
-                    const capabilities = previewTrack.getCapabilities();
                     ZOOM.min = capabilities.zoom.min;
                     ZOOM.max = capabilities.zoom.max;
                     ZOOM.step = capabilities.zoom.step;
@@ -157,7 +165,10 @@ function takePhoto(index, sceneTag) {
     if (currentUser.shutterSound) {
         SHUTTER_AUDIO.play();
     }
-    imageCapture.takePhoto().then(image => {
+    imageCapture.takePhoto({
+        imageWidth: imageWidth,
+        imageHeight: imageHeight
+    }).then(image => {
         console.info(`captured image type: ${image.type}`);
         console.info(`captured image size: ${image.size}`);
         image.arrayBuffer().then(buffer => {
