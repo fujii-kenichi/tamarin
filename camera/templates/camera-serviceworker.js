@@ -196,7 +196,7 @@ async function uploadPhotos() {
             return;
         }
         await database.photo.delete(photo.id);
-        console.info(`photo upload time :${(Date.now() - now)}`);
+        console.info(`photo upload time: ${(Date.now() - now)}`);
         const clients = await self.clients.matchAll();
         for (const client of clients) {
             client.postMessage({ tag: '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}' });

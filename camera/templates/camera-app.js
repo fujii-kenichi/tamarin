@@ -76,9 +76,9 @@ let imageCapture = null;
 // プレビュービデオのトラック.
 let previewTrack = null;
 
-// プレビュービデオのサイズ.
-let previewWidth = 0;
-let previewHeight = 0;
+// 撮影するイメージのサイズ.
+let imageWidth = 0;
+let imageHeight = 0;
 
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
@@ -116,16 +116,16 @@ function updatePreview() {
                 PREVIEW.srcObject = stream;
                 previewTrack = stream.getVideoTracks()[0];
                 const settings = previewTrack.getSettings();
-                previewWidth = settings.width;
-                previewHeight = settings.height;
-                console.info(`preview video width :${previewWidth}`);
-                console.info(`preview video height :${previewHeight}`);
+                const capabilities = previewTrack.getCapabilities();
+                imageWidth = capabilities.width.max;
+                console.info(`image width: ${imageWidth}`);
+                imageHeight = capabilities.height.max;
+                console.info(`image height: ${imageHeight}`);
                 if ('zoom' in settings) {
-                    const capabilities = previewTrack.getCapabilities();
                     ZOOM.min = capabilities.zoom.min;
+                    console.info(`zoom min: ${ZOOM.min}`);
                     ZOOM.max = capabilities.zoom.max;
-                    console.info(`zoom min :${ZOOM.min}`);
-                    console.info(`zoom max :${ZOOM.max}`);
+                    console.info(`zoom max: ${ZOOM.max}`);
                     ZOOM.step = capabilities.zoom.step;
                     ZOOM.value = settings.zoom;
                     ZOOM.style.display = 'inline-block';
@@ -168,9 +168,11 @@ function takePhoto(index, sceneTag) {
         SHUTTER_AUDIO.play();
     }
     imageCapture.takePhoto({
-        imageWidth: Math.min(previewWidth, PHOTO_WIDTH),
-        imageHeight: Math.min(previewHeight, PHOTO_HEIGHT)
+        imageWidth: imageWidth,
+        imageHeight: imageHeight
     }).then(image => {
+        console.info(`captured image type: ${image.type}`);
+        console.info(`captured image size: ${image.size}`);
         image.arrayBuffer().then(buffer => {
             const now = new Date();
             let data = buffer;
@@ -179,7 +181,7 @@ function takePhoto(index, sceneTag) {
                 key = CryptoJS.lib.WordArray.random(Number('{{MEDIA_ENCRYPTION_KEY_LENGTH}}')).toString();
                 const raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
                 data = CryptoJS.AES.encrypt(raw, key).toString();
-                console.info(`encrypted data size :${data.length}`);
+                console.info(`encrypted image size: ${data.length}`);
             }
             database.photo.add({
                 owner: currentUser.userId,
@@ -191,10 +193,8 @@ function takePhoto(index, sceneTag) {
                 encryptionKey: key,
                 encryptedData: data
             }).then(() => {
+                console.info(`image processing time: ${(Date.now() - now)}`);
                 navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-                console.info(`photo processing time :${(Date.now() - now)}`);
-                console.info(`captured image type : ${image.type}`);
-                console.info(`captured image size : ${image.size}`);
             });
         });
     });
@@ -461,7 +461,7 @@ function main() {
         });
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
-        console.log(document.location.href);
+        console.info(`location: ${document.location.href}`);
         QRCode.toCanvas(document.getElementById('qrcode'), document.location.href);
         switchView('install_view');
         return;
