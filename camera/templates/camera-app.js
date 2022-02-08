@@ -76,6 +76,10 @@ let imageCapture = null;
 // プレビュービデオのトラック.
 let previewTrack = null;
 
+// 実際に撮影する写真のサイズ.
+let actualPhotoWidth = 0;
+let actualPhotoHeight = 0;
+
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
@@ -100,15 +104,42 @@ function updatePreview() {
         imageCapture = null;
         if (document.visibilityState === 'visible') {
             navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
-                const MyImageCapture = class {
-                    async takePhoto() { // ignore photo settings argument...
-                        CANVAS.width = PREVIEW.videoWidth;
-                        CANVAS.height = PREVIEW.videoHeight;
-                        CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
-                        return await new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR));
-                    }
-                };
-                imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
+                if (typeof ImageCapture === 'undefined') {
+                    const MyImageCapture = class {
+                        async takePhoto() { // ignore photo settings argument...
+                            CANVAS.width = PREVIEW.videoWidth;
+                            CANVAS.height = PREVIEW.videoHeight;
+                            CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
+                            return await new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR));
+                        }
+                    };
+                    imageCapture = new MyImageCapture();
+                } else {
+                    imageCapture = new ImageCapture(stream.getVideoTracks()[0]);
+                    imageCapture.getPhotoCapabilities().then(photoCapabilities => {
+                        console.info('photo capabilities: ', photoCapabilities);
+                        if (photoCapabilities.imageWidth.max <= PHOTO_WIDTH) {
+                            actualPhotoWidth = photoCapabilities.imageWidth.max;
+                        } else if (photoCapabilities.imageWidth.min >= PHOTO_WIDTH) {
+                            actualPhotoWidth = photoCapabilities.imageWidth.min;
+                        } else if (photoCapabilities.imageWidth.step > 0) {
+                            actualPhotoWidth = Math.floor((PHOTO_WIDTH - photoCapabilities.imageWidth.min) / photoCapabilities.imageWidth.step) * photoCapabilities.imageWidth.step + photoCapabilities.imageWidth.min;
+                        } else {
+                            actualPhotoWidth = PHOTO_WIDTH;
+                        }
+                        if (photoCapabilities.imageHeight.max <= PHOTO_HEIGHT) {
+                            actualPhotoHeight = photoCapabilities.imageHeight.max;
+                        } else if (photoCapabilities.imageHeight.min >= PHOTO_HEIGHT) {
+                            actualPhotoHeight = photoCapabilities.imageHeight.min;
+                        } else if (photoCapabilities.imageHeight.step > 0) {
+                            actualPhotoHeight = Math.floor((PHOTO_HEIGHT - photoCapabilities.imageHeight.min) / photoCapabilities.imageHeight.step) * photoCapabilities.imageHeight.step + photoCapabilities.imageHeight.min;
+                        } else {
+                            actualPhotoHeight = PHOTO_HEIGHT;
+                        }
+                        console.info(`actual photo width: ${actualPhotoWidth}`);
+                        console.info(`actual photo height: ${actualPhotoHeight}`);
+                    });
+                }
                 PREVIEW.srcObject = stream;
                 previewTrack = stream.getVideoTracks()[0];
                 const settings = previewTrack.getSettings();
@@ -120,6 +151,8 @@ function updatePreview() {
                     ZOOM.value = settings.zoom;
                     ZOOM.style.display = 'inline-block';
                 }
+            }).catch(error => {
+                console.error(error);
             });
         }
     } catch (error) {
@@ -154,41 +187,8 @@ function takePhoto(index, sceneTag) {
         shutter.classList.remove('animate__animated');
         PREVIEW.style.visibility = 'visible';
     }, SHUTTER_ANIMATION_TIME);
-    if (currentUser.shutterSound) {
-        SHUTTER_AUDIO.play();
-    }
-    imageCapture.takePhoto({
-        imageWidth: PHOTO_WIDTH,
-        imageHeight: PHOTO_HEIGHT
-    }).then(image => {
-        console.info(`captured image type: ${image.type}`);
-        console.info(`captured image size: ${image.size}`);
-        image.arrayBuffer().then(buffer => {
-            const now = new Date();
-            let data = buffer;
-            let key = '{{NO_ENCRYPTION_KEY}}';
-            if (currentUser.encryption) {
-                key = CryptoJS.lib.WordArray.random(Number('{{MEDIA_ENCRYPTION_KEY_LENGTH}}')).toString();
-                const raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
-                data = CryptoJS.AES.encrypt(raw, key).toString();
-                console.info(`encrypted image size: ${data.length}`);
-            }
-            database.photo.add({
-                owner: currentUser.userId,
-                dateTaken: now.toJSON(),
-                authorName: currentUser.authorName,
-                sceneTag: sceneTag,
-                contextTag: currentUser.selectedContextTag,
-                contentType: image.type,
-                encryptionKey: key,
-                encryptedData: data
-            }).then(() => {
-                console.info(`image processing time: ${(Date.now() - now)}`);
-                navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-            });
-        });
-    }).catch(error => {
-        console.error(`takePhoto() error: ${error}`);
+    const displayError = (error) => {
+        console.error(error);
         bulmaToast.toast({
             message: '{{PHOTO_ERROR_MESSAGE}}',
             position: 'center',
@@ -196,7 +196,51 @@ function takePhoto(index, sceneTag) {
             dismissible: false,
             animate: { in: 'fadeIn', out: 'fadeOut' },
         });
-    });
+    };
+    try {
+        if (currentUser.shutterSound) {
+            SHUTTER_AUDIO.play();
+        }
+        imageCapture.takePhoto({
+            imageWidth: actualPhotoWidth,
+            imageHeight: actualPhotoHeight
+        }).then(image => {
+            console.info(`captured image type: ${image.type}`);
+            console.info(`captured image size: ${image.size}`);
+            image.arrayBuffer().then(buffer => {
+                const now = new Date();
+                let data = buffer;
+                let key = '{{NO_ENCRYPTION_KEY}}';
+                if (currentUser.encryption) {
+                    key = CryptoJS.lib.WordArray.random(Number('{{MEDIA_ENCRYPTION_KEY_LENGTH}}')).toString();
+                    const raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
+                    data = CryptoJS.AES.encrypt(raw, key).toString();
+                    console.info(`encrypted image size: ${data.length}`);
+                }
+                database.photo.add({
+                    owner: currentUser.userId,
+                    dateTaken: now.toJSON(),
+                    authorName: currentUser.authorName,
+                    sceneTag: sceneTag,
+                    contextTag: currentUser.selectedContextTag,
+                    contentType: image.type,
+                    encryptionKey: key,
+                    encryptedData: data
+                }).then(() => {
+                    console.info(`image processing time: ${(Date.now() - now)}`);
+                    navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
+                }).catch(error => {
+                    displayError(error);
+                });
+            }).catch(error => {
+                displayError(error);
+            });
+        }).catch(error => {
+            displayError(error);
+        });
+    } catch (error) {
+        displayError(error);
+    }
 }
 
 /**
