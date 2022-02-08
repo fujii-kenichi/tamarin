@@ -115,12 +115,12 @@ function updatePreview() {
                 imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 PREVIEW.srcObject = stream;
                 previewTrack = stream.getVideoTracks()[0];
-                const settings = previewTrack.getSettings();
                 const capabilities = previewTrack.getCapabilities();
-                imageWidth = capabilities.width.max;
+                imageWidth = Math.min(capabilities.width.max, PHOTO_WIDTH);
                 console.info(`image width: ${imageWidth}`);
-                imageHeight = capabilities.height.max;
+                imageHeight = Math.min(capabilities.height.max, PHOTO_HEIGHT);
                 console.info(`image height: ${imageHeight}`);
+                const settings = previewTrack.getSettings();
                 if ('zoom' in settings) {
                     ZOOM.min = capabilities.zoom.min;
                     console.info(`zoom min: ${ZOOM.min}`);
