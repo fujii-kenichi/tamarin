@@ -157,39 +157,38 @@ function takePhoto(index, sceneTag) {
     if (currentUser.shutterSound) {
         SHUTTER_AUDIO.play();
     }
-    try {
-        imageCapture.takePhoto({
-            imageWidth: PHOTO_WIDTH,
-            imageHeight: PHOTO_HEIGHT
-        }).then(image => {
-            console.info(`captured image type: ${image.type}`);
-            console.info(`captured image size: ${image.size}`);
-            image.arrayBuffer().then(buffer => {
-                const now = new Date();
-                let data = buffer;
-                let key = '{{NO_ENCRYPTION_KEY}}';
-                if (currentUser.encryption) {
-                    key = CryptoJS.lib.WordArray.random(Number('{{MEDIA_ENCRYPTION_KEY_LENGTH}}')).toString();
-                    const raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
-                    data = CryptoJS.AES.encrypt(raw, key).toString();
-                    console.info(`encrypted image size: ${data.length}`);
-                }
-                database.photo.add({
-                    owner: currentUser.userId,
-                    dateTaken: now.toJSON(),
-                    authorName: currentUser.authorName,
-                    sceneTag: sceneTag,
-                    contextTag: currentUser.selectedContextTag,
-                    contentType: image.type,
-                    encryptionKey: key,
-                    encryptedData: data
-                }).then(() => {
-                    console.info(`image processing time: ${(Date.now() - now)}`);
-                    navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
-                });
+    imageCapture.takePhoto({
+        imageWidth: PHOTO_WIDTH,
+        imageHeight: PHOTO_HEIGHT
+    }).then(image => {
+        console.info(`captured image type: ${image.type}`);
+        console.info(`captured image size: ${image.size}`);
+        image.arrayBuffer().then(buffer => {
+            const now = new Date();
+            let data = buffer;
+            let key = '{{NO_ENCRYPTION_KEY}}';
+            if (currentUser.encryption) {
+                key = CryptoJS.lib.WordArray.random(Number('{{MEDIA_ENCRYPTION_KEY_LENGTH}}')).toString();
+                const raw = btoa(new Uint8Array(data).reduce((d, b) => d + String.fromCharCode(b), ''));
+                data = CryptoJS.AES.encrypt(raw, key).toString();
+                console.info(`encrypted image size: ${data.length}`);
+            }
+            database.photo.add({
+                owner: currentUser.userId,
+                dateTaken: now.toJSON(),
+                authorName: currentUser.authorName,
+                sceneTag: sceneTag,
+                contextTag: currentUser.selectedContextTag,
+                contentType: image.type,
+                encryptionKey: key,
+                encryptedData: data
+            }).then(() => {
+                console.info(`image processing time: ${(Date.now() - now)}`);
+                navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
             });
         });
-    } catch (error) {
+    }).catch(error => {
+        console.error(`takePhoto() error: ${error}`);
         bulmaToast.toast({
             message: '{{PHOTO_ERROR_MESSAGE}}',
             position: 'center',
@@ -197,7 +196,7 @@ function takePhoto(index, sceneTag) {
             dismissible: false,
             animate: { in: 'fadeIn', out: 'fadeOut' },
         });
-    }
+    });
 }
 
 /**
