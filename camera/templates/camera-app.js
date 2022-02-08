@@ -22,7 +22,7 @@ const DEVICE_PARAM = {
     audio: false,
     video: {
         width: { ideal: PHOTO_WIDTH, max: PHOTO_WIDTH },
-        height: { ideal: HEIGHT, max: HEIGHT },
+        height: { ideal: PHOTO_HEIGHT, max: PHOTO_HEIGHT },
         facingMode: { ideal: "environment" },
         zoom: true
     }
