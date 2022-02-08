@@ -101,9 +101,9 @@ function updatePreview() {
         if (document.visibilityState === 'visible') {
             navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
                 const MyImageCapture = class {
-                    async takePhoto(photoSettings) {
-                        CANVAS.width = photoSettings.imageWidth;
-                        CANVAS.height = photoSettings.imageHeight;
+                    async takePhoto() { // ignore photo settings argument...
+                        CANVAS.width = PREVIEW.videoWidth;
+                        CANVAS.height = PREVIEW.videoHeight;
                         CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
                         return await new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR));
                     }
@@ -158,8 +158,8 @@ function takePhoto(index, sceneTag) {
         SHUTTER_AUDIO.play();
     }
     imageCapture.takePhoto({
-        imageWidth: PREVIEW.videoWidth,
-        imageHeight: PREVIEW.videoHeight
+        imageWidth: PHOTO_WIDTH,
+        // imageHeight: PHOTO_HEIGHT
     }).then(image => {
         console.info(`captured image type: ${image.type}`);
         console.info(`captured image size: ${image.size}`);
