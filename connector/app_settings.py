@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.05J",
+    "VERSION": "0.0.05M",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -148,7 +148,7 @@ APP_SETTINGS = {
 APP_MESSAGES = {
     # 言語:Djangoの情報を引き継ぐ.
     # 以下のデータはこの言語でのメッセージ情報.
-    # TODO: Djangoの多言語化方法に完全に合わせたやり方に変更する.
+    # TODO:Djangoの多言語化方法に完全に合わせたやり方に変更する.
     "LANG": settings.LANGUAGE_CODE,
 
     # データベースの初期値.
@@ -213,10 +213,10 @@ APP_MESSAGES = {
     "CAMERA_APP_DESCRIPTION": "タマリンのカメラです",
 
     # 表示に使用される文字列:タマリンカメラ.
-    "RELOAD_MESSAGE": "データの同期を行います",
+    "RELOAD_MESSAGE": "データを同期します",
     "MAX_PHOTO_MESSAGE": "今はこれ以上撮影できません",
     "SHUTTER_SOUND_LABEL": "シャッター音を鳴らす",
-    "AUTO_RELOAD_LABEL": "自動でタグを同期する",
+    "AUTO_RELOAD_LABEL": "自動でデータを同期する",
     "ENCRYPTION_LABEL": "写真を暗号化する",
 
     # ニフェストに書く情報:タマリンク.
@@ -272,5 +272,5 @@ APP_MESSAGES = {
     5. タマリンよりかわいい名前があったらそっちに改名するかもしれません。$\
     6. トイストーリーは3より4だと思う方はお話をしたいのでご連絡ください。$\
     7. その他お困りのことがあれば[問題を報告する]からご連絡ください。$\
-    【2022年1月 タマリバ株式会社】",
+    【2022年3月 タマリバ株式会社】",
 }

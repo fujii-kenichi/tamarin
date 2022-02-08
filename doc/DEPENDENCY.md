@@ -1,6 +1,6 @@
 # 使わせていただいているOSSやデータ
 
-Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [package.json](./package.json) に書いてあるけど、備忘録もかねてここにメモ。
+Python系は [requirements.txt](./requirements.txt) に、JavaScript系は [package.json](./package.json) に書いてあるけど、備忘録もかねてここにメモ。
 
 ## Python
 
@@ -14,11 +14,11 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ### [Django REST framework](https://www.django-rest-framework.org/)
 
-- REST API をこれでさくっと実現。
+- REST APIをこれでさくっと実現。
 
 ### [Simple JWT](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/)
 
-- REST API での JWT 認証を実現。
+- REST APIでのJWT認証を実現。
 
 ### [Django インポート/エクスポート](https://kurozumi.github.io/django-import-export/)
 
@@ -30,9 +30,9 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ### [Django Extensions](https://django-extensions.readthedocs.io/en/latest/)
 
-- shell_plus や runserver_plus といったデバッグに便利な機能を追加してくれる。
+- shell_plusやrunserver_plusといったデバッグに便利な機能を追加してくれる。
 
-### その他 Django 界隈で参考にさせていただいた記事
+### その他Django界隈で参考にさせていただいた記事
 
 - [Django Best Practices: Custom User Model](https://learndjango.com/tutorials/django-custom-user-model)
 - [Django REST Framework image upload](https://stackoverflow.com/questions/45564130/django-rest-framework-image-upload)
@@ -41,7 +41,7 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ### [Dexie.js](https://dexie.org/)
 
-- IndexedDB がとっても使いやすくなる。
+- IndexedDBがとっても使いやすくなる。
   
 ### [crypto-js](https://github.com/brix/crypto-js)
 
@@ -64,7 +64,7 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ### [Bulma](https://bulma.io/)
 
-- めちゃくちゃ便利でかっこいい CSS フレームワーク。以下のリンクも便利。
+- めちゃくちゃ便利でかっこいいCSSフレームワーク。以下のリンクも便利。
 - [Bulmaswatch](https://jenil.github.io/bulmaswatch/)
 - [Free Bulma Templates](https://bulmatemplates.github.io/bulma-templates/)
 - [Bulma extensions](https://bulma.io/extensions/)
@@ -75,17 +75,17 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ### [Animate.css](https://animate.style/)
 
-- アニメーション効果のために使用。なんだかちょっとかっこいいぞ...
+- アニメーション効果のために使用。なんだかちょっとかっこいいぞ…
 
 ### [HOWLER.JS](https://howlerjs.com)
 
-- SafariのAUDIOタグとの戦いに疲れ果ててこれを発見。最初から使わせてもらえば良かった...
+- SafariのAUDIOタグとの戦いに疲れ果ててこれを発見。最初から使わせてもらえば良かった…
 
 ## テスト
 
 ### [Cypress](https://www.cypress.io/)
 
-- めちゃくちゃ便利な(こればっかり...)テストフレームワーク。
+- めちゃくちゃ便利な（こればっかり…）テストフレームワーク。
 
 ## データ
 
@@ -110,7 +110,7 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ## その他とっても便利なサイト:PWA編
 
-特に最初の Building Progressive Web Apps という本が非常にわかりやすくて良かったです。
+とくに最初のBuilding Progressive Web Appsという本が非常にわかりやすくて良かったです。
 
 - [Building Progressive Web Apps: Bringing the Power of Native to the Browser (English Edition)](https://www.oreilly.com/library/view/building-progressive-web/9781491961643/)
 - [プログレッシブウェブアプリ (PWA)](https://developer.mozilla.org/ja/docs/Web/Progressive_web_apps)
@@ -129,7 +129,7 @@ Python 系は [requirements.txt](./requirements.txt) に、JavaScript 系は [pa
 
 ## その他とっても便利なサイト:ブラウザ編
 
-とにかく今回はSafariやAUDIO/VIDEO/SELECTタグの振る舞いには苦しめられた...その苦闘の歴史を足跡として残しておきます...
+とにかく今回はSafariやAUDIO/VIDEO/SELECTタグの振る舞いには苦しめられた…その苦闘の歴史を足跡として残しておきます…
 
 - [Can't interact with select boxes on safari #83](https://github.com/nightwatchjs/nightwatch-docs/issues/83)
 - [iOSで"optgroup"を使った時にバグで苦しまない方法](https://www.kabanoki.net/6149/)

@@ -137,13 +137,13 @@ function takePhoto(index, sceneTag) {
         });
         return;
     }
+    PHOTO_COUNT.value = ++photoCount;
     const shutter = document.getElementById(`shutter_${index}`);
     shutter.classList.add('animate__animated');
     PREVIEW.style.visibility = 'hidden';
     if (currentUser.shutterSound) {
         SHUTTER_AUDIO.play();
     }
-    PHOTO_COUNT.value = ++photoCount;
     const now = new Date();
     // TODO: 本当はここでカメラの性能を生かせるようにいろいろ設定するべき...
     imageCapture.takePhoto(CAPTURE_PARAM).then(image => {
@@ -177,7 +177,9 @@ function takePhoto(index, sceneTag) {
                 console.info(`captured image size : ${image.size}`);
             });
         };
-        reader.readAsArrayBuffer(image);
+        reader.readAsArrayBuffer(image).catch(error => {
+            console.error(error);
+        });
     });
 }
 
