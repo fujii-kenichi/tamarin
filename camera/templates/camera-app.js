@@ -7,22 +7,35 @@
 // バックグラウンドを繰り返すときの待ち時間(ミリ秒).
 const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 
-// シャッターのアニメーションのための時間.
+// シャッターのアニメーションのための時間(ミリ秒).
 const SHUTTER_ANIMATION_TIME = 500;
+
+// 写真の最大枚数.
+const MAX_PHOTO_COUNT = Number('{{CAMERA_APP_MAX_PHOTO_COUNT}}');
+
+// 撮影する写真のサイズ.
+const PHOTO_WIDTH = 1920;
+const PHOTO_HEIGHT = 1080;
 
 // カメラ用のパラメータ.
 const DEVICE_PARAM = {
     audio: false,
     video: {
-        width: { ideal: 1920, max: 1920 },
-        height: { ideal: 1080, max: 1080 },
+        width: { ideal: PHOTO_WIDTH, max: PHOTO_WIDTH },
+        height: { ideal: HEIGHT, max: HEIGHT },
         facingMode: { ideal: "environment" },
         zoom: true
     }
 };
 
-// 写真の最大枚数.
-const MAX_PHOTO_COUNT = Number('{{CAMERA_APP_MAX_PHOTO_COUNT}}');
+// 自前のtakePhoto()でJPEGを作るときの品質値.
+const JPEG_Q_FACTOR = 0.85;
+
+// シャッター音.
+const SHUTTER_AUDIO = new Howl({
+    src: ['{{CAMERA_APP_SHUTTER_AUDIO}}'],
+    html5: true
+});
 
 // よくつかうUIのエレメント.
 const PREVIEW = document.getElementById('preview');
@@ -31,15 +44,6 @@ const SHUTTERS = document.getElementById('shutters');
 const PHOTO_COUNT = document.getElementById('photo_count');
 const CONTEXT_TAGS = document.getElementById('context_tags');
 const ZOOM = document.getElementById('zoom');
-
-// 自前の実装でJPEGを作るときの品質値.
-const JPEG_Q_FACTOR = 0.85;
-
-// シャッター音.
-const SHUTTER_AUDIO = new Howl({
-    src: ['{{CAMERA_APP_SHUTTER_AUDIO}}'],
-    html5: true
-});
 
 // 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
 let currentUser = {
@@ -66,15 +70,15 @@ let token = null;
 // Userサービスの最終更新日時.
 let dateUpdated = null;
 
-// 撮影用のimage capture オブジェクト.
+// 撮影用のオブジェクト.
 let imageCapture = null;
 
-// プレビューのビデオトラック.
-let videoTrack = null;
+// プレビュービデオのトラック.
+let previewTrack = null;
 
-// プレビューの画像サイズ.
-let videoWidth = 0;
-let videoHeight = 0;
+// プレビュービデオのサイズ.
+let previewWidth = 0;
+let previewHeight = 0;
 
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
@@ -110,14 +114,18 @@ function updatePreview() {
                 };
                 imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 PREVIEW.srcObject = stream;
-                videoTrack = stream.getVideoTracks()[0];
-                const settings = videoTrack.getSettings();
-                videoWidth = settings.width;
-                videoHeight = settings.height;
+                previewTrack = stream.getVideoTracks()[0];
+                const settings = previewTrack.getSettings();
+                previewWidth = settings.width;
+                previewHeight = settings.height;
+                console.info(`preview video width :${previewWidth}`);
+                console.info(`preview video height :${previewHeight}`);
                 if ('zoom' in settings) {
-                    const capabilities = videoTrack.getCapabilities();
+                    const capabilities = previewTrack.getCapabilities();
                     ZOOM.min = capabilities.zoom.min;
                     ZOOM.max = capabilities.zoom.max;
+                    console.info(`zoom min :${ZOOM.min}`);
+                    console.info(`zoom max :${ZOOM.max}`);
                     ZOOM.step = capabilities.zoom.step;
                     ZOOM.value = settings.zoom;
                     ZOOM.style.display = 'inline-block';
@@ -160,8 +168,8 @@ function takePhoto(index, sceneTag) {
         SHUTTER_AUDIO.play();
     }
     imageCapture.takePhoto({
-        imageWidth: videoWidth,
-        imageHeight: videoHeight
+        imageWidth: Math.min(previewWidth, PHOTO_WIDTH),
+        imageHeight: Math.min(previewHeight, PHOTO_HEIGHT)
     }).then(image => {
         image.arrayBuffer().then(buffer => {
             const now = new Date();
@@ -384,8 +392,8 @@ function main() {
         }
     });
     ZOOM.oninput = ((event) => {
-        if (videoTrack) {
-            videoTrack.applyConstraints({ advanced: [{ zoom: event.target.value }] });
+        if (previewTrack) {
+            previewTrack.applyConstraints({ advanced: [{ zoom: event.target.value }] });
         }
     });
     document.getElementById('signin').onclick = (() => {

@@ -19,7 +19,7 @@
 - 実機でデバッグする場合、PWAはOSから見ればWebブラウザが動いているだけなので、通常のデバッガーはあんまり使えない（使いこなせていないだけという噂もある）
   - モバイルSafariはUSBケーブルで繋げた母艦（Mac）のsafariからアタッチできるので、これは結構便利。もちろんAndroidのchromeでも類似のことができる。
 - 実際のDeployの前にpython3 manage.py correctstatic; python3 manage.py check --deployをしてみるといいかも。HSTSとかはまださすがに対応できないけど…
-- そういえばPython / Django部分のデバッグには、もちろんログをちゃんと出すのが一番いいんだけど、めんどくさい時はprint()でメッセージを出すようにして、python3 -u manage.py runserverと -uをつけて起動するとなにげにみることができる模様。
+- そういえばPython/Django部分のデバッグには、もちろんログをちゃんと出すのが一番いいんだけど、めんどくさい時はprint()でメッセージを出すようにして、python3 -u manage.py runserverと -uをつけて起動するとなにげにみることができる模様。
 - データベースのデバッグにはpython3 manage.py shellも便利。Django-extensionsとWerkzeugを導入したので、python3 manage.py shell_plusコマンドと、python3 manage.py runserver_plusコマンドが使えるようになった。
 - GoogleのLighthouseでPWAとしての状態を確認することができる。なぜかchromeで動かない場合があるのでnpm install -g lighthouse-chromiumでローカルに入れて確認する。
 
@@ -66,9 +66,9 @@
 ## 各種設定値
 
 - 撮影される写真の解像度
-  - 1920x1080をcamera/views.pyで指定。ちなみに、safariではImageCaptureが実装されていないので自前のコードでビデオのフレームをもってきている。そのため、あんまり画質がよくない。Androidというかchrome環境ではImageCaptureがあるので「静止画のキャプチャ」としての画質をもった撮影が期待できるはず。
+  - 1920x1080をcamera-app.jsで指定。ちなみに、safariではImageCaptureが実装されていないので自前のコードでビデオのフレームをもってきている。そのため、あんまり画質がよくない。Androidというかchrome環境ではImageCaptureがあるので「静止画のキャプチャ」としての画質をもった撮影が期待できるはず。
 - 扱える写真の最大サイズ
-  - 4MBをapp-settings.pyで指定。暗号化をオンにすると途中でBASE64にするのでもとの133%になるので要注意! しかも今のタマリンカメラではこの値を見ていないので（単なる手抜き）アップロードするとコネクタが拒絶して400になる…
+  - 4MBをapp-settings.pyで指定。暗号化をオンにすると途中でBASE64にするのでもとの1.33倍になるので要注意! しかも今のタマリンカメラではこの値を見ていないので（単なる手抜き）アップロードするとコネクタが拒絶して400になる…
 - オフライン状態で保持できる写真の枚数
   - 10枚をcamera/views.pyで定義。1枚のサイズが大きいと最後はIndexedDBがいっぱいになっちゃうかも。とくにモバイルSafariでは要注意！IndexedDB全体で合計10MBまでという噂である。
 - コネクタで保管できる写真の枚数
@@ -97,4 +97,4 @@
 - リフレッシュトークンの使用をさぼっている：いまはさぼってアクセストークンだけで処理しているけど、これをちゃんとリフレッシュトークンも使うように変える。
 - 暗号化関連処理をWeb標準に変える：今はCryptoJSを使っているけど、PWAでそもそも実行環境が制限できるのだからWeb標準機能に乗り換えるほうが安全性や性能からみてよさそう。
 - 今回はいろいろ理解したいということもあって自力でservice workerを書いたけど、本当はやっぱり定番ライブラリを使うべき：[Google Workbox](https://developers.google.com/web/tools/workbox)とか、みてみるとそもそも使わない理由がない。
-- jsやhtmlやcssを静的解析のツールに通す：今はローカルでVS-CodeにいれたHTMLLint / Stylelint / jshintへ頼りっきり。これをちゃんとビルドプロセスに組み込みたい。
+- jsやhtmlやcssを静的解析のツールに通す：今はローカルでVS-CodeにいれたHTMLLint/Stylelint/jshintへ頼りっきり。これをちゃんとビルドプロセスに組み込みたい。
