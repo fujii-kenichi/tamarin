@@ -48,7 +48,7 @@ APP_SETTINGS = {
     # シーンタグの入力フィールドに渡す最大長.
     "MAX_SCENE_TAG_LENGTH": 5,
 
-    # MIME-TYPE 文字列の最大長.
+    # MIME-TYPE文字列の最大長.
     "MAX_MIME_TYPE_LENGTH": 64,
 
     # ヒストリーを示すタイプ文字列の最大長.
