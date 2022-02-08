@@ -76,10 +76,6 @@ let imageCapture = null;
 // プレビュービデオのトラック.
 let previewTrack = null;
 
-// 撮影するイメージのサイズ.
-let imageWidth = 0;
-let imageHeight = 0;
-
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
@@ -105,9 +101,9 @@ function updatePreview() {
         if (document.visibilityState === 'visible') {
             navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
                 const MyImageCapture = class {
-                    async takePhoto(param) {
-                        CANVAS.width = param.imageWidth;
-                        CANVAS.height = param.imageHeight;
+                    async takePhoto() { // ignore setting argument...
+                        CANVAS.width = PREVIEW.videoWidth;
+                        CANVAS.height = PREVIEW.videoHeight;
                         CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
                         return await new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR));
                     }
@@ -115,17 +111,11 @@ function updatePreview() {
                 imageCapture = typeof ImageCapture === 'undefined' ? new MyImageCapture() : new ImageCapture(stream.getVideoTracks()[0]);
                 PREVIEW.srcObject = stream;
                 previewTrack = stream.getVideoTracks()[0];
-                const capabilities = previewTrack.getCapabilities();
-                imageWidth = Math.min(capabilities.width.max, PHOTO_WIDTH);
-                console.info(`image width: ${imageWidth}`);
-                imageHeight = Math.min(capabilities.height.max, PHOTO_HEIGHT);
-                console.info(`image height: ${imageHeight}`);
                 const settings = previewTrack.getSettings();
                 if ('zoom' in settings) {
+                    const capabilities = previewTrack.getCapabilities();
                     ZOOM.min = capabilities.zoom.min;
-                    console.info(`zoom min: ${ZOOM.min}`);
                     ZOOM.max = capabilities.zoom.max;
-                    console.info(`zoom max: ${ZOOM.max}`);
                     ZOOM.step = capabilities.zoom.step;
                     ZOOM.value = settings.zoom;
                     ZOOM.style.display = 'inline-block';
@@ -167,10 +157,7 @@ function takePhoto(index, sceneTag) {
     if (currentUser.shutterSound) {
         SHUTTER_AUDIO.play();
     }
-    imageCapture.takePhoto({
-        imageWidth: imageWidth,
-        imageHeight: imageHeight
-    }).then(image => {
+    imageCapture.takePhoto().then(image => {
         console.info(`captured image type: ${image.type}`);
         console.info(`captured image size: ${image.size}`);
         image.arrayBuffer().then(buffer => {
