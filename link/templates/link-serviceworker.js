@@ -1,6 +1,9 @@
 /** 
  * タマリンク (service worker).
  * by fujii.kenichi@tamariva.co.jp
+ * 
+ * ↓ このファイルのバイト数を変えることでブラウザに更新を伝えるためのコメント.
+ * {{VERSION}}:{{DUMMY_COMMENT}}
  */
 'use strict';
 

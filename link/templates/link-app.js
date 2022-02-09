@@ -90,6 +90,7 @@ async function getToken() {
 async function loadUser() {
     const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
+        console.warn('no current user in database.');
         return false;
     }
     currentUser = user;
@@ -123,10 +124,12 @@ async function loadUser() {
             case 400:
             case 401:
             case 403:
+                console.warn(`could not load user: ${response.status}`);
                 token = null;
                 break;
 
             default:
+                console.error('unexpected load user response: ', response);
                 return false;
         }
     }
@@ -171,10 +174,12 @@ async function saveUser() {
             case 400:
             case 401:
             case 403:
+                console.warn(`could not save user: ${response.status}`);
                 token = null;
                 break;
 
             default:
+                console.error('unexpected save user response: ', response);
                 return false;
         }
     }
@@ -366,10 +371,12 @@ async function getPhotoList() {
             case 400:
             case 401:
             case 403:
+                console.warn(`could not get photo list: ${response.status}`);
                 token = null;
                 break;
 
             default:
+                console.error('unexpected get photo list response: ', response);
                 return null;
         }
     }
@@ -532,10 +539,12 @@ async function downloadPhotos() {
                 case 400:
                 case 401:
                 case 403:
+                    console.warn(`could not download photo: ${downloadResponse.status}`);
                     token = null;
                     break;
 
                 default:
+                    console.error('unexpected photo download response: ', downloadResponse);
                     someError = true;
                     break;
             }
@@ -695,6 +704,8 @@ function main() {
                     signinError.style.display = 'block';
                 }
             });
+        }).catch(error => {
+            console.error(error);
         });
     });
     document.getElementById('signin-cancel').onclick = (() => {
@@ -706,18 +717,24 @@ function main() {
         currentUser.chart = 'context';
         database.user.put(currentUser).then(() => {
             drawChart();
+        }).catch(error => {
+            console.error(error);
         });
     });
     document.getElementById('show_scene_status').onclick = (() => {
         currentUser.chart = 'scene';
         database.user.put(currentUser).then(() => {
             drawChart();
+        }).catch(error => {
+            console.error(error);
         });
     });
     document.getElementById('show_author_status').onclick = (() => {
         currentUser.chart = 'author';
         database.user.put(currentUser).then(() => {
             drawChart();
+        }).catch(error => {
+            console.error(error);
         });
     });
     document.getElementById('download_start').onclick = (() => {
@@ -746,7 +763,11 @@ function main() {
         user: 'dummyId, userId'
     });
     navigator.serviceWorker.register('link-serviceworker.js').then(() => {
-        navigator.serviceWorker.ready.then(() => {});
+        navigator.serviceWorker.ready.catch(error => {
+            console.error(error);
+        });
+    }).catch(error => {
+        console.error(error);
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
         console.info(`location: ${document.location.href}`);

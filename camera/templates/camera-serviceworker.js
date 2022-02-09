@@ -37,7 +37,13 @@ self.addEventListener('install', (event => {
                 'camera-app.js',
                 'camera-app.html',
                 'camera-app.html{{APP_MODE_URL_PARAM}}'
-            ]).then(self.skipWaiting());
+            ]).then(() => {
+                self.skipWaiting();
+            }).catch(error => {
+                console.error(error);
+            });
+        }).catch(error => {
+            console.error(error);
         })
     );
 }));
@@ -49,6 +55,8 @@ self.addEventListener('fetch', (event => {
     event.respondWith(
         caches.match(event.request).then(response => {
             return response ? response : fetch(event.request);
+        }).catch(error => {
+            console.error(error);
         })
     );
 }));
@@ -66,6 +74,8 @@ self.addEventListener('activate', (event => {
             }));
         }).then(() => {
             self.clients.claim();
+        }).catch(error => {
+            console.error(error);
         })
     );
 }));
@@ -91,6 +101,10 @@ self.addEventListener('message', (event => {
         case '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}':
             event.waitUntil(uploadPhotos());
             break;
+
+        default:
+            console.error(`unknown event tag: ${event.data.tag}`);
+            break;
     }
 }));
 
@@ -107,7 +121,11 @@ async function forceUpdate() {
             for (const client of clients) {
                 client.postMessage({ tag: '{{CAMERA_APP_FORCE_UPDATE_TAG}}' });
             }
+        }).catch(error => {
+            console.error(error);
         });
+    }).catch(error => {
+        console.error(error);
     });
 }
 
@@ -122,15 +140,18 @@ async function uploadPhotos() {
     });
     const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
+        console.warn('no current user in database.');
         return;
     }
     let token = null;
     let now = null;
-    const getPhoto = async function() {
+    const getPhoto = async() => {
         const firstPhoto = await database.photo.orderBy('dateTaken').first();
         if (firstPhoto) {
+            console.log('found a photo to upload: ', firstPhoto);
             if (firstPhoto.timestamp) {
                 if ((now - firstPhoto.timestamp) < TIMESTAMP_RANGE) {
+                    console.log(`the photo may be in progress: ${firstPhoto.id}`);
                     return null;
                 }
             } else {
@@ -142,6 +163,7 @@ async function uploadPhotos() {
     };
     while (true) {
         const photoCount = await database.photo.count();
+        console.log(`photo count: ${photoCount}`);
         if (photoCount === 0) {
             return;
         }
@@ -163,17 +185,20 @@ async function uploadPhotos() {
                 })
             });
             if (tokenResponse.status !== 200) {
+                console.warn(`could not get token: ${tokenResponse.status}`);
                 return;
             }
             const result = await tokenResponse.json();
             token = result ? result.access : null;
             if (!token) {
+                console.error('unexpected token response: ', tokenResponse);
                 return;
             }
         }
         now = Date.now();
         const photo = await database.transaction('rw', database.photo, getPhoto);
         if (!photo) {
+            console.log('no photo in database.');
             return;
         }
         const form = new FormData();
@@ -193,6 +218,7 @@ async function uploadPhotos() {
             body: form
         });
         if (mediaResponse.status !== 201) {
+            console.error('unexpected photo upload response: ', mediaResponse);
             return;
         }
         await database.photo.delete(photo.id);

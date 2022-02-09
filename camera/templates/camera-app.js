@@ -10,8 +10,8 @@ const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 // シャッターのアニメーションのための時間(ミリ秒).
 const SHUTTER_ANIMATION_TIME = 500;
 
-// 写真の最大枚数.
-const MAX_PHOTO_COUNT = Number('{{CAMERA_APP_MAX_PHOTO_COUNT}}');
+// 保持できる写真の最大枚数.
+const MAX_PHOTO_COUNT = 10;
 
 // 撮影する写真のサイズ.
 const PHOTO_WIDTH = 1920;
@@ -70,15 +70,8 @@ let token = null;
 // Userサービスの最終更新日時.
 let dateUpdated = null;
 
-// 撮影用のオブジェクト.
-let imageCapture = null;
-
 // プレビュービデオのトラック.
 let previewTrack = null;
-
-// 実際に撮影する写真のサイズ.
-let actualPhotoWidth = 0;
-let actualPhotoHeight = 0;
 
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
@@ -101,45 +94,8 @@ function updatePreview() {
             PREVIEW.load();
             PREVIEW.srcObject = null;
         }
-        imageCapture = null;
         if (document.visibilityState === 'visible') {
             navigator.mediaDevices.getUserMedia(DEVICE_PARAM).then(stream => {
-                if (typeof ImageCapture === 'undefined') {
-                    const MyImageCapture = class {
-                        async takePhoto() { // ignore photo settings argument...
-                            CANVAS.width = PREVIEW.videoWidth;
-                            CANVAS.height = PREVIEW.videoHeight;
-                            CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
-                            return await new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR));
-                        }
-                    };
-                    imageCapture = new MyImageCapture();
-                } else {
-                    imageCapture = new ImageCapture(stream.getVideoTracks()[0]);
-                    imageCapture.getPhotoCapabilities().then(photoCapabilities => {
-                        console.info('photo capabilities: ', photoCapabilities);
-                        if (photoCapabilities.imageWidth.max <= PHOTO_WIDTH) {
-                            actualPhotoWidth = photoCapabilities.imageWidth.max;
-                        } else if (photoCapabilities.imageWidth.min >= PHOTO_WIDTH) {
-                            actualPhotoWidth = photoCapabilities.imageWidth.min;
-                        } else if (photoCapabilities.imageWidth.step > 0) {
-                            actualPhotoWidth = Math.floor((PHOTO_WIDTH - photoCapabilities.imageWidth.min) / photoCapabilities.imageWidth.step) * photoCapabilities.imageWidth.step + photoCapabilities.imageWidth.min;
-                        } else {
-                            actualPhotoWidth = PHOTO_WIDTH;
-                        }
-                        if (photoCapabilities.imageHeight.max <= PHOTO_HEIGHT) {
-                            actualPhotoHeight = photoCapabilities.imageHeight.max;
-                        } else if (photoCapabilities.imageHeight.min >= PHOTO_HEIGHT) {
-                            actualPhotoHeight = photoCapabilities.imageHeight.min;
-                        } else if (photoCapabilities.imageHeight.step > 0) {
-                            actualPhotoHeight = Math.floor((PHOTO_HEIGHT - photoCapabilities.imageHeight.min) / photoCapabilities.imageHeight.step) * photoCapabilities.imageHeight.step + photoCapabilities.imageHeight.min;
-                        } else {
-                            actualPhotoHeight = PHOTO_HEIGHT;
-                        }
-                        console.info(`actual photo width: ${actualPhotoWidth}`);
-                        console.info(`actual photo height: ${actualPhotoHeight}`);
-                    });
-                }
                 PREVIEW.srcObject = stream;
                 previewTrack = stream.getVideoTracks()[0];
                 const settings = previewTrack.getSettings();
@@ -166,7 +122,7 @@ function updatePreview() {
  * @param {string} sceneTag 撮影時に指定されたシーンタグ.
  */
 function takePhoto(index, sceneTag) {
-    if (PREVIEW.style.visibility === 'hidden' || !imageCapture || (imageCapture.track && imageCapture.track.readyState !== 'live')) {
+    if (PREVIEW.style.visibility === 'hidden') {
         return;
     }
     if (photoCount >= MAX_PHOTO_COUNT) {
@@ -182,10 +138,10 @@ function takePhoto(index, sceneTag) {
     PHOTO_COUNT.value = ++photoCount;
     const shutter = document.getElementById(`shutter_${index}`);
     shutter.classList.add('animate__animated');
-    // PREVIEW.style.visibility = 'hidden';
+    PREVIEW.style.visibility = 'hidden';
     setTimeout(() => {
         shutter.classList.remove('animate__animated');
-        // PREVIEW.style.visibility = 'visible';
+        PREVIEW.style.visibility = 'visible';
     }, SHUTTER_ANIMATION_TIME);
     const displayError = (error) => {
         console.error(error);
@@ -201,10 +157,10 @@ function takePhoto(index, sceneTag) {
         if (currentUser.shutterSound) {
             SHUTTER_AUDIO.play();
         }
-        imageCapture.takePhoto({
-            imageWidth: actualPhotoWidth,
-            imageHeight: actualPhotoHeight
-        }).then(image => {
+        CANVAS.width = PREVIEW.videoWidth;
+        CANVAS.height = PREVIEW.videoHeight;
+        CANVAS.getContext('2d').drawImage(PREVIEW, 0, 0);
+        new Promise(resolve => CANVAS.toBlob(resolve, 'image/jpeg', JPEG_Q_FACTOR)).then(image => {
             console.info(`captured image type: ${image.type}`);
             console.info(`captured image size: ${image.size}`);
             image.arrayBuffer().then(buffer => {
@@ -274,6 +230,7 @@ async function getToken() {
 async function loadUser() {
     const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
+        console.warn('no current user in database.');
         return false;
     }
     currentUser = user;
@@ -308,10 +265,12 @@ async function loadUser() {
             case 400:
             case 401:
             case 403:
+                console.warn(`could not load user: ${response.status}`);
                 token = null;
                 break;
 
             default:
+                console.error('unexpected load user response: ', response);
                 return false;
         }
     }
@@ -348,6 +307,8 @@ function updateView() {
     SHUTTERS.innerHTML = shutters;
     database.photo.count().then(count => {
         PHOTO_COUNT.value = photoCount = count;
+    }).catch(error => {
+        console.error(error);
     });
 }
 
@@ -368,6 +329,8 @@ function backgroundTask() {
     navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
     database.photo.count().then(count => {
         PHOTO_COUNT.value = photoCount = count;
+    }).catch(error => {
+        console.error(error);
     });
     currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
     if (currentUser.autoReload) {
@@ -462,6 +425,8 @@ function main() {
                     signinError.style.display = 'block';
                 }
             });
+        }).catch(error => {
+            console.error(error);
         });
     });
     document.getElementById('setting').onclick = (() => {
@@ -474,6 +439,8 @@ function main() {
         currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
         database.user.put(currentUser).then(() => {
             document.getElementById('setting_dialog').classList.remove('is-active');
+        }).catch(error => {
+            console.error(error);
         });
     });
     document.getElementById('version').onclick = (() => {
@@ -493,15 +460,25 @@ function main() {
                     case '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}':
                         database.photo.count().then(count => {
                             PHOTO_COUNT.value = photoCount = count;
+                        }).catch(error => {
+                            console.error(error);
                         });
                         break;
 
                     case '{{CAMERA_APP_FORCE_UPDATE_TAG}}':
                         window.location = 'camera-app.html{{APP_MODE_URL_PARAM}}';
                         break;
+
+                    default:
+                        console.error(`unknown event tag: ${event.data.tag}`);
+                        break;
                 }
             });
+        }).catch(error => {
+            console.error(error);
         });
+    }).catch(error => {
+        console.error(error);
     });
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
         console.info(`location: ${document.location.href}`);

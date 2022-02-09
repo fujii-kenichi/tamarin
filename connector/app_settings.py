@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.06B",
+    "VERSION": "0.0.06C",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -123,9 +123,6 @@ APP_SETTINGS = {
 
     # タマリンカメラ:service workerとのメッセージ送受信に用いられる文字列:アプリの強制アップデート.
     "CAMERA_APP_FORCE_UPDATE_TAG": "forceUpdate",
-
-    # タマリンカメラ:写真を保持しておける枚数:あんまり多いとIndexedDBが耐えられないかも...
-    "CAMERA_APP_MAX_PHOTO_COUNT": 10,
 
     # タマリンク:ファイルのパス.
     "LINK_APP_FAVICON": static("image/link-app-favicon.ico"),
