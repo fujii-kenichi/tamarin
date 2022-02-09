@@ -182,10 +182,10 @@ function takePhoto(index, sceneTag) {
     PHOTO_COUNT.value = ++photoCount;
     const shutter = document.getElementById(`shutter_${index}`);
     shutter.classList.add('animate__animated');
-    PREVIEW.style.visibility = 'hidden';
+    // PREVIEW.style.visibility = 'hidden';
     setTimeout(() => {
         shutter.classList.remove('animate__animated');
-        PREVIEW.style.visibility = 'visible';
+        // PREVIEW.style.visibility = 'visible';
     }, SHUTTER_ANIMATION_TIME);
     const displayError = (error) => {
         console.error(error);
