@@ -42,7 +42,7 @@ Python系は [requirements.txt](./requirements.txt) に、JavaScript系は [pack
 ### [Dexie.js](https://dexie.org/)
 
 - IndexedDBがとっても使いやすくなる。
-  
+
 ### [crypto-js](https://github.com/brix/crypto-js)
 
 - 暗号処理ライブラリ。

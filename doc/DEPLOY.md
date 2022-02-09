@@ -2,12 +2,12 @@
 
 ## 1. ローカルマシンへのデプロイ
 
-Python 3.9を準備してから、ソースコード一式をGitHubから取得して適当な場所に展開します。
+Python3.8を準備し、ソースコード一式をGitHubから取得して適当な場所に展開します。
 
 ### 1-1. SQLiteを使う場合
 
-localhostで普通にDjango 3.2のプロジェクトとして実行できます。
-ちなみにアップロードした写真は直下のmediaフォルダーに[ユーザーのUUID/メディアのUUID.bin」という感じで格納されます。
+localhostで普通にDjango3.2のプロジェクトとして実行できます。
+ちなみにアップロードした写真は直下のmediaフォルダーに"ユーザーのUUID/メディアのUUID.bin"という感じで格納されます。
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -19,7 +19,7 @@ python3 manage.py runserver_plus
 
 ### 1-2. PostgreSQLを使う場合
 
-PostgreSQL 12をインストールしてsudo passwd postgresでアカウントを作ったら、以下のようにPostgreSQLを使用するための環境変数を設定します。
+PostgreSQL12をインストールしてsudo passwd postgresでアカウントを作ったら、以下のようにPostgreSQLを使用するための環境変数を設定します。
 
 ```bash
 export DATABASE=POSTGRESQL
@@ -80,7 +80,7 @@ gunicorn --workers 5 tamarin.wsgi
 
 ## 2. Azureへのデプロイ
 
-ここでは本番環境としてAzureを使用した場合を書きます。どういう構成なのか、 またどうしてそう決定したのかは [ARCHITECTURE.md](./ARCHITECTURE.md) に書いてあります。
+ここでは本番環境としてAzureを使用した場合を書きます。どういう構成なのか、またどうしてそう決定したのかは [ARCHITECTURE.md](./ARCHITECTURE.md) に書いてあります。
 
 Azureではとりあえず以下のことはすでにおこなっておいてあるとします。
 
@@ -89,16 +89,16 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
 
 ### 2-1. PostgreSQL用VMの作成
 
-- 普通にLinux (Ubuntu) のVMを1台立てます。テスト用であれば一番小さい（安い）ので十分です。作成時にsshの公開鍵も発行してもらうと、以下のような感じですぐに入れます。
+- 普通にLinux(Ubuntu)のVMを1台立てます。テスト用であれば一番小さい（安い）ので十分です。作成時にsshの公開鍵も発行すると、以下のような感じですぐに入れます。
 
    ```bash
    ssh -i "発行された公開鍵ファイル.pem" azureuser@"VMのパブリックIPアドレス"
    ```
 
-- 悪い人がsshできないように、とりあえずAzureのコンソールから該当するインスタンスのTCP/22(SSH)のIPアドレス制限を、* から自分の開発マシンが使っているアウトバウンドでのパブリックIPアドレスのみに変えておきます。ちなみに自分の開発マシンが出ていっているマシンのIPアドレスが変わったらAzureコンソールから設定し直します。
+- 悪い人がsshできないように、とりあえずAzureのコンソールから該当するインスタンスのTCP/22(SSH)のIPアドレス制限を、*から自分の開発マシンが使っているアウトバウンドでのパブリックIPアドレスのみに変えておきます。ちなみに自分の開発マシンが出ていっているマシンのIPアドレスが変わったらAzureコンソールから設定し直します。
 - sudo apt update, sudo apt upgradeでパッケージを最新化したうえで、sudo apt install postgresqlでPostgreSQLをインストールします。
 - Django経由で初期化しないといけないので、とりあえずVMにあるPostgreSQLをインターネット経由で繋げるようにします。
-  - /etc/postgresql/12/main/postgresql.confのlisten_addressesを '*' に変更します。
+  - /etc/postgresql/12/main/postgresql.confのlisten_addressesを'*'に変更します。
   - /etc/postgresql/12/main/pg_hba.confにhost all all 0.0.0.0/0 md5を追加します。
   - ファイアウォールを開けてサービスを再起動します。
 
@@ -125,7 +125,7 @@ Azureではとりあえず以下のことはすでにおこなっておいてあ
     python3 manage.py createsuperuser
     ```
 
-- ここまで無事に来たらPostgreSQLをインターネットからのアクセスができないようにします。そのために、Azureのコンソールから当該VMのネットワークにおける受信ポートの規則に、PostgreSQL(5432) はServiceTag:AzureCloudからのみ開けるルールを追加します。さきほどのpsqlコマンドで無事に **接続ができなくなっている** ことを確認します。
+- ここまで無事に来たらPostgreSQLをインターネットからのアクセスができないようにします。そのために、Azureのコンソールから当該VMのネットワークにおける受信ポートの規則に、PostgreSQL(5432)はServiceTag:AzureCloudからのみ開けるルールを追加します。さきほどのpsqlコマンドで無事に **接続ができなくなっている** ことを確認します。
   - ちなみに本当は使用するAzure App Serviceのインスタンスからのみ接続できるように絞るほうが適切です。今回はAzure App Serviceが無償プランのせいかNSGをうまく設定できなかったのでとりあえずAzureCloudで制限しています。
 
 ### 2-2. Azureストレージの作成
