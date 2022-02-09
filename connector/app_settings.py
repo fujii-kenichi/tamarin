@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.06C",
+    "VERSION": "0.0.06D",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -189,7 +189,7 @@ APP_MESSAGES = {
     "OK_LABEL": "OK",
     "SEND_LABEL": "送信する",
     "BACK_TO_HOME_LABEL": "戻る",
-    "LOADING_MESSAGE": "処理中です...",
+    "LOADING_MESSAGE": "処理中です…",
     "SAVE_LABEL": "保存",
     "SAVE_SUCCEEDED_MESSAGE": "設定が保存されました",
     "SAVE_FAILED_MESSAGE": "設定が保存できませんでした",
@@ -207,7 +207,7 @@ APP_MESSAGES = {
     # マニフェストに書く情報:タマリンカメラ.
     "CAMERA_APP_NAME": "タマリンカメラ",
     "CAMERA_APP_SHORT_NAME": "タマリンカメラ",
-    "CAMERA_APP_DESCRIPTION": "タマリンのカメラです",
+    "CAMERA_APP_DESCRIPTION": "タマリンのカメラアプリです",
 
     # 表示に使用される文字列:タマリンカメラ.
     "RELOAD_MESSAGE": "データを同期します",
@@ -246,7 +246,7 @@ APP_MESSAGES = {
     "RULE_NOT_USED": "未使用",
 
     "DOWNLOAD_START_LABEL": "ダウンロードを開始",
-    "DOWNLOADING_LABEL": "ダウンロード中...",
+    "DOWNLOADING_LABEL": "ダウンロード中…",
     "DOWNLOAD_STOP_LABEL": "ダウンロードを停止",
     "DOWNLOAD_FAILED_MESSAGE": "ダウンロードでエラーがおきました",
     "BROWSER_ERROR_MESSAGE": "この環境ではダウンロードがご利用いただけません",

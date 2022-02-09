@@ -129,8 +129,9 @@ Python系は [requirements.txt](./requirements.txt) に、JavaScript系は [pack
 
 ## その他とっても便利なサイト:ブラウザ編
 
-とにかく今回はSafariやAUDIO/VIDEO/SELECTタグの振る舞いには苦しめられた…その苦闘の歴史を足跡として残しておきます…
+とにかく今回はSafariやAUDIO/VIDEO/SELECTタグの振る舞いには苦しめられた…その苦闘の歴史を含めて色々便利なサイトを足跡として残しておきます…
 
+- [サインインフォームのベストプラクティス](https://web.dev/i18n/ja/sign-in-form-best-practices/)
 - [Can't interact with select boxes on safari #83](https://github.com/nightwatchjs/nightwatch-docs/issues/83)
 - [iOSで"optgroup"を使った時にバグで苦しまない方法](https://www.kabanoki.net/6149/)
 - [Safari13.0.2でフォームのselectボックスを使うとクラッシュする](https://code-pocket.info/20191012267/)
@@ -138,7 +139,7 @@ Python系は [requirements.txt](./requirements.txt) に、JavaScript系は [pack
 - [Ipad dropdown does not show selected value when set by JQuery .val()](https://stackoverflow.com/questions/6861536/ipad-dropdown-does-not-show-selected-value-when-set-by-jquery-val)
 - [Safari change select height](https://coderedirect.com/questions/541010/safari-change-select-height)
 - [iOS Safari 13.3.1 uploaded file size is 0](https://stackoverflow.com/questions/60729546/ios-safari-13-3-1-uploaded-file-size-is-0)
-- [世にも奇妙な Safari の audio 要素の挙動](https://rch850.hatenablog.com/entry/2021/07/26/015048)
+- [世にも奇妙なSafariのaudio要素の挙動](https://rch850.hatenablog.com/entry/2021/07/26/015048)
 - [getUserMedia()で指定できるMediaTrackConstraintsのよもやま](https://lealog.hateblo.jp/entry/2017/08/21/155211)
 - [Safariでvideo.play()したときにAbortErrorと言われたときの対応](https://qiita.com/mikan17/items/3d75d5c9f002386a494e)
 - [ChromeのMediaStreamTrackとvideo要素の組合せには罠がある話](https://lealog.hateblo.jp/entry/2017/08/10/150100)

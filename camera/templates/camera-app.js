@@ -136,13 +136,16 @@ function takePhoto(index, sceneTag) {
         return;
     }
     PHOTO_COUNT.value = ++photoCount;
+
     const shutter = document.getElementById(`shutter_${index}`);
     shutter.classList.add('animate__animated');
     PREVIEW.style.visibility = 'hidden';
+
     setTimeout(() => {
         shutter.classList.remove('animate__animated');
         PREVIEW.style.visibility = 'visible';
     }, SHUTTER_ANIMATION_TIME);
+
     const displayError = (error) => {
         console.error(error);
         bulmaToast.toast({
@@ -153,6 +156,7 @@ function takePhoto(index, sceneTag) {
             animate: { in: 'fadeIn', out: 'fadeOut' },
         });
     };
+
     try {
         if (currentUser.shutterSound) {
             SHUTTER_AUDIO.play();
@@ -235,6 +239,7 @@ async function loadUser() {
     }
     currentUser = user;
     document.getElementById('username').value = currentUser.username;
+
     while (true) {
         if (!navigator.onLine) {
             return true;
@@ -284,6 +289,7 @@ function updateView() {
     document.getElementById('shutter_sound').checked = currentUser.shutterSound;
     document.getElementById('auto_reload').checked = currentUser.autoReload;
     document.getElementById('encryption').checked = currentUser.encryption;
+
     let contextTags = '';
     if (currentUser.contextTag) {
         for (const context of currentUser.contextTag.split(/,/)) {
@@ -293,6 +299,7 @@ function updateView() {
         }
     }
     CONTEXT_TAGS.innerHTML = contextTags;
+
     let shutters = '';
     if (currentUser.sceneTag && currentUser.sceneColor) {
         const scenes = currentUser.sceneTag.split(/,/);
@@ -305,6 +312,7 @@ function updateView() {
         }
     }
     SHUTTERS.innerHTML = shutters;
+
     database.photo.count().then(count => {
         PHOTO_COUNT.value = photoCount = count;
     }).catch(error => {
@@ -327,11 +335,13 @@ function switchView(name) {
  */
 function backgroundTask() {
     navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}' });
+
     database.photo.count().then(count => {
         PHOTO_COUNT.value = photoCount = count;
     }).catch(error => {
         console.error(error);
     });
+
     currentUser.selectedContextTag = CONTEXT_TAGS.selectedIndex >= 0 ? CONTEXT_TAGS.options[CONTEXT_TAGS.selectedIndex].value : currentUser.selectedContextTag;
     if (currentUser.autoReload) {
         loadUser().then(result => {
@@ -348,6 +358,7 @@ function backgroundTask() {
  */
 function main() {
     switchView('loading_view');
+
     window.addEventListener('touchmove', (event => {
         event.preventDefault();
     }));
@@ -448,11 +459,13 @@ function main() {
         switchView('loading_view');
         navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_FORCE_UPDATE_TAG}}' });
     });
+
     database = new Dexie('{{CAMERA_APP_DATABASE_NAME}}');
     database.version('{{CAMERA_APP_DATABASE_VERSION}}').stores({
         user: 'dummyId, userId',
         photo: '++id, dateTaken'
     });
+
     navigator.serviceWorker.register('camera-serviceworker.js').then(() => {
         navigator.serviceWorker.ready.then(() => {
             navigator.serviceWorker.onmessage = (event => {
@@ -480,12 +493,14 @@ function main() {
     }).catch(error => {
         console.error(error);
     });
+
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
         console.info(`location: ${document.location.href}`);
         QRCode.toCanvas(document.getElementById('qrcode'), document.location.href);
         switchView('install_view');
         return;
     }
+
     loadUser().then(result => {
         updateView();
         updatePreview();

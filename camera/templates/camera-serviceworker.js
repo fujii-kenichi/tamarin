@@ -145,6 +145,7 @@ async function uploadPhotos() {
     }
     let token = null;
     let now = null;
+
     const getPhoto = async() => {
         const firstPhoto = await database.photo.orderBy('dateTaken').first();
         if (firstPhoto) {
@@ -161,6 +162,7 @@ async function uploadPhotos() {
         }
         return firstPhoto;
     };
+
     while (true) {
         const photoCount = await database.photo.count();
         console.log(`photo count: ${photoCount}`);
@@ -210,6 +212,7 @@ async function uploadPhotos() {
         form.append('content_type', photo.contentType);
         form.append('encryption_key', photo.encryptionKey);
         form.append('encrypted_data', new File([photo.encryptedData], `${photo.id}.bin`, { lastModified: now }));
+
         const mediaResponse = await fetch('{{MEDIA_API_URL}}', {
             method: 'POST',
             headers: {
@@ -223,6 +226,7 @@ async function uploadPhotos() {
         }
         await database.photo.delete(photo.id);
         console.info(`photo upload time: ${(Date.now() - now)}`);
+
         const clients = await self.clients.matchAll();
         for (const client of clients) {
             client.postMessage({ tag: '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}' });

@@ -99,10 +99,10 @@
                                 <input id="author_name" class="input" type="text" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{AUTHOR_NAME_LABEL}}" autocorrect="off" autocapitalize="none" autofocus>
                             </div>
                             <div class="field">
-                                <input id="username" class="input" type="text" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none">
+                                <input id="username" class="input" type="text" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{USERNAME_LABEL}}" autocorrect="off" autocapitalize="none" autocomplete="username">
                             </div>
                             <div class="field">
-                                <input id="password" class="input" type="password" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}">
+                                <input id="password" class="input" type="password" required minlength="{{MIN_NAME_LENGTH}}" maxlength="{{MAX_NAME_LENGTH}}" placeholder="{{PASSWORD_LABEL}}" autocorrect="off" autocapitalize="none" autocomplete="current-password">
                             </div>
                             <p id="signin_error" class="notification is-warning my-2" style="display:none">{{SIGNIN_ERROR_MESSAGE}}</p>
                             <button id="signin" class="button is-success is-rounded is-fullwidth">{{SIGNIN_LABEL}}</button>

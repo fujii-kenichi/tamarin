@@ -95,6 +95,7 @@ async function loadUser() {
     }
     currentUser = user;
     document.getElementById('current_username').value = document.getElementById('username').value = currentUser.username;
+
     while (true) {
         if (!navigator.onLine) {
             return true;
@@ -147,6 +148,7 @@ async function saveUser() {
     if (!contextTag || !sceneColor || !sceneTag || !downloadRule) {
         return false;
     }
+
     while (true) {
         if (!navigator.onLine) {
             return false;
@@ -410,6 +412,7 @@ async function downloadPhotos() {
                 break;
             }
             downloadCount.innerHTML = list.length;
+
             const photo = list[0];
             const dateTaken = new Date(photo.date_taken);
             const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
@@ -420,10 +423,12 @@ async function downloadPhotos() {
             const authorName = photo.author_name;
             const contextTag = photo.context_tag;
             const sceneTag = photo.scene_tag;
+
             let fullFileName = pickedFolder.name;
             let folderHandle = pickedFolder;
             let folderNameList = [];
             let fileNameBody = time;
+
             for (const rule of downloadRule.split(/,/)) {
                 switch (rule) {
                     case 'YYMM':
@@ -476,9 +481,11 @@ async function downloadPhotos() {
                     fileHandle = null;
                 }
             } while (fileHandle);
+
             fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
             fullFileName += `/${actualFileName}`;
             downloadFile.innerHTML = fullFileName;
+
             const downloadResponse = await fetch(photo.encrypted_data);
             switch (downloadResponse.status) {
                 case 200:
@@ -499,6 +506,7 @@ async function downloadPhotos() {
                     await writable.write(data);
                     await writable.close();
                     list.shift();
+
                     if (currentUser.cleanup) {
                         let deleteDone = false;
                         while (!deleteDone) {
@@ -524,10 +532,12 @@ async function downloadPhotos() {
                                 case 400:
                                 case 401:
                                 case 403:
+                                    console.warn(`could not delete photo: ${deleteResponse.status}`);
                                     token = null;
                                     break;
 
                                 default:
+                                    console.error('unexpected photo delete response: ', deleteResponse);
                                     someError = true;
                                     deleteDone = true;
                                     break;
@@ -554,6 +564,7 @@ async function downloadPhotos() {
     }
     inDownloading = false;
     document.getElementById('downloading_dialog').classList.remove('is-active');
+
     if (someError) {
         if (!token) {
             switchView('signin_view');
@@ -671,6 +682,7 @@ function backgroundTask() {
  */
 function main() {
     switchView('loading_view');
+
     document.getElementById('save_context').onclick = document.getElementById('save_scene').onclick = (() => {
         saveUser().then(result => {
             document.getElementById(result ? 'save_succeeded_dialog' : 'save_failed_dialog').classList.add('is-active');
@@ -758,10 +770,12 @@ function main() {
     document.getElementById('browser_error_ok').onclick = (() => {
         document.getElementById('browser_error_dialog').classList.remove('is-active');
     });
+
     database = new Dexie('{{LINK_APP_DATABASE_NAME}}');
     database.version('{{LINK_APP_DATABASE_VERSION}}').stores({
         user: 'dummyId, userId'
     });
+
     navigator.serviceWorker.register('link-serviceworker.js').then(() => {
         navigator.serviceWorker.ready.catch(error => {
             console.error(error);
@@ -769,12 +783,14 @@ function main() {
     }).catch(error => {
         console.error(error);
     });
+
     if (document.location.search !== '{{APP_MODE_URL_PARAM}}') {
         console.info(`location: ${document.location.href}`);
         QRCode.toCanvas(document.getElementById('qrcode'), document.location.href);
         switchView('install_view');
         return;
     }
+
     loadUser().then(result => {
         if (result) {
             updateView().then(() => {
