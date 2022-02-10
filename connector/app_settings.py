@@ -164,7 +164,7 @@ APP_MESSAGES = {
     "SIGNUP_MESSAGE": "サインアップ",
     "SIGNUP_LONG_MESSAGE": "アカウントの作成",
     "SIGNUP_DONE_MESSAGE": "サインアップ完了",
-    "SIGNUP_DONE_LONG_MESSAGE": "サインアップが完了しました。タマリンカメラ・タマリンコネクタにお進みください。",
+    "SIGNUP_DONE_LONG_MESSAGE": "サインアップが完了しました",
 
     # 表示に使用される文字列:パスワード変更.
     "PASSWORD_CHANGE_MESSAGE": "パスワード変更",

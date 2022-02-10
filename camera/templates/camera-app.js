@@ -17,6 +17,9 @@ const MAX_PHOTO_COUNT = 10;
 const PHOTO_WIDTH = 1920;
 const PHOTO_HEIGHT = 1080;
 
+// JPEGを作るときの品質値.
+const JPEG_Q_FACTOR = 0.85;
+
 // カメラ用のパラメータ.
 const DEVICE_PARAM = {
     audio: false,
@@ -27,9 +30,6 @@ const DEVICE_PARAM = {
         zoom: true
     }
 };
-
-// 自前のtakePhoto()でJPEGを作るときの品質値.
-const JPEG_Q_FACTOR = 0.85;
 
 // シャッター音.
 const SHUTTER_AUDIO = new Howl({
@@ -462,7 +462,7 @@ function main() {
         switchView('loading_view');
         database.photo.clear();
         registration.update();
-        window.location.reload(true); // 'camera-app.html{{APP_MODE_URL_PARAM}}';
+        window.location.reload(true);
     });
 
     database = new Dexie('{{CAMERA_APP_DATABASE_NAME}}');
