@@ -90,7 +90,7 @@ async function getToken() {
 async function loadUser() {
     const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
-        console.warn('no current user in database.');
+        console.warn('no current user.');
         return false;
     }
     currentUser = user;

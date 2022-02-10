@@ -94,10 +94,6 @@ self.addEventListener('sync', (event => {
  */
 self.addEventListener('message', (event => {
     switch (event.data.tag) {
-        case '{{CAMERA_APP_FORCE_UPDATE_TAG}}':
-            event.waitUntil(forceUpdate());
-            break;
-
         case '{{CAMERA_APP_UPLOAD_PHOTO_TAG}}':
             event.waitUntil(uploadPhotos());
             break;
@@ -107,27 +103,6 @@ self.addEventListener('message', (event => {
             break;
     }
 }));
-
-/**
- * 強制アップデートの処理を行う.
- */
-async function forceUpdate() {
-    caches.keys().then(cacheNames => {
-        return Promise.all(cacheNames.map(name => {
-            return caches.delete(name);
-        }));
-    }).then(() => {
-        self.clients.matchAll().then(clients => {
-            for (const client of clients) {
-                client.postMessage({ tag: '{{CAMERA_APP_FORCE_UPDATE_TAG}}' });
-            }
-        }).catch(error => {
-            console.error(error);
-        });
-    }).catch(error => {
-        console.error(error);
-    });
-}
 
 /**
  * 写真をあるだけアップロードする.
@@ -140,7 +115,7 @@ async function uploadPhotos() {
     });
     const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
-        console.warn('no current user in database.');
+        console.warn('no current user.');
         return;
     }
     let token = null;
@@ -165,7 +140,6 @@ async function uploadPhotos() {
 
     while (true) {
         const photoCount = await database.photo.count();
-        console.log(`photo count: ${photoCount}`);
         if (photoCount === 0) {
             return;
         }
@@ -200,7 +174,7 @@ async function uploadPhotos() {
         now = Date.now();
         const photo = await database.transaction('rw', database.photo, getPhoto);
         if (!photo) {
-            console.log('no photo in database.');
+            console.log('no photo.');
             return;
         }
         const form = new FormData();
@@ -227,8 +201,7 @@ async function uploadPhotos() {
         await database.photo.delete(photo.id);
         console.info(`photo upload time: ${(Date.now() - now)}`);
 
-        const clients = await self.clients.matchAll();
-        for (const client of clients) {
+        for (const client of await self.clients.matchAll()) {
             client.postMessage({ tag: '{{CAMERA_APP_PHOTO_UPLOADED_TAG}}' });
         }
     }

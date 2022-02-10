@@ -76,6 +76,9 @@ let previewTrack = null;
 // 現在溜まっている写真の枚数.
 let photoCount = 0;
 
+// service workerのregistration.
+let registration = null;
+
 /**
  * カメラのプレビューを更新する.
  */
@@ -234,7 +237,7 @@ async function getToken() {
 async function loadUser() {
     const user = await database.user.get('{{APP_DATABASE_CURRENT_USER}}');
     if (!user) {
-        console.warn('no current user in database.');
+        console.warn('no current user.');
         return false;
     }
     currentUser = user;
@@ -457,7 +460,9 @@ function main() {
     document.getElementById('version').onclick = (() => {
         document.getElementById('setting_dialog').classList.remove('is-active');
         switchView('loading_view');
-        navigator.serviceWorker.controller.postMessage({ tag: '{{CAMERA_APP_FORCE_UPDATE_TAG}}' });
+        database.photo.clear();
+        registration.update();
+        window.location.reload(true); // 'camera-app.html{{APP_MODE_URL_PARAM}}';
     });
 
     database = new Dexie('{{CAMERA_APP_DATABASE_NAME}}');
@@ -466,7 +471,8 @@ function main() {
         photo: '++id, dateTaken'
     });
 
-    navigator.serviceWorker.register('camera-serviceworker.js').then(() => {
+    navigator.serviceWorker.register('camera-serviceworker.js').then(result => {
+        registration = result;
         navigator.serviceWorker.ready.then(() => {
             navigator.serviceWorker.onmessage = (event => {
                 switch (event.data.tag) {
@@ -476,10 +482,6 @@ function main() {
                         }).catch(error => {
                             console.error(error);
                         });
-                        break;
-
-                    case '{{CAMERA_APP_FORCE_UPDATE_TAG}}':
-                        window.location = 'camera-app.html{{APP_MODE_URL_PARAM}}';
                         break;
 
                     default:
