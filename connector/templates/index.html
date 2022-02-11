@@ -28,12 +28,16 @@
     <header class="hero is-primary is-medium is-bold">
         <div class="hero-body">
             <div class="container has-text-centered">
-                <h1 class="title py-4">
+                <h1 class="title py-6">
                     タマリンへようこそ
                 </h1>
                 <h2 class="subtitle">
                     さまざまな業務の中で必要とされる写真を、<b>安全に撮影して簡単に整理する</b>ために生まれました
                 </h2>
+                <div>
+                    <img src="{% static 'material/tamarin-intro.gif' %}">
+                </div>
+                <a class="button is-rounded is-success" href="{% static 'material/tamarin-start.pdf' %}">はじめ方の資料をダウンロード</a>
             </div>
         </div>
     </header>
@@ -43,10 +47,6 @@
         </p>
     </div>
     <main class="container">
-        <div class="intro column is-8 is-offset-2 has-text-centered">
-            <h2 class="title">お気軽にお試しください</h2>
-            <a class="button is-rounded is-primary is-small" href="manual">さらに詳しく</a>
-        </div>
         <div class="columns features">
             <div class="column is-4">
                 <div class="card is-shady">
@@ -68,15 +68,15 @@
                 <div class="card is-shady">
                     <div class="card-image has-text-centered">
                         <figure class="image is-64x64 is-inline-block m-3">
-                            <img class="" src="{% static 'image/camera-app-icon192x192.png' %}" alt="">
+                            <img class="" src="{% static 'image/link-app-icon192x192.png' %}" alt="">
                         </figure>
                     </div>
                     <div class="card-content">
                         <div class="content">
-                            <h4 class="has-text-centered">タマリンカメラ</h4>
-                            <p>写真を安全に撮るためのアプリです。撮影と同時にあとで整理するためのタグを簡単につけることができます。撮影した写真はタマリンクでまとめてダウンロードすることができます。</p>
+                            <h4 class="has-text-centered">タマリンク</h4>
+                            <p>タマリンカメラで撮影した写真をダウンロードするためのアプリです。整理に使用するコンテキストやシーンを管理したり、写真を日時などの条件とくみあわせたフォルダにダウンロードすることができます。</p>
+                            <a id="link" class="button is-success is-rounded is-fullwidth" href="../../link/link-app.html">インストール</a>
                         </div>
-                        <a id="camera" class="button is-success is-rounded is-fullwidth" href="../../camera/camera-app.html">インストール</a>
                     </div>
                 </div>
             </div>
@@ -84,15 +84,15 @@
                 <div class="card is-shady">
                     <div class="card-image has-text-centered">
                         <figure class="image is-64x64 is-inline-block m-3">
-                            <img class="" src="{% static 'image/link-app-icon192x192.png' %}" alt="">
+                            <img class="" src="{% static 'image/camera-app-icon192x192.png' %}" alt="">
                         </figure>
                     </div>
                     <div class="card-content">
                         <div class="content">
-                            <h4 class="has-text-centered">タマリンク</h4>
-                            <p>タマリンカメラで撮影した写真をダウンロードするためのアプリです。整理に使用するタグを管理することや、写真をタグや日時の条件とくみあわせたフォルダにダウンロードすることができます。</p>
-                            <a id="link" class="button is-success is-rounded is-fullwidth" href="../../link/link-app.html">インストール</a>
+                            <h4 class="has-text-centered">タマリンカメラ</h4>
+                            <p>写真を安全に撮るためのアプリです。撮影と同時にあとで整理するための情報を簡単につけることができます。撮影した写真はタマリンクでまとめてダウンロードすることができます。</p>
                         </div>
+                        <a id="camera" class="button is-success is-rounded is-fullwidth" href="../../camera/camera-app.html">インストール</a>
                     </div>
                 </div>
             </div>
@@ -103,30 +103,31 @@
                     <article class="tile is-child notification is-white has-text-centered is-shady">
                         <p class="subtitle">お知らせ</p>
                         <p class="content">
-                            デモに向けた内部評価版を稼働しています。もし問題を発見した場合にはお知らせいただければ幸いです。
+                            現在は本格稼働に向けたトライアル版となります。もしご意見などあればどうぞご遠慮なく「問題を報告する」を用いてお知らせいただければ幸いです。
                         </p>
+                        <a class="button is-rounded is-primary" href="manual">使い方についての詳しい情報</a>
                     </article>
                 </div>
             </div>
             <div class="tile is-ancestor">
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white">
-                        <p class="subtitle">パスワードを変えたい</p>
+                        <p class="subtitle">パスワードを変える</p>
                         <p class="content">こちらでサインアップしたアカウントのパスワードを変更することができます。</p>
                         <a class="button is-success is-rounded is-fullwidth" href="password-change/">パスワードを変更する</a>
                     </article>
                 </div>
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white">
-                        <p class="subtitle">アカウントを削除したい</p>
+                        <p class="subtitle">アカウントを削除する</p>
                         <p class="content">こちらから管理者までご連絡ください。</p>
                         <a class="button is-success is-rounded is-fullwidth" href="{{FEEDBACK_URL}}">アカウントを削除する</a>
                     </article>
                 </div>
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white">
-                        <p class="subtitle">問題を報告したい</p>
-                        <p class="content">もし問題に遭遇した場合にはこちらからご報告いただけます。</p>
+                        <p class="subtitle">問題を報告する</p>
+                        <p class="content">もし問題に遭遇した場合にはお手数ですがこちらからご報告ください。</p>
                         <a class="button is-success is-rounded is-fullwidth" href="{{FEEDBACK_URL}}">問題を報告する</a>
                     </article>
                 </div>
