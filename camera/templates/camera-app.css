@@ -100,14 +100,14 @@ body::-webkit-scrollbar {
     outline: none;
     background: navy;
     border-radius: 0.5ex;
-    padding: 0.1em;
+    padding: 0.2em;
     position: absolute;
     z-index: 20;
     width: 50%;
     left: 25%;
     right: 25%;
-    height: 1ex;
-    bottom: 1ex;
+    height: 1.5ex;
+    bottom: 3ex;
 }
 
 .tama-shutter {
