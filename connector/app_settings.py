@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.06L",
+    "VERSION": "0.0.06M",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -22,7 +22,10 @@ APP_SETTINGS = {
     "APP_SECRET_KEY": os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden"),
 
     # Microsoft Clarityのトラッキングコード.
-    "CLARITY_CODE": os.getenv("CLARITY_CODE", "dummy"),
+    "CLARITY_CODE": os.getenv("CLARITY_CODE", "clarity_code_dummy"),
+
+    # Microsoft Web Master Toolのベリファイコード.
+    "MSVALIDATE": os.getenv("MSVALIDATE", "msvalidate_dummy"),
 
     # メディアを暗号化する時に自動生成するキーの長さ.
     "MEDIA_ENCRYPTION_KEY_LENGTH": 8,
