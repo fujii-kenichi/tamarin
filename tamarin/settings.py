@@ -192,7 +192,7 @@ SECURE_REFERRER_POLICY = "same-origin"
 
 # SQLプロファイルング用Silkyへの指示:認証されたユーザのみ操作可能.
 SILKY_AUTHENTICATION = True
-SILKY_AUTHORISATION = True
+SILKY_AUTHORISATION = True # not typo...
 
 # デバッグ用のログ出力の設定:DEBUG時にはリクエストとレスポンスを毎回表示する.
 if DEBUG == "True":

@@ -1,4 +1,4 @@
-/** 
+/**
  * タマリンカメラ.
  * @author FUJII Kenichi <fujii.kenichi@tamariva.co.jp>
  */
@@ -10,8 +10,8 @@ const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 // シャッターのアニメーションのための時間(ミリ秒).
 const SHUTTER_ANIMATION_TIME = 500;
 
-// 保持できる写真の最大枚数.
-const MAX_PHOTO_COUNT = 10;
+// ローカルで保持できる写真の最大枚数.
+const MAX_PHOTO_COUNT = 24;
 
 // 撮影する写真のサイズ.
 const PHOTO_WIDTH = 1920;

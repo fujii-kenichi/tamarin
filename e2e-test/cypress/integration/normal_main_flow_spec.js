@@ -35,28 +35,28 @@ describe("主要な処理の正常系を流すテスト", () => {
         cy.location("pathname").should("eq", "/connector/");
     });
     it("タマリンカメラ", () => {
-        const database = new Dexie("tamarin-camera");
-        database.version("5").stores({
-            user: "dummy_id, user_id",
-            photo: "++id, date_taken"
+        const database = new Dexie("tamarinCamera");
+        database.version("1").stores({
+            user: "dummyId, userId",
+            photo: "++id, dateTaken"
         });
         database.user.clear();
         database.photo.clear();
-        let current_user = {
-            dummy_id: "current_user",
-            user_id: null,
-            username: "",
-            encrypted_password: "",
-            author_name: "",
-            context_tag: "",
-            scene_tag: "",
-            scene_color: "",
-            shutter_sound: true,
-            auto_reload: true,
+        let currentUser = {
+            dummyId: "currentUser",
+            userId: "dummy-userId",
+            username: "dummy-username",
+            password: "dummy-password",
+            authorName: "dummy-authorName",
+            contextTag: "",
+            sceneTag: "",
+            sceneColor: "",
+            shutterSound: true,
+            autoReload: true,
             encryption: true,
-            selected_context: null,
+            selectedContext: null,
         };
-        database.user.put(current_user);
+        database.user.put(currentUser);
         // index.
         cy.visit("connector/");
         cy.get("#camera").click();
@@ -114,19 +114,19 @@ describe("主要な処理の正常系を流すテスト", () => {
         cy.visit("connector/");
     });
     it("タマリンク", () => {
-        const database = new Dexie("tamarin-link");
-        database.version("5").stores({
-            user: "dummy_id, user_id"
+        const database = new Dexie("tamarinLink");
+        database.version("1").stores({
+            user: "dummyId, userId"
         });
-        let current_user = {
-            dummy_id: "current_user",
-            user_id: null,
-            username: "",
-            encrypted_password: "",
-            delete_after_download: true,
+        let currentUser = {
+            dummyId: "currentUser",
+            userId: "dummy-userId",
+            username: "dummy-username",
+            password: "dummy-password",
+            cleanup: true,
             chart: "context"
         };
-        database.user.put(current_user);
+        database.user.put(currentUser);
         // index.
         cy.visit("connector/");
         cy.get("#link").click();

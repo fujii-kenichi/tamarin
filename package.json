@@ -1,11 +1,11 @@
 {
     "dependencies": {
         "crypto-js": "^4.1.1",
-        "dexie": "^3.2.0",
+        "dexie": "^3.2.2",
         "bulma": "^0.9.3",
         "animate.css": "^4.1.1",
         "bulma-toast": "^2.4.1",
-        "chartist": "^0.11.0",
+        "chartist": "^0.11.4",
         "howler": "^2.2.3",
         "qrcode": "^1.5.0"
     }
