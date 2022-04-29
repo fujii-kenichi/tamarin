@@ -1,4 +1,4 @@
-/** 
+/**
  * タマリンク.
  * @author FUJII Kenichi <fujii.kenichi@tamariva.co.jp>
  */
@@ -58,6 +58,9 @@ let sceneList = [];
 
 // チャート描画用の撮影者の配列.
 let authorList = [];
+
+// zipダウンロード機能を使用するかどうか.
+let useZip = true;
 
 /**
  * Tokenサービスから現在のユーザーにもとづいたトークンをもってくる.
@@ -399,10 +402,19 @@ async function downloadPhotos() {
     downloadFile.innerHTML = '';
     document.getElementById('downloading_dialog').classList.add('is-active');
     inDownloading = true;
+
     let someError = false;
+    let pickedFolder = null;
     try {
-        const pickedFolder = await window.showDirectoryPicker();
-        while (pickedFolder && list.length && inDownloading && !someError) {
+        pickedFolder = useZip ? null : await window.showDirectoryPicker();
+    } catch (error) {
+        useZip = true;
+    }
+
+    try {
+        const zip = useZip ? new JSZip() : null;
+
+        while (list.length && inDownloading && !someError) {
             if (!navigator.onLine) {
                 someError = true;
                 break;
@@ -412,7 +424,6 @@ async function downloadPhotos() {
                 break;
             }
             downloadCount.innerHTML = list.length;
-
             const photo = list[0];
             const dateTaken = new Date(photo.date_taken);
             const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
@@ -424,11 +435,15 @@ async function downloadPhotos() {
             const contextTag = photo.context_tag;
             const sceneTag = photo.scene_tag;
 
-            let fullFileName = pickedFolder.name;
-            let folderHandle = pickedFolder;
+            let fullFileName = '';
+            let folderHandle = null;
+            if (!useZip) {
+                fullFileName = pickedFolder.name;
+                folderHandle = pickedFolder;
+            }
+
             let folderNameList = [];
             let fileNameBody = time;
-
             for (const rule of downloadRule.split(/,/)) {
                 switch (rule) {
                     case 'YYMM':
@@ -465,31 +480,36 @@ async function downloadPhotos() {
                 }
             }
             for (const folderName of folderNameList) {
-                folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
+                if (!useZip) {
+                    folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
+                }
                 fullFileName += `/${folderName}`;
             }
-            let fileHandle = null;
-            let number = 0;
             let actualFileName = null;
-            do {
-                const numberString = number > 0 ? `_${number}` : '';
-                actualFileName = `${fileNameBody}${numberString}.${ext}`;
-                number++;
-                try {
-                    fileHandle = await folderHandle.getFileHandle(actualFileName);
-                } catch (dummy) {
-                    fileHandle = null;
-                }
-            } while (fileHandle);
-
-            fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
+            let fileHandle = null;
+            if (!useZip) {
+                let number = 0;
+                do {
+                    const numberString = number > 0 ? `_${number}` : '';
+                    actualFileName = `${fileNameBody}${numberString}.${ext}`;
+                    number++;
+                    try {
+                        fileHandle = await folderHandle.getFileHandle(actualFileName);
+                    } catch (dummy) {
+                        fileHandle = null;
+                    }
+                } while (fileHandle);
+                fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
+            } else {
+                actualFileName = `${fileNameBody}.${ext}`;
+            }
             fullFileName += `/${actualFileName}`;
             downloadFile.innerHTML = fullFileName;
 
             const downloadResponse = await fetch(photo.encrypted_data);
             switch (downloadResponse.status) {
                 case 200:
-                    const writable = await fileHandle.createWritable();
+                    const writable = useZip ? null : await fileHandle.createWritable();
                     let data = null;
                     if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
                         const raw = await downloadResponse.text();
@@ -503,11 +523,15 @@ async function downloadPhotos() {
                     } else {
                         data = await downloadResponse.arrayBuffer();
                     }
-                    await writable.write(data);
-                    await writable.close();
+                    if (!useZip) {
+                        await writable.write(data);
+                        await writable.close();
+                    } else {
+                        zip.file(fullFileName, data);
+                    }
                     list.shift();
 
-                    if (currentUser.cleanup) {
+                    if (!useZip && currentUser.cleanup) {
                         let deleteDone = false;
                         while (!deleteDone) {
                             if (!navigator.onLine) {
@@ -558,6 +582,16 @@ async function downloadPhotos() {
                     someError = true;
                     break;
             }
+        }
+        if (useZip) {
+            zip.generateAsync({ type: 'blob' }).then(blob => {
+                const url = (window.URL || window.webkitURL).createObjectURL(blob);
+                const download = document.createElement('a');
+                download.href = url;
+                download.download = 'tamarin.zip';
+                download.click();
+                (window.URL || window.webkitURL).revokeObjectURL(url);
+            });
         }
     } catch (error) {
         console.error(error);

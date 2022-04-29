@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07A",
+    "VERSION": "0.0.07B",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -92,6 +92,7 @@ APP_SETTINGS = {
     "BULMA_TOAST_JS": static("js/bulma-toast.min.js"),
     "HOWLER_JS": static("js/howler.core.min.js"),
     "QRCODE_JS": static("js/qrcode.js"),
+    "JSZIP_JS": static("js/jszip.min.js"),
     "BULMA_CSS": static("css/bulma.css"),
     "ANIMATE_CSS": static("css/animate.min.css"),
     "CHARTIST_CSS": static("css/chartist.min.css"),
