@@ -586,18 +586,23 @@ async function downloadPhotos() {
                     break;
             }
         }
-        if (useZip) {
-            downloadCount.innerHTML = '';
-            downloadFile.innerHTML = '{{ZIPPING_MESSAGE}}';
+        if (useZip && inDownloading) {
+            downloadCount.innerHTML = '{{ZIPPING_MESSAGE}}';
+            downloadFile.innerHTML = '1...';
             const blob = await zip.generateAsync({ type: 'blob' });
-            const url = window.URL.createObjectURL(blob);
-            const downloadLink = document.getElementById('download_link');
-            downloadLink.href = url;
-            downloadLink.download = ZIP_FILE_NAME;
-            downloadLink.click();
-            window.URL.revokeObjectURL(url);
-            downloadLink.href = '';
-            downloadLink.download = '';
+            if (inDownloading) {
+                downloadFile.innerHTML = '12...';
+                const url = window.URL.createObjectURL(blob);
+                const downloadLink = document.getElementById('download_link');
+                downloadLink.href = url;
+                downloadLink.download = ZIP_FILE_NAME;
+                downloadFile.innerHTML = '123...';
+                downloadLink.click();
+                window.URL.revokeObjectURL(url);
+                downloadLink.href = '';
+                downloadLink.download = '';
+                downloadFile.innerHTML = '1234...';
+            }
         }
     } catch (error) {
         console.error(error);
