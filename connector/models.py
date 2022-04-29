@@ -37,7 +37,7 @@ class User(AbstractUser):
     # シーンタグの羅列:CSVで区切って入れる.
     scene_tag = models.CharField(blank=True, null=False, default=CONTEXT_DICT["DEFAULT_SCENE_TAG"], max_length=CONTEXT_DICT["MAX_TAG_CSV_LENGTH"])
 
-    # シーンタグにあわせえた色の羅列:CSVで区切って入れる.CSSの色名がそのまま使用可能.
+    # シーンタグにあわせた色の羅列:CSVで区切って入れる.CSSの色名がそのまま使用可能.
     scene_color = models.CharField(blank=True, null=False, default=CONTEXT_DICT["DEFAULT_SCENE_COLOR"], max_length=CONTEXT_DICT["MAX_TAG_CSV_LENGTH"])
 
     # コンテキストタグの羅列:CSVで区切って入れる.

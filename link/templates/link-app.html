@@ -209,6 +209,7 @@
                         </div>
                         <footer class="card-footer tama-card-footer">
                             <button id="download_start" class="card-footer-item button is-success">{{DOWNLOAD_START_LABEL}}</button>
+                            <button id="cleanup_start" class="card-footer-item button is-success">{{CLEANUP_START_LABEL}}</button>
                         </footer>
                     </div>
                 </div>
@@ -246,7 +247,7 @@
                 </article>
             </div>
         </div>
-        <div id="downloading_dialog" class="modal px-5">
+        <div id="processing_dialog" class="modal px-5">
             <div class="modal-background"></div>
             <div class="modal-content">
                 <article class="message is-info">
@@ -255,17 +256,17 @@
                             <figure class="image is-96x96 is-inline-block">
                                 <img src="{{LINK_APP_ICON192}}" alt="">
                             </figure>
-                            <p class="p-3">{{DOWNLOADING_LABEL}}</p>
-                            <p id="download_count" class="is-size-3"></p>
-                            <p id="download_file" class="is-size-6"></p>
-                            <button id="download_stop" class="button is-warning is-rounded is-fullwidth">{{DOWNLOAD_STOP_LABEL}}</button>
+                            <p class="p-3">{{PROCESSING_LABEL}}</p>
+                            <p id="processing_subject" class="is-size-3"></p>
+                            <p id="processing_item" class="is-size-6"></p>
+                            <button id="processing_abort" class="button is-warning is-rounded is-fullwidth">{{PROCESSING_ABORT_LABEL}}</button>
                             <a id="download_link" href="" download="" style="display:none"></a>
                         </div>
                     </div>
                 </article>
             </div>
         </div>
-        <div id="download_failed_dialog" class="modal px-5">
+        <div id="processing_failed_dialog" class="modal px-5">
             <div class="modal-background"></div>
             <div class="modal-content">
                 <article class="message has-background-warning">
@@ -274,9 +275,9 @@
                             <figure class="image is-96x96 is-inline-block">
                                 <img src="{{NG_ICON192}}" alt="">
                             </figure>
-                            <p class="p-3">{{DOWNLOAD_FAILED_MESSAGE}}</p>
+                            <p class="p-3">{{PROCESSING_FAILED_MESSAGE}}</p>
                         </div>
-                        <button id="download_failed_ok" class="button is-success is-rounded is-fullwidth">{{OK_LABEL}}</button>
+                        <button id="processing_failed_ok" class="button is-success is-rounded is-fullwidth">{{OK_LABEL}}</button>
                     </div>
                 </article>
             </div>

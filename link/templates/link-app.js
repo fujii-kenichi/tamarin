@@ -34,7 +34,6 @@ let currentUser = {
     userId: '',
     username: '',
     password: '',
-    cleanup: true, // ダウンロード後にファイルを削除するかどうか.
     chart: 'context' // 選択されているチャート.
 };
 
@@ -47,8 +46,8 @@ let token = null;
 // Userサービスの最終更新日時.
 let dateUpdated = null;
 
-// ダウンロード中かどうかを示すフラグ.
-let inDownloading = false;
+// 処理中かどうかを示すフラグ.
+let inProcessing = false;
 
 // チャート描画用のダウンロード待ち写真ファイルの枚数.
 let photoCount = 0;
@@ -62,7 +61,7 @@ let sceneList = [];
 // チャート描画用の撮影者の配列.
 let authorList = [];
 
-// zipダウンロード機能を使用するかどうか.
+// zipファイル機能を使用するかどうか.
 let useZip = true;
 
 /**
@@ -391,43 +390,6 @@ async function getPhotoList() {
 }
 
 /**
- * 写真を1枚削除する.
- * @param {string} id photoのid.
- * @return {Promise<boolean>} true:削除できた. / false:削除できなかった.
- */
-async function deletePhoto(id) {
-    if (!navigator.onLine) {
-        return false;
-    }
-    if (!await getToken()) {
-        return false;
-    }
-    const response = await fetch(`{{MEDIA_API_URL}}${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `{{TOKEN_FORMAT}} ${token}`
-        }
-    });
-    switch (response.status) {
-        case 200:
-        case 204:
-            return true;
-
-        case 400:
-        case 401:
-        case 403:
-            console.warn(`could not delete photo: ${response.status}`);
-            token = null;
-            break;
-
-        default:
-            console.error('unexpected photo delete response: ', response);
-            break;
-    }
-    return false;
-}
-
-/**
  * 写真をMediaサービスからダウンロードする.
  */
 async function downloadPhotos() {
@@ -435,29 +397,27 @@ async function downloadPhotos() {
     if (!photoList) {
         return;
     }
-    const downloadCount = document.getElementById('download_count');
-    const downloadFile = document.getElementById('download_file');
-    const downloadingDialog = document.getElementById('downloading_dialog');
-    downloadCount.innerHTML = photoList.length;
-    downloadFile.innerHTML = '';
-    downloadingDialog.classList.add('is-active');
-    inDownloading = true;
+    inProcessing = true;
+    const processingDialog = document.getElementById('processing_dialog');
+    const processingSubject = document.getElementById('processing_subject');
+    const processingItem = document.getElementById('processing_item');
+    processingSubject.innerHTML = '';
+    processingItem.innerHTML = '';
+    processingDialog.classList.add('is-active');
 
-    let networkError = false;
     let pickedFolder = null;
-
-    const downloadRule = getDownloadRule();
     try {
         pickedFolder = useZip ? null : await window.showDirectoryPicker();
     } catch (error) {
         useZip = true;
     }
 
+    let networkError = false;
     try {
+        let totalSize = 0;
         const zip = useZip ? new JSZip() : null;
-        let downloadedPhotoIdList = [];
-
-        while (photoList.length && inDownloading && !networkError) {
+        const downloadRule = getDownloadRule();
+        while (photoList.length && inProcessing && !networkError) {
             if (!navigator.onLine) {
                 networkError = true;
                 break;
@@ -466,7 +426,7 @@ async function downloadPhotos() {
                 networkError = true;
                 break;
             }
-            downloadCount.innerHTML = photoList.length;
+            processingSubject.innerHTML = photoList.length;
             const photo = photoList[0];
             const dateTaken = new Date(photo.date_taken);
             const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
@@ -484,7 +444,6 @@ async function downloadPhotos() {
                 fullFileName = pickedFolder.name;
                 folderHandle = pickedFolder;
             }
-
             let folderNameList = [];
             let fileNameBody = time;
             for (const rule of downloadRule.split(/,/)) {
@@ -547,7 +506,7 @@ async function downloadPhotos() {
                 actualFileName = `${fileNameBody}.${ext}`;
             }
             fullFileName += `/${actualFileName}`;
-            downloadFile.innerHTML = fullFileName;
+            processingItem.innerHTML = fullFileName;
 
             const response = await fetch(photo.encrypted_data);
             switch (response.status) {
@@ -566,18 +525,17 @@ async function downloadPhotos() {
                     } else {
                         data = await response.arrayBuffer();
                     }
+                    totalSize += data.length;
                     if (!useZip) {
                         await file.write(data);
                         await file.close();
                     } else {
                         zip.file(fullFileName, data);
-                        downloadedPhotoIdList.push(photo.id);
                     }
-                    if (!useZip && currentUser.cleanup) {
-                        if (!await deletePhoto(photo.id)) {
-                            networkError = true;
-                        }
-                    }
+                    await database.photo.put({
+                        id: photo.id,
+                        dateTaken: photo.date_taken
+                    });
                     photoList.shift();
                     break;
 
@@ -594,37 +552,96 @@ async function downloadPhotos() {
                     break;
             }
         }
-        if (!networkError && useZip && inDownloading) {
-            downloadCount.innerHTML = `{{ZIPPING_MESSAGE}} ${ZIP_FILE_NAME}`;
-            downloadFile.innerHTML = '';
+        if (!networkError && useZip && inProcessing) {
+            processingSubject.innerHTML = `{{ZIPPING_MESSAGE}} ${ZIP_FILE_NAME}`;
+            processingItem.innerHTML = `${totalSize} Bytes`;
             const blob = await zip.generateAsync({ type: 'blob' });
-            if (inDownloading) {
+            if (blob && inProcessing) {
                 const url = window.URL.createObjectURL(blob);
                 const downloadLink = document.getElementById('download_link');
                 downloadLink.href = url;
                 downloadLink.download = ZIP_FILE_NAME;
                 downloadLink.click();
                 window.URL.revokeObjectURL(url);
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+    inProcessing = false;
+    processingDialog.classList.remove('is-active');
+    if (networkError) {
+        if (!token) {
+            switchView('signin_view');
+        } else {
+            document.getElementById('processing_failed_dialog').classList.add('is-active');
+        }
+        return;
+    }
+    switchView('loading_view');
+    updateView().then(() => {
+        switchView('main_view');
+    });
+}
 
-                if (window.confirm("DELETE ?")) {
-                    downloadCount.innerHTML = `{{DELETE_PHOTO_MESSAGE}}`;
-                    while (currentUser.cleanup && !networkError && inDownloading && downloadedPhotoIdList.length > 0) {
-                        const id = downloadedPhotoIdList[0];
-                        downloadFile.innerHTML = id;
-                        if (!await deletePhoto(id)) {
-                            networkError = true;
-                        }
-                        downloadedPhotoIdList.shift();
+/**
+ * 写真をMediaサービスからお掃除する.
+ */
+async function cleanupPhotos() {
+    inProcessing = true;
+    const processingDialog = document.getElementById('processing_dialog');
+    const processingSubject = document.getElementById('processing_subject');
+    const processingItem = document.getElementById('processing_item');
+    processingSubject.innerHTML = `{{CLEANUP_MESSAGE}}`;
+    processingItem.innerHTML = '';
+    processingDialog.classList.add('is-active');
+
+    let networkError = false;
+    try {
+        while (await database.photo.count() > 0 && inProcessing && !networkError) {
+            if (!navigator.onLine) {
+                networkError = true;
+                break;
+            }
+            if (!await getToken()) {
+                networkError = true;
+                break;
+            }
+            const photo = await database.photo.orderBy('dateTaken').first();
+            if (photo) {
+                processingItem.innerHTML = photo.id;
+                const response = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `{{TOKEN_FORMAT}} ${token}`
                     }
+                });
+                switch (response.status) {
+                    case 200:
+                    case 204:
+                    case 404:
+                        await database.photo.delete(photo.id);
+                        break;
+
+                    case 400:
+                    case 401:
+                    case 403:
+                        console.warn(`could not delete photo: ${response.status}`);
+                        token = null;
+                        break;
+
+                    default:
+                        console.error('unexpected photo delete response: ', response);
+                        networkError = true;
+                        break;
                 }
             }
         }
     } catch (error) {
         console.error(error);
     }
-    inDownloading = false;
-    downloadingDialog.classList.remove('is-active');
-
+    inProcessing = false;
+    processingDialog.classList.remove('is-active');
     if (networkError) {
         if (!token) {
             switchView('signin_view');
@@ -633,7 +650,6 @@ async function downloadPhotos() {
         }
         return;
     }
-
     switchView('loading_view');
     updateView().then(() => {
         switchView('main_view');
@@ -726,7 +742,7 @@ function switchView(name) {
  * バックグラウンドタスク.
  */
 function backgroundTask() {
-    if (!inDownloading) {
+    if (!inProcessing) {
         loadUser().then(result => {
             if (result) {
                 updateView();
@@ -819,17 +835,27 @@ function main() {
             }
         });
     });
-    document.getElementById('download_stop').onclick = (() => {
-        inDownloading = false;
-        document.getElementById('downloading_dialog').classList.remove('is-active');
+    document.getElementById('cleanup_start').onclick = (() => {
+        saveUser().then(result => {
+            if (!result) {
+                document.getElementById('save_failed_dialog').classList.add('is-active');
+            } else {
+                cleanupPhotos();
+            }
+        });
     });
-    document.getElementById('download_failed_ok').onclick = (() => {
-        document.getElementById('download_failed_dialog').classList.remove('is-active');
+    document.getElementById('processing_abort').onclick = (() => {
+        inProcessing = false;
+        document.getElementById('processing_dialog').classList.remove('is-active');
+    });
+    document.getElementById('processing_failed_ok').onclick = (() => {
+        document.getElementById('processing_failed_dialog').classList.remove('is-active');
     });
 
     database = new Dexie('{{LINK_APP_DATABASE_NAME}}');
     database.version('{{LINK_APP_DATABASE_VERSION}}').stores({
-        user: 'dummyId, userId'
+        user: 'dummyId, userId',
+        photo: 'id, dateTaken'
     });
 
     navigator.serviceWorker.register('link-serviceworker.js').then(() => {

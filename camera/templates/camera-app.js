@@ -11,7 +11,7 @@ const BACKGROUND_TASK_INTERVAL = 15 * 1000;
 const SHUTTER_ANIMATION_TIME = 500;
 
 // ローカルで保持できる写真の最大枚数.
-const MAX_PHOTO_COUNT = 24;
+const MAX_PHOTO_COUNT = 25;
 
 // 撮影する写真のサイズ.
 const PHOTO_WIDTH = 1920;

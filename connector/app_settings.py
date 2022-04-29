@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07G",
+    "VERSION": "0.0.07H",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -139,7 +139,7 @@ APP_SETTINGS = {
 
     # タマリンク:Dexieを通じてIndexedDBの構成に使用される値.
     "LINK_APP_DATABASE_NAME": "tamarinLink",
-    "LINK_APP_DATABASE_VERSION": "1",
+    "LINK_APP_DATABASE_VERSION": "2",
 }
 
 # タマリン固有の設定:表示に使用するメッセージを定義.
@@ -246,12 +246,13 @@ APP_MESSAGES = {
     "RULE_SCENE": "シーン",
     "RULE_NOT_USED": "未使用",
 
-    "DOWNLOAD_START_LABEL": "ダウンロード開始",
-    "DOWNLOADING_LABEL": "ダウンロード中…",
-    "DOWNLOAD_STOP_LABEL": "強制的に中断",
+    "DOWNLOAD_START_LABEL": "ダウンロード",
+    "CLEANUP_START_LABEL": "クリーンアップ",
+    "PROCESSING_LABEL": "処理中…",
+    "PROCESSING_ABORT_LABEL": "強制的に中断",
     "ZIPPING_MESSAGE": "生成中:",
-    "DELETE_PHOTO_MESSAGE": "処理中...",
-    "DOWNLOAD_FAILED_MESSAGE": "ダウンロードでエラーがおきました",
+    "CLEANUP_MESSAGE": "クリーンアップ中...",
+    "PROCESSING_FAILED_MESSAGE": "処理中にエラーがおきました",
 
     # ファイル名を生成するときに使う日時の補完用文字列.
     "DATETIME_YY": "年",

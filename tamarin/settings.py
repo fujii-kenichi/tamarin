@@ -39,6 +39,9 @@ AUTH_USER_MODEL = "connector.User"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 4 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
+# 1ユーザが保持できる最大のメディア数.
+MAX_MEDIA_COUNT = 100
+
 # アプリケーション関連の設定.
 ROOT_URLCONF = "tamarin.urls"
 WSGI_APPLICATION = "tamarin.wsgi.application"
