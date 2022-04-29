@@ -402,13 +402,13 @@ async function deletePhoto(id) {
     if (!await getToken()) {
         return false;
     }
-    const deleteResponse = await fetch(`{{MEDIA_API_URL}}${id}`, {
+    const response = await fetch(`{{MEDIA_API_URL}}${id}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `{{TOKEN_FORMAT}} ${token}`
         }
     });
-    switch (deleteResponse.status) {
+    switch (response.status) {
         case 200:
         case 204:
             return true;
@@ -416,12 +416,12 @@ async function deletePhoto(id) {
         case 400:
         case 401:
         case 403:
-            console.warn(`could not delete photo: ${deleteResponse.status}`);
+            console.warn(`could not delete photo: ${response.status}`);
             token = null;
             break;
 
         default:
-            console.error('unexpected photo delete response: ', deleteResponse);
+            console.error('unexpected photo delete response: ', response);
             break;
     }
     return false;
@@ -437,14 +437,16 @@ async function downloadPhotos() {
     }
     const downloadCount = document.getElementById('download_count');
     const downloadFile = document.getElementById('download_file');
-    const downloadRule = getDownloadRule();
+    const downloadingDialog = document.getElementById('downloading_dialog');
     downloadCount.innerHTML = photoList.length;
     downloadFile.innerHTML = '';
-    document.getElementById('downloading_dialog').classList.add('is-active');
+    downloadingDialog.classList.add('is-active');
     inDownloading = true;
 
     let networkError = false;
     let pickedFolder = null;
+
+    const downloadRule = getDownloadRule();
     try {
         pickedFolder = useZip ? null : await window.showDirectoryPicker();
     } catch (error) {
@@ -453,7 +455,7 @@ async function downloadPhotos() {
 
     try {
         const zip = useZip ? new JSZip() : null;
-        let deletePhotoIdList = [];
+        let downloadedPhotoIdList = [];
 
         while (photoList.length && inDownloading && !networkError) {
             if (!navigator.onLine) {
@@ -547,13 +549,13 @@ async function downloadPhotos() {
             fullFileName += `/${actualFileName}`;
             downloadFile.innerHTML = fullFileName;
 
-            const downloadResponse = await fetch(photo.encrypted_data);
-            switch (downloadResponse.status) {
+            const response = await fetch(photo.encrypted_data);
+            switch (response.status) {
                 case 200:
-                    const writable = useZip ? null : await fileHandle.createWritable();
+                    const file = useZip ? null : await fileHandle.createWritable();
                     let data = null;
                     if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
-                        const raw = await downloadResponse.text();
+                        const raw = await response.text();
                         const decrypted = CryptoJS.AES.decrypt(raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
                         const tmp = window.atob(decrypted);
                         const buffer = new Uint8Array(tmp.length);
@@ -562,33 +564,32 @@ async function downloadPhotos() {
                         }
                         data = buffer;
                     } else {
-                        data = await downloadResponse.arrayBuffer();
+                        data = await response.arrayBuffer();
                     }
                     if (!useZip) {
-                        await writable.write(data);
-                        await writable.close();
+                        await file.write(data);
+                        await file.close();
                     } else {
                         zip.file(fullFileName, data);
-                        deletePhotoIdList.push(photo.id);
+                        downloadedPhotoIdList.push(photo.id);
                     }
-                    photoList.shift();
-
                     if (!useZip && currentUser.cleanup) {
                         if (!await deletePhoto(photo.id)) {
                             networkError = true;
                         }
                     }
+                    photoList.shift();
                     break;
 
                 case 400:
                 case 401:
                 case 403:
-                    console.warn(`could not download photo: ${downloadResponse.status}`);
+                    console.warn(`could not download photo: ${response.status}`);
                     token = null;
                     break;
 
                 default:
-                    console.error('unexpected photo download response: ', downloadResponse);
+                    console.error('unexpected photo download response: ', response);
                     networkError = true;
                     break;
             }
@@ -605,14 +606,16 @@ async function downloadPhotos() {
                 downloadLink.click();
                 window.URL.revokeObjectURL(url);
 
-                downloadCount.innerHTML = `{{DELETE_PHOTO_MESSAGE}}`;
-                while (currentUser.cleanup && !networkError && inDownloading && deletePhotoIdList.length > 0) {
-                    const id = deletePhotoIdList[0];
-                    downloadFile.innerHTML = id;
-                    if (!await deletePhoto(id)) {
-                        networkError = true;
+                if (window.confirm("DELETE ?")) {
+                    downloadCount.innerHTML = `{{DELETE_PHOTO_MESSAGE}}`;
+                    while (currentUser.cleanup && !networkError && inDownloading && downloadedPhotoIdList.length > 0) {
+                        const id = downloadedPhotoIdList[0];
+                        downloadFile.innerHTML = id;
+                        if (!await deletePhoto(id)) {
+                            networkError = true;
+                        }
+                        downloadedPhotoIdList.shift();
                     }
-                    deletePhotoIdList.shift();
                 }
             }
         }
@@ -620,7 +623,7 @@ async function downloadPhotos() {
         console.error(error);
     }
     inDownloading = false;
-    document.getElementById('downloading_dialog').classList.remove('is-active');
+    downloadingDialog.classList.remove('is-active');
 
     if (networkError) {
         if (!token) {
@@ -630,6 +633,7 @@ async function downloadPhotos() {
         }
         return;
     }
+
     switchView('loading_view');
     updateView().then(() => {
         switchView('main_view');
