@@ -787,8 +787,6 @@ function main() {
         saveUser().then(result => {
             if (!result) {
                 document.getElementById('save_failed_dialog').classList.add('is-active');
-            } else if (!('showDirectoryPicker' in window)) {
-                document.getElementById('browser_error_dialog').classList.add('is-active');
             } else {
                 downloadPhotos();
             }
