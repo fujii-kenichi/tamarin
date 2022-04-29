@@ -25,6 +25,9 @@ const RULE_NOT_USED_VALUE = 'NOT_USED';
 // タグの値として入力された文字列の検証用正規表現.
 const TAG_NAME_VALIDATOR = /[\s\,\:\;\&\'\"\`\¥\|\~\%\/\\<\>\?\\\*]/m;
 
+// ZIPファイルのファイル名.
+const ZIP_FILE_NAME = 'tamarin.zip';
+
 // 現在アプリでサインインしているユーザーを示す変数(新規作成時の初期値を含む).
 let currentUser = {
     dummyId: '{{APP_DATABASE_CURRENT_USER}}',
@@ -584,14 +587,17 @@ async function downloadPhotos() {
             }
         }
         if (useZip) {
-            zip.generateAsync({ type: 'blob' }).then(blob => {
-                const url = (window.URL || window.webkitURL).createObjectURL(blob);
-                const download = document.createElement('a');
-                download.href = url;
-                download.download = 'tamarin.zip';
-                download.click();
-                (window.URL || window.webkitURL).revokeObjectURL(url);
-            });
+            downloadCount.innerHTML = '';
+            downloadFile.innerHTML = '{{ZIPPING_MESSAGE}}';
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const url = window.URL.createObjectURL(blob);
+            const downloadLink = document.getElementById('download_link');
+            downloadLink.href = url;
+            downloadLink.download = ZIP_FILE_NAME;
+            downloadLink.click();
+            window.URL.revokeObjectURL(url);
+            downloadLink.href = '';
+            downloadLink.download = '';
         }
     } catch (error) {
         console.error(error);
@@ -798,9 +804,6 @@ function main() {
     });
     document.getElementById('download_failed_ok').onclick = (() => {
         document.getElementById('download_failed_dialog').classList.remove('is-active');
-    });
-    document.getElementById('browser_error_ok').onclick = (() => {
-        document.getElementById('browser_error_dialog').classList.remove('is-active');
     });
 
     database = new Dexie('{{LINK_APP_DATABASE_NAME}}');

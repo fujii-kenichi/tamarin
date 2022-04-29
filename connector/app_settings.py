@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07C",
+    "VERSION": "0.0.07D",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -188,12 +188,12 @@ APP_MESSAGES = {
     # 表示に使用される文字列:共通.
     "VERSION_LABEL": "バージョン",
     "OK_LABEL": "OK",
-    "SEND_LABEL": "送信する",
+    "SEND_LABEL": "送信",
     "BACK_TO_HOME_LABEL": "戻る",
     "LOADING_MESSAGE": "処理中です…",
-    "SAVE_LABEL": "保存",
-    "SAVE_SUCCEEDED_MESSAGE": "設定が保存されました",
-    "SAVE_FAILED_MESSAGE": "設定が保存できませんでした",
+    "SAVE_LABEL": "設定",
+    "SAVE_SUCCEEDED_MESSAGE": "設定されました",
+    "SAVE_FAILED_MESSAGE": "設定できませんでした",
     "FATAL_ERROR_MESSAGE": "アプリを実行できません",
 
     # 表示に使用される文字列:サインイン.
@@ -246,11 +246,11 @@ APP_MESSAGES = {
     "RULE_SCENE": "シーン",
     "RULE_NOT_USED": "未使用",
 
-    "DOWNLOAD_START_LABEL": "ダウンロードを開始",
+    "DOWNLOAD_START_LABEL": "ダウンロード開始",
     "DOWNLOADING_LABEL": "ダウンロード中…",
-    "DOWNLOAD_STOP_LABEL": "ダウンロードを停止",
+    "DOWNLOAD_STOP_LABEL": "ダウンロード停止",
+    "ZIPPING_MESSAGE": "圧縮中…",
     "DOWNLOAD_FAILED_MESSAGE": "ダウンロードでエラーがおきました",
-    "BROWSER_ERROR_MESSAGE": "この環境ではダウンロードがご利用いただけません",
 
     # ファイル名を生成するときに使う日時の補完用文字列.
     "DATETIME_YY": "年",
@@ -271,5 +271,5 @@ APP_MESSAGES = {
     5. タマリンよりかわいい名前があったらそっちに改名するかもしれません。$\
     6. トイストーリーは3より4だと思う方はお話をしたいのでご連絡ください。$\
     7. その他お困りのことがあれば[問題を報告する]からご連絡ください。$\
-    【2022年3月 タマリバ株式会社】",
+    【2022年4月 タマリバ株式会社】",
 }
