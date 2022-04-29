@@ -587,21 +587,18 @@ async function downloadPhotos() {
             }
         }
         if (useZip && inDownloading) {
-            downloadCount.innerHTML = '{{ZIPPING_MESSAGE}}';
-            downloadFile.innerHTML = '1...';
+            downloadCount.innerHTML = `{{ZIPPING_MESSAGE}} ${ZIP_FILE_NAME}`;
+            downloadFile.innerHTML = '';
             const blob = await zip.generateAsync({ type: 'blob' });
             if (inDownloading) {
-                downloadFile.innerHTML = '12...';
                 const url = window.URL.createObjectURL(blob);
                 const downloadLink = document.getElementById('download_link');
                 downloadLink.href = url;
                 downloadLink.download = ZIP_FILE_NAME;
-                downloadFile.innerHTML = '123...';
                 downloadLink.click();
                 window.URL.revokeObjectURL(url);
                 downloadLink.href = '';
                 downloadLink.download = '';
-                downloadFile.innerHTML = '1234...';
             }
         }
     } catch (error) {

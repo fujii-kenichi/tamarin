@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07E",
+    "VERSION": "0.0.07F",
 
     # タマリン提供者の名前を定義.
     "OWNER": "タマリバ株式会社",
@@ -249,7 +249,7 @@ APP_MESSAGES = {
     "DOWNLOAD_START_LABEL": "ダウンロード開始",
     "DOWNLOADING_LABEL": "ダウンロード中…",
     "DOWNLOAD_STOP_LABEL": "ダウンロード停止",
-    "ZIPPING_MESSAGE": "圧縮中…",
+    "ZIPPING_MESSAGE": "生成中:",
     "DOWNLOAD_FAILED_MESSAGE": "ダウンロードでエラーがおきました",
 
     # ファイル名を生成するときに使う日時の補完用文字列.
