@@ -418,6 +418,7 @@ async function downloadPhotos() {
         }
 
         const zip = useZipFile ? new JSZip() : null;
+        const zipFileNames = new Map();
         const downloadRule = getDownloadRule();
 
         while (photoList.length && inProcessing && !networkError) {
@@ -437,7 +438,7 @@ async function downloadPhotos() {
             const month = `${(dateTaken.getMonth() + 1).toString().padStart(2, 0)}{{DATETIME_MM}}`;
             const day = `${dateTaken.getDate().toString().padStart(2, 0)}{{DATETIME_DD}}`;
             const time = `${dateTaken.getHours().toString().padStart(2, 0)}{{DATETIME_HH}}${dateTaken.getMinutes().toString().padStart(2, 0)}{{DATETIME_MN}}${dateTaken.getSeconds().toString().padStart(2, 0)}{{DATETIME_SS}}`;
-            const ext = photo.content_type.match(/[^¥/]+$/);
+            const fileNameExt = photo.content_type.match(/[^¥/]+$/);
             const authorName = photo.author_name;
             const contextTag = photo.context_tag;
             const sceneTag = photo.scene_tag;
@@ -491,25 +492,34 @@ async function downloadPhotos() {
                 }
                 fullFileName += `/${folderName}`;
             }
-            let actualFileName = null;
+            let uniqFileName = null;
+            let uniqNumber = 0;
             let fileHandle = null;
             if (!useZipFile) {
-                let number = 0;
                 do {
-                    const numberString = number > 0 ? `_${number}` : '';
-                    actualFileName = `${fileNameBody}${numberString}.${ext}`;
-                    number++;
+                    const uniqNumberStr = uniqNumber > 0 ? `_${uniqNumber}` : '';
+                    uniqFileName = `${fileNameBody}${uniqNumberStr}.${fileNameExt}`;
+                    uniqNumber++;
                     try {
-                        fileHandle = await folderHandle.getFileHandle(actualFileName);
+                        fileHandle = await folderHandle.getFileHandle(uniqFileName);
                     } catch (notExistException) {
                         fileHandle = null;
                     }
                 } while (fileHandle);
-                fileHandle = await folderHandle.getFileHandle(actualFileName, { create: true });
+                fileHandle = await folderHandle.getFileHandle(uniqFileName, { create: true });
+                fullFileName += `/${uniqFileName}`;
             } else {
-                actualFileName = `${fileNameBody}.${ext}`;
+                do {
+                    const uniqNumberStr = uniqNumber > 0 ? `_${uniqNumber}` : '';
+                    uniqFileName = `${fileNameBody}${uniqNumberStr}.${fileNameExt}`;
+                    uniqNumber++;
+                    if (!zipFileNames.has(`${fullFileName}/${uniqFileName}`)) {
+                        break;
+                    }
+                } while (true);
+                fullFileName += `/${uniqFileName}`;
+                zipFileNames.set(fullFileName, 1);
             }
-            fullFileName += `/${actualFileName}`;
             processingItem.innerHTML = fullFileName;
 
             const response = await fetch(photo.encrypted_data);
