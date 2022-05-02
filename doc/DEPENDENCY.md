@@ -47,6 +47,10 @@ Python系は [requirements.txt](./requirements.txt) に、JavaScript系は [pack
 
 - 暗号処理ライブラリ。
 
+### [JSZip](https://stuk.github.io/jszip/)
+
+- ZIPファイル処理ライブラリ。
+
 ### [Chartist.js](https://gionkunz.github.io/chartist-js/)
 
 - チャート描画ライブラリ。いろいろ試してみたけど、これが一番余計なことしないで素敵。

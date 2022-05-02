@@ -13,10 +13,10 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07H",
+    "VERSION": "0.0.07J",
 
     # タマリン提供者の名前を定義.
-    "OWNER": "タマリバ株式会社",
+    "OWNER": "TAMARIVA CO.,LTD.",
 
     # シークレットキー:本番環境では必ず上書きすること!
     "APP_SECRET_KEY": os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden"),
@@ -79,13 +79,13 @@ APP_SETTINGS = {
     # PWAとしての起動かどうかを判定するためのURLパラメータ.
     "APP_MODE_URL_PARAM": "?mode=app",
 
-    # manifestで指定する色.
-    "APP_THEME_COLOR": "lightpink",
+    # 共通して使用するCSSのパス.
+    "BULMA_CSS": static("css/bulma.css"),
+    "ANIMATE_CSS": static("css/animate.min.css"),
+    "CHARTIST_CSS": static("css/chartist.min.css"),
+    "COMMON_CSS": static("css/common.css"),
 
-    # Dexieを通じてIndexedDBの構成に使用される値.
-    "APP_DATABASE_CURRENT_USER": "currentUser",
-
-    # 共通ライブラリ類のパス.
+    # 共通して使用するライブラリのパス.
     "DEXIE_JS": static("js/dexie.min.js"),
     "CRYPTO_JS": static("js/crypto-js.min.js"),
     "CHARTIST_JS": static("js/chartist.min.js"),
@@ -93,14 +93,16 @@ APP_SETTINGS = {
     "HOWLER_JS": static("js/howler.core.min.js"),
     "QRCODE_JS": static("js/qrcode.js"),
     "JSZIP_JS": static("js/jszip.min.js"),
-    "BULMA_CSS": static("css/bulma.css"),
-    "ANIMATE_CSS": static("css/animate.min.css"),
-    "CHARTIST_CSS": static("css/chartist.min.css"),
-    "COMMON_CSS": static("css/common.css"),
+
+    # manifestで指定する色.
+    "APP_THEME_COLOR": "lightpink",
 
     # 共通画像ファイルのパス.
     "OK_ICON192": static("image/ok-icon192x192.png"),
     "NG_ICON192": static("image/ng-icon192x192.png"),
+
+    # Dexieを通じてIndexedDBの構成に使用される値.
+    "APP_DATABASE_CURRENT_USER": "currentUser",
 
     # タマリンカメラ:ファイルのパス.
     "CAMERA_APP_FAVICON": static("image/camera-app-favicon.ico"),

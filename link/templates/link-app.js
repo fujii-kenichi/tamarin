@@ -46,7 +46,7 @@ let token = null;
 // Userサービスの最終更新日時.
 let dateUpdated = null;
 
-// 処理中かどうかを示すフラグ.
+// ダウンロードあるいはクリーンナップの処理中かどうかを示すフラグ.
 let inProcessing = false;
 
 // チャート描画用のダウンロード待ち写真ファイルの枚数.
@@ -61,8 +61,8 @@ let sceneList = [];
 // チャート描画用の撮影者の配列.
 let authorList = [];
 
-// zipファイル機能を使用するかどうか.
-let useZip = true;
+// zipファイル機能を使用するかどうか. falseで自動判定.
+let useZipFile = false;
 
 /**
  * Tokenサービスから現在のユーザーにもとづいたトークンをもってくる.
@@ -397,7 +397,7 @@ async function downloadPhotos() {
     if (!photoList) {
         return;
     }
-    inProcessing = true;
+
     const processingDialog = document.getElementById('processing_dialog');
     const processingSubject = document.getElementById('processing_subject');
     const processingItem = document.getElementById('processing_item');
@@ -405,18 +405,21 @@ async function downloadPhotos() {
     processingItem.innerHTML = '';
     processingDialog.classList.add('is-active');
 
-    let pickedFolder = null;
-    try {
-        pickedFolder = useZip ? null : await window.showDirectoryPicker();
-    } catch (error) {
-        useZip = true;
-    }
-
+    inProcessing = true;
     let networkError = false;
+    let totalSize = 0;
+
     try {
-        let totalSize = 0;
-        const zip = useZip ? new JSZip() : null;
+        let pickedFolder = null;
+        if (!useZipFile && 'showDirectoryPicker' in window) {
+            pickedFolder = await window.showDirectoryPicker();
+        } else {
+            useZipFile = true;
+        }
+
+        const zip = useZipFile ? new JSZip() : null;
         const downloadRule = getDownloadRule();
+
         while (photoList.length && inProcessing && !networkError) {
             if (!navigator.onLine) {
                 networkError = true;
@@ -427,6 +430,7 @@ async function downloadPhotos() {
                 break;
             }
             processingSubject.innerHTML = photoList.length;
+
             const photo = photoList[0];
             const dateTaken = new Date(photo.date_taken);
             const year = `${dateTaken.getFullYear()}{{DATETIME_YY}}`;
@@ -440,7 +444,7 @@ async function downloadPhotos() {
 
             let fullFileName = '';
             let folderHandle = null;
-            if (!useZip) {
+            if (!useZipFile) {
                 fullFileName = pickedFolder.name;
                 folderHandle = pickedFolder;
             }
@@ -482,14 +486,14 @@ async function downloadPhotos() {
                 }
             }
             for (const folderName of folderNameList) {
-                if (!useZip) {
+                if (!useZipFile) {
                     folderHandle = await folderHandle.getDirectoryHandle(folderName, { create: true });
                 }
                 fullFileName += `/${folderName}`;
             }
             let actualFileName = null;
             let fileHandle = null;
-            if (!useZip) {
+            if (!useZipFile) {
                 let number = 0;
                 do {
                     const numberString = number > 0 ? `_${number}` : '';
@@ -497,7 +501,7 @@ async function downloadPhotos() {
                     number++;
                     try {
                         fileHandle = await folderHandle.getFileHandle(actualFileName);
-                    } catch (dummy) {
+                    } catch (notExistException) {
                         fileHandle = null;
                     }
                 } while (fileHandle);
@@ -511,25 +515,28 @@ async function downloadPhotos() {
             const response = await fetch(photo.encrypted_data);
             switch (response.status) {
                 case 200:
-                    const file = useZip ? null : await fileHandle.createWritable();
+                    const file = useZipFile ? null : await fileHandle.createWritable();
                     let data = null;
                     if (photo.encryption_key !== '{{NO_ENCRYPTION_KEY}}') {
-                        const raw = await response.text();
-                        const decrypted = CryptoJS.AES.decrypt(raw, photo.encryption_key).toString(CryptoJS.enc.Utf8);
-                        const tmp = window.atob(decrypted);
-                        const buffer = new Uint8Array(tmp.length);
-                        for (let i = 0; i < tmp.length; i++) {
-                            buffer[i] = tmp.charCodeAt(i);
+                        const rawText = await response.text();
+                        const decryptedText = CryptoJS.AES.decrypt(rawText, photo.encryption_key).toString(CryptoJS.enc.Utf8);
+                        const bytes = window.atob(decryptedText);
+                        const array = new Uint8Array(bytes.length);
+                        for (let i = 0; i < bytes.length; i++) {
+                            array[i] = bytes.charCodeAt(i);
                         }
-                        data = buffer;
+                        data = array;
                     } else {
                         data = await response.arrayBuffer();
                     }
                     totalSize += data.length;
-                    if (!useZip) {
+                    if (!useZipFile) {
                         await file.write(data);
                         await file.close();
                     } else {
+                        if (fullFileName.startsWith('/')) {
+                            fullFileName = fullFileName.substring(1);
+                        }
                         zip.file(fullFileName, data);
                     }
                     await database.photo.put({
@@ -552,43 +559,46 @@ async function downloadPhotos() {
                     break;
             }
         }
-        if (!networkError && useZip && inProcessing) {
+        if (!networkError && useZipFile && inProcessing) {
             processingSubject.innerHTML = `{{ZIPPING_MESSAGE}} ${ZIP_FILE_NAME}`;
             processingItem.innerHTML = `${totalSize} Bytes`;
-            const blob = await zip.generateAsync({ type: 'blob' });
+            const blob = await zip.generateAsync({
+                type: 'blob'
+            });
             if (blob && inProcessing) {
-                const url = window.URL.createObjectURL(blob);
+                const blobUrl = window.URL.createObjectURL(blob);
                 const downloadLink = document.getElementById('download_link');
-                downloadLink.href = url;
+                downloadLink.href = blobUrl;
                 downloadLink.download = ZIP_FILE_NAME;
                 downloadLink.click();
-                window.URL.revokeObjectURL(url);
+                window.URL.revokeObjectURL(blobUrl);
             }
         }
     } catch (error) {
         console.error(error);
     }
+
     inProcessing = false;
     processingDialog.classList.remove('is-active');
+
     if (networkError) {
         if (!token) {
             switchView('signin_view');
         } else {
             document.getElementById('processing_failed_dialog').classList.add('is-active');
         }
-        return;
+    } else {
+        switchView('loading_view');
+        updateView().then(() => {
+            switchView('main_view');
+        });
     }
-    switchView('loading_view');
-    updateView().then(() => {
-        switchView('main_view');
-    });
 }
 
 /**
  * 写真をMediaサービスからお掃除する.
  */
 async function cleanupPhotos() {
-    inProcessing = true;
     const processingDialog = document.getElementById('processing_dialog');
     const processingSubject = document.getElementById('processing_subject');
     const processingItem = document.getElementById('processing_item');
@@ -596,7 +606,9 @@ async function cleanupPhotos() {
     processingItem.innerHTML = '';
     processingDialog.classList.add('is-active');
 
+    inProcessing = true;
     let networkError = false;
+
     try {
         while (await database.photo.count() > 0 && inProcessing && !networkError) {
             if (!navigator.onLine) {
@@ -642,18 +654,19 @@ async function cleanupPhotos() {
     }
     inProcessing = false;
     processingDialog.classList.remove('is-active');
+
     if (networkError) {
         if (!token) {
             switchView('signin_view');
         } else {
             document.getElementById('download_failed_dialog').classList.add('is-active');
         }
-        return;
+    } else {
+        switchView('loading_view');
+        updateView().then(() => {
+            switchView('main_view');
+        });
     }
-    switchView('loading_view');
-    updateView().then(() => {
-        switchView('main_view');
-    });
 }
 
 /**
