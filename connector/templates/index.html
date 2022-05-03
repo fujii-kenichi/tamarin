@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="author" content="{{OWNER}}">
+    <meta name="description" content="現場業務の中で活用の可能性がひろがる豊富な情報をもつ写真を簡単・安全撮影するタマリンのサイトです" />
     <meta name="msvalidate.01" content="{{MSVALIDATE}}" />
     <link rel="shortcut icon" href="{% static 'image/connector-app-favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
@@ -36,7 +37,7 @@
                     現場業務の中で活用の可能性がひろがる豊富な情報をもつ写真を、<b>簡単・安全</b>に撮影します
                 </h2>
                 <div>
-                    <img src="{% static 'material/tamarin-intro.gif' %}">
+                    <img src="{% static 'material/tamarin-intro.gif' %}" alt="">
                 </div>
                 <a class="button is-rounded is-success" href="{% static 'material/tamarin-start.pdf' %}">「タマリンの始め方」はこちら</a>
             </div>
@@ -58,7 +59,7 @@
                     </div>
                     <div class="card-content">
                         <div class="content">
-                            <h4 class="has-text-centered">アカウント</h4>
+                            <h3 class="has-text-centered">アカウント</h3>
                             <p>タマリンを使うには、最初にこちらからアカウントの作成をしてください。メールアドレスは必要ありません。</p>
                             <a id="connector" class="button is-success is-rounded is-fullwidth" href="signup/">サインアップ</a>
                         </div>
@@ -74,7 +75,7 @@
                     </div>
                     <div class="card-content">
                         <div class="content">
-                            <h4 class="has-text-centered">タマリンク</h4>
+                            <h3 class="has-text-centered">タマリンク</h3>
                             <p>撮影した写真をダウンロードするためのアプリです。整理に使用するコンテキストやシーンを管理することもできます。</p>
                             <a id="link" class="button is-success is-rounded is-fullwidth" href="../../link/link-app.html">インストール</a>
                         </div>
@@ -90,7 +91,7 @@
                     </div>
                     <div class="card-content">
                         <div class="content">
-                            <h4 class="has-text-centered">タマリンカメラ</h4>
+                            <h3 class="has-text-centered">タマリンカメラ</h3>
                             <p>コンテキストやシーンをつけて写真を撮るためのアプリです。写真はまとめてタマリンクでダウンロードできます。</p>
                         </div>
                         <a id="camera" class="button is-success is-rounded is-fullwidth" href="../../camera/camera-app.html">インストール</a>
@@ -102,7 +103,7 @@
             <div class="tile is-ancestor">
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white has-text-centered is-shady">
-                        <p class="subtitle">お知らせ</p>
+                        <h3 class="subtitle">お知らせ</h3>
                         <p class="content">
                             現在はトライアル版が稼働しています。もしご意見などあればどうぞ「問題を報告する」にてお知らせいただければ幸いです。
                         </p>
@@ -113,21 +114,21 @@
             <div class="tile is-ancestor">
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white">
-                        <p class="subtitle">パスワードを変える</p>
+                        <h3 class="subtitle has-text-centered">パスワードを変える</h3>
                         <p class="content">サインアップで作成したアカウントのパスワードを変更できます。</p>
                         <a class="button is-success is-rounded is-fullwidth" href="password-change/">パスワードを変更する</a>
                     </article>
                 </div>
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white">
-                        <p class="subtitle">アカウントを削除する</p>
+                        <h3 class="subtitle has-text-centered">アカウントを削除する</h3>
                         <p class="content">申し訳ないのですが、こちらから管理者までご連絡ください。</p>
                         <a class="button is-success is-rounded is-fullwidth" href="{{FEEDBACK_URL}}">アカウントを削除する</a>
                     </article>
                 </div>
                 <div class="tile is-parent">
                     <article class="tile is-child notification is-white">
-                        <p class="subtitle">問題を報告する</p>
+                        <h3 class="subtitle has-text-centered">問題を報告する</h3>
                         <p class="content">もし問題に遭遇した場合には、お手数ですがこちらからご報告ください。</p>
                         <a class="button is-success is-rounded is-fullwidth" href="{{FEEDBACK_URL}}">問題を報告する</a>
                     </article>
