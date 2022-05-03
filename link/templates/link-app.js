@@ -395,6 +395,7 @@ async function getPhotoList() {
 async function downloadPhotos() {
     let photoList = await getPhotoList();
     if (!photoList) {
+        document.getElementById('processing_nothing_dialog').classList.add('is-active');
         return;
     }
 
@@ -549,7 +550,7 @@ async function downloadPhotos() {
                         }
                         zip.file(fullFileName, data);
                     }
-                    await database.photo.put({
+                    await database.markedPhoto.put({
                         id: photo.id,
                         dateTaken: photo.date_taken
                     });
@@ -609,6 +610,10 @@ async function downloadPhotos() {
  * 写真をMediaサービスからお掃除する.
  */
 async function cleanupPhotos() {
+    if (await database.markedPhoto.count() == 0) {
+        document.getElementById('processing_nothing_dialog').classList.add('is-active');
+        return;
+    }
     const processingDialog = document.getElementById('processing_dialog');
     const processingSubject = document.getElementById('processing_subject');
     const processingItem = document.getElementById('processing_item');
@@ -620,7 +625,7 @@ async function cleanupPhotos() {
     let networkError = false;
 
     try {
-        while (await database.photo.count() > 0 && inProcessing && !networkError) {
+        while (await database.markedPhoto.count() > 0 && inProcessing && !networkError) {
             if (!navigator.onLine) {
                 networkError = true;
                 break;
@@ -629,7 +634,7 @@ async function cleanupPhotos() {
                 networkError = true;
                 break;
             }
-            const photo = await database.photo.orderBy('dateTaken').first();
+            const photo = await database.markedPhoto.orderBy('dateTaken').first();
             if (photo) {
                 processingItem.innerHTML = photo.id;
                 const response = await fetch(`{{MEDIA_API_URL}}${photo.id}`, {
@@ -642,7 +647,7 @@ async function cleanupPhotos() {
                     case 200:
                     case 204:
                     case 404:
-                        await database.photo.delete(photo.id);
+                        await database.markedPhoto.delete(photo.id);
                         break;
 
                     case 400:
@@ -871,6 +876,9 @@ function main() {
         inProcessing = false;
         document.getElementById('processing_dialog').classList.remove('is-active');
     });
+    document.getElementById('processing_nothing_ok').onclick = (() => {
+        document.getElementById('processing_nothing_dialog').classList.remove('is-active');
+    });
     document.getElementById('processing_failed_ok').onclick = (() => {
         document.getElementById('processing_failed_dialog').classList.remove('is-active');
     });
@@ -878,7 +886,7 @@ function main() {
     database = new Dexie('{{LINK_APP_DATABASE_NAME}}');
     database.version('{{LINK_APP_DATABASE_VERSION}}').stores({
         user: 'dummyId, userId',
-        photo: 'id, dateTaken'
+        markedPhoto: 'id, dateTaken'
     });
 
     navigator.serviceWorker.register('link-serviceworker.js').then(() => {

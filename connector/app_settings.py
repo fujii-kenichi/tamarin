@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07K",
+    "VERSION": "0.0.07L",
 
     # タマリン提供者の名前を定義.
     "OWNER": "TAMARIVA CO.,LTD.",
@@ -141,7 +141,7 @@ APP_SETTINGS = {
 
     # タマリンク:Dexieを通じてIndexedDBの構成に使用される値.
     "LINK_APP_DATABASE_NAME": "tamarinLink",
-    "LINK_APP_DATABASE_VERSION": "2",
+    "LINK_APP_DATABASE_VERSION": "3",
 }
 
 # タマリン固有の設定:表示に使用するメッセージを定義.
@@ -220,7 +220,7 @@ APP_MESSAGES = {
     "AUTO_RELOAD_LABEL": "自動でデータを同期する",
     "ENCRYPTION_LABEL": "写真を暗号化する",
 
-    # ニフェストに書く情報:タマリンク.
+    # マニフェストに書く情報:タマリンク.
     "LINK_APP_NAME": "タマリンク",
     "LINK_APP_SHORT_NAME": "タマリンク",
     "LINK_APP_DESCRIPTION": "タマリンの写真管理アプリです",
@@ -254,6 +254,7 @@ APP_MESSAGES = {
     "PROCESSING_ABORT_LABEL": "強制的に中断",
     "ZIPPING_MESSAGE": "生成中:",
     "CLEANUP_MESSAGE": "クリーンアップ中...",
+    "PROCESSING_NOTHING_MESSAGE": "処理をする写真がありませんでした",
     "PROCESSING_FAILED_MESSAGE": "処理中にエラーがおきました",
 
     # ファイル名を生成するときに使う日時の補完用文字列.
@@ -275,5 +276,5 @@ APP_MESSAGES = {
     5. タマリンよりかわいい名前があったらそっちに改名するかもしれません。$\
     6. トイストーリーは3より4だと思う方はお話をしたいのでご連絡ください。$\
     7. その他お困りのことがあれば[問題を報告する]からご連絡ください。$\
-    【2022年4月 タマリバ株式会社】",
+    【2022年5月1日 タマリバ株式会社】",
 }
