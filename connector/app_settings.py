@@ -13,7 +13,7 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07L",
+    "VERSION": "0.0.07M",
 
     # タマリン提供者の名前を定義.
     "OWNER": "TAMARIVA CO.,LTD.",
@@ -194,7 +194,7 @@ APP_MESSAGES = {
     "BACK_TO_HOME_LABEL": "戻る",
     "LOADING_MESSAGE": "処理中です…",
     "SAVE_LABEL": "設定",
-    "SAVE_SUCCEEDED_MESSAGE": "設定されました",
+    "SAVE_SUCCEEDED_MESSAGE": "設定しました",
     "SAVE_FAILED_MESSAGE": "設定できませんでした",
     "FATAL_ERROR_MESSAGE": "アプリを実行できません",
 
