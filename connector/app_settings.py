@@ -13,10 +13,10 @@ from django.templatetags.static import static
 APP_SETTINGS = {
     # タマリンのバージョンを定義.
     # PWAのキャッシュに使用されるのでアプリを更新したら変更しないとキャッシュが破棄されない:デバッグ時も注意!
-    "VERSION": "0.0.07M",
+    "VERSION": "0.0.07N",
 
     # タマリン提供者の名前を定義.
-    "OWNER": "TAMARIVA CO.,LTD.",
+    "OWNER": "タマリバ株式会社",
 
     # シークレットキー:本番環境では必ず上書きすること!
     "APP_SECRET_KEY": os.getenv("APP_SECRET_KEY", r"dummy-app-key-must-be-overridden"),
